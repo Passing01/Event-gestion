@@ -324,7 +324,7 @@
         } else {
             sidebar.classList.remove('collapsed');
             chevron.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>`;
-            if (tipEl) tipEl.textContent = 'Contrôlez votre maison en toute simplicité.';
+            if (tipEl) tipEl.textContent = 'Contrôlez vos évènements en toute simplicité.';
         }
     }
 

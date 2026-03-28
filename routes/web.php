@@ -15,7 +15,7 @@ use App\Http\Controllers\OnboardingController;
 
 // Redirection de la racine vers le dashboard
 Route::get('/', function () {
-    return redirect()->route('dashboard.index');
+    return view('landing');
 });
 
 // ──────────────────────────────────────────────
