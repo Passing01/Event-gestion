@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\VerifyEmailStyled;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -18,6 +19,14 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    /**
+     * Envoyer la notification de vérification d'e-mail personnalisée.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmailStyled);
+    }
 
     /**
      * Get the attributes that should be cast.
