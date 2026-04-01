@@ -92,6 +92,7 @@ use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\InsightsController;
 
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\PanelistController;
 
 // ──────────────────────────────────────────────
 //  Routes du Dashboard (Protégées)
