@@ -56,10 +56,29 @@
                                     <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $question->created_at->diffForHumans() }}</p>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 0.5rem;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                @if($question->status === 'pending')
+                                    <form action="{{ route('dashboard.moderator.status', $question->id) }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        <input type="hidden" name="status" value="approved">
+                                        <button type="submit" class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #10b981;">
+                                            Approuver
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('dashboard.moderator.status', $question->id) }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #ef4444;">
+                                            Rejeter
+                                        </button>
+                                    </form>
+                                @endif
                                 <button class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="suggestAI('{{ $question->id }}')">
                                     💡 Suggestion IA
                                 </button>
+                                <span class="badge" style="font-size: 0.625rem; padding: 0.25rem 0.5rem; border-radius: 9999px; background: {{ $question->status === 'pending' ? '#f59e0b' : ($question->status === 'approved' ? '#10b981' : ($question->status === 'answering' ? '#3b82f6' : '#6b7280')) }}; color: white;">
+                                    {{ strtoupper($question->status) }}
+                                </span>
                             </div>
                         </div>
                         <p style="font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">{{ $question->content }}</p>

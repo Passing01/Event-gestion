@@ -26,9 +26,13 @@ class ModeratorController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $question = Question::findOrFail($id);
+        $event = $question->event;
         
-        // Vérifier que l'utilisateur est bien le propriétaire de l'événement
-        if ($question->event->user_id !== Auth::id()) {
+        // Vérifier que l'utilisateur est soit le propriétaire, soit un panéliste
+        $isOwner = $event->user_id === Auth::id();
+        $isPanelist = $event->panelists()->where('user_id', Auth::id())->exists();
+
+        if (!$isOwner && !$isPanelist) {
             abort(403);
         }
 
@@ -72,8 +76,13 @@ class ModeratorController extends Controller
     public function storeReply(Request $request, $id)
     {
         $question = Question::findOrFail($id);
+        $event = $question->event;
         
-        if ($question->event->user_id !== Auth::id()) {
+        // Vérifier que l'utilisateur est soit le propriétaire, soit un panéliste
+        $isOwner = $event->user_id === Auth::id();
+        $isPanelist = $event->panelists()->where('user_id', Auth::id())->exists();
+
+        if (!$isOwner && !$isPanelist) {
             abort(403);
         }
 
