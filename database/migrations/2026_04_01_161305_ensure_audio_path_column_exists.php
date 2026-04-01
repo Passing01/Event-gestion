@@ -25,10 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('questions', function (Blueprint $table) {
-            if (Schema::hasColumn('questions', 'audio_path')) {
-                $table->dropColumn('audio_path');
-            }
-            $table->text('content')->nullable(false)->change();
+            // No need to drop column if it was already there
         });
     }
 };

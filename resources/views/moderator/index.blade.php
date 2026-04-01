@@ -143,6 +143,13 @@
                                 <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $reply->created_at->diffForHumans() }}</span>
                             </div>
                             <p>{{ $reply->content }}</p>
+                            @if($reply->audio_path)
+                                <div style="margin-top: 0.5rem;">
+                                    <audio controls style="height: 25px; max-width: 100%;">
+                                        <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
+                                    </audio>
+                                </div>
+                            @endif
                         </div>
                         @endforeach
                     </div>

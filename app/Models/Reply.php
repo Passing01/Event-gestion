@@ -11,6 +11,7 @@ class Reply extends Model
         'question_id',
         'pseudo',
         'content',
+        'audio_path',
         'is_moderator',
     ];
 

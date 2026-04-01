@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('questions', function (Blueprint $table) {
-            if (!Schema::hasColumn('questions', 'audio_path')) {
+        Schema::table('replies', function (Blueprint $table) {
+            if (!Schema::hasColumn('replies', 'audio_path')) {
                 $table->string('audio_path')->nullable()->after('content');
             }
             $table->text('content')->nullable()->change();
@@ -24,8 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('questions', function (Blueprint $table) {
-            if (Schema::hasColumn('questions', 'audio_path')) {
+        Schema::table('replies', function (Blueprint $table) {
+            if (Schema::hasColumn('replies', 'audio_path')) {
                 $table->dropColumn('audio_path');
             }
             $table->text('content')->nullable(false)->change();

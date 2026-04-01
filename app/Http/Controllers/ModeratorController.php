@@ -78,12 +78,23 @@ class ModeratorController extends Controller
         }
 
         $data = $request->validate([
-            'content' => 'required|string|max:500',
+            'content' => 'nullable|string|max:500',
+            'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120',
         ]);
+
+        $audioPath = null;
+        if ($request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->store('replies/audio', 'public');
+        }
+
+        if (!$data['content'] && !$audioPath) {
+            return back()->with('error', 'Vous devez fournir une réponse ou un message vocal.');
+        }
 
         $question->replies()->create([
             'pseudo' => Auth::user()->name,
             'content' => $data['content'],
+            'audio_path' => $audioPath,
             'is_moderator' => true,
         ]);
 

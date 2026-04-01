@@ -72,21 +72,22 @@
         @endif
 
         {{-- Input Section --}}
-        <div class="card" style="margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--brand);">
+        <div class="card" style="margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--brand); position: relative;">
             <h2 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Posez votre question</h2>
-            <form action="{{ route('participant.ask', $event->code) }}" method="POST">
+            <form id="question-form" action="{{ route('participant.ask', $event->code) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" required maxlength="200"></textarea>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" maxlength="200"></textarea>
+                <input type="file" name="audio" id="audio-input" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <div id="voice-status" style="display: none; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
                             <span style="width: 0.5rem; height: 0.5rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
-                            Enregistrement... <span id="voice-timer">0s</span>
+                            <span id="voice-timer">0s</span>
                         </div>
                         <button type="button" id="voice-btn" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording()">
                             <span id="voice-icon">🎤</span> <span id="voice-text">Vocal</span>
                         </button>
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 200 caractères</span>
+                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 200 car.</span>
                     </div>
                     <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Envoyer</button>
                 </div>
@@ -111,7 +112,19 @@
                     @endif
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div style="flex: 1; padding-right: 1rem;">
-                            <p style="font-size: 0.875rem; margin-bottom: 0.5rem; line-height: 1.4;">{{ $q->content }}</p>
+                            @if($q->content)
+                                <p style="font-size: 0.875rem; margin-bottom: 0.5rem; line-height: 1.4;">{{ $q->content }}</p>
+                            @endif
+                            
+                            @if($q->audio_path)
+                                <div style="margin-bottom: 0.5rem;">
+                                    <audio controls style="height: 30px; max-width: 100%;">
+                                        <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
+                                        Votre navigateur ne supporte pas l'élément audio.
+                                    </audio>
+                                </div>
+                            @endif
+
                             <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground);">
                                 <span>Par <strong>{{ $q->pseudo }}</strong></span>
                                 <span>•</span>
@@ -143,6 +156,14 @@
                                     <span style="font-size: 0.625rem; color: var(--muted-foreground);">{{ $reply->created_at->diffForHumans() }}</span>
                                 </div>
                                 <p>{{ $reply->content }}</p>
+                                @if($reply->audio_path)
+                                    <div style="margin-top: 0.5rem;">
+                                        <audio controls style="height: 25px; max-width: 100%;">
+                                            <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
+                                        </audio>
+                                    </div>
+                                @endif
+
                             </div>
                             @endforeach
                         </div>
@@ -235,36 +256,47 @@
         } catch (e) {}
     }
 
-    let recognition;
+    let mediaRecorder;
+    let audioChunks = [];
     let isRecording = false;
     let voiceTimerInterval;
     let voiceSeconds = 0;
 
-    function toggleVoiceRecording() {
-        if (!('webkitSpeechRecognition' in window)) {
-            alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
-            return;
-        }
-
+    async function toggleVoiceRecording() {
         const btn = document.getElementById('voice-btn');
         const icon = document.getElementById('voice-icon');
         const text = document.getElementById('voice-text');
         const status = document.getElementById('voice-status');
         const timer = document.getElementById('voice-timer');
+        const audioInput = document.getElementById('audio-input');
 
         if (!isRecording) {
-            // Start Recording
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = 'fr-FR';
-            recognition.interimResults = true;
-            recognition.continuous = true;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
 
-            recognition.onstart = function() {
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const file = new File([audioBlob], "vocal.webm", { type: 'audio/webm' });
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    audioInput.files = dataTransfer.files;
+                    
+                    alert("Message vocal enregistré ! Cliquez sur Envoyer.");
+                };
+
+                mediaRecorder.start();
                 isRecording = true;
                 btn.style.background = '#dc2626';
                 btn.style.color = '#fff';
                 icon.textContent = '⏹';
-                text.textContent = 'Arrêter';
+                text.textContent = 'Stop';
                 status.style.display = 'flex';
                 
                 voiceSeconds = 0;
@@ -273,37 +305,13 @@
                     voiceSeconds++;
                     timer.textContent = voiceSeconds + 's';
                 }, 1000);
-            };
 
-            recognition.onresult = function(event) {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    }
-                }
-                if (finalTranscript) {
-                    document.getElementById('question-content').value += (document.getElementById('question-content').value ? ' ' : '') + finalTranscript;
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Speech recognition error', event.error);
-                stopRecordingUI();
-            };
-
-            recognition.onend = function() {
-                stopRecordingUI();
-            };
-
-            recognition.start();
+            } catch (err) {
+                console.error("Microphone error:", err);
+                alert("Erreur micro. Vérifiez les permissions.");
+            }
         } else {
-            // Stop Recording
-            recognition.stop();
-            stopRecordingUI();
-        }
-
-        function stopRecordingUI() {
+            mediaRecorder.stop();
             isRecording = false;
             btn.style.background = '#f3f4f6';
             btn.style.color = '#374151';
@@ -311,6 +319,7 @@
             text.textContent = 'Vocal';
             status.style.display = 'none';
             clearInterval(voiceTimerInterval);
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
         }
     }
 

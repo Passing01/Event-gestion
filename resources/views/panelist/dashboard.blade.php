@@ -79,25 +79,36 @@
                                 <div style="font-size: 0.875rem; background: white; padding: 0.75rem; border-radius: 0.5rem;">
                                     <p style="font-weight: 600;">{{ $reply->user->name ?? 'Panéliste' }}</p>
                                     <p>{{ $reply->content }}</p>
+                                    @if($reply->audio_path)
+                                        <div style="margin-top: 0.5rem;">
+                                            <audio controls style="height: 25px; max-width: 100%;">
+                                                <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
+                                            </audio>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
 
                         <!-- Formulaire de réponse -->
-                        <form action="{{ route('dashboard.moderator.reply', $question->id) }}" method="POST" style="margin-top: 1rem;">
+                        <form action="{{ route('dashboard.moderator.reply', $question->id) }}" method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
                             @csrf
-                            <div style="display: flex; gap: 0.5rem;">
-                                <textarea name="content" id="ai-response-{{ $question->id }}" class="form-input" rows="2" placeholder="Votre réponse..." required style="font-size: 0.875rem;"></textarea>
-                                <button type="submit" class="btn-brand" style="width: auto; padding: 0 1.5rem;">Répondre</button>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center;">
-                                <div id="voice-status-{{ $question->id }}" style="display: none; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-                                    <span style="width: 0.5rem; height: 0.5rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
-                                    Enregistrement... <span id="voice-timer-{{ $question->id }}">0s</span>
+                            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                                <textarea name="content" id="ai-response-{{ $question->id }}" class="form-input" rows="2" placeholder="Votre réponse..." style="font-size: 0.875rem;"></textarea>
+                                <input type="file" name="audio" id="audio-input-{{ $question->id }}" style="display: none;">
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <div id="voice-status-{{ $question->id }}" style="display: none; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                                            <span style="width: 0.4rem; height: 0.4rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                                            <span id="voice-timer-{{ $question->id }}">0s</span>
+                                        </div>
+                                        <button type="button" id="voice-btn-{{ $question->id }}" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording('{{ $question->id }}')">
+                                            <span id="voice-icon-{{ $question->id }}">🎤</span> <span id="voice-text-{{ $question->id }}">Vocal</span>
+                                        </button>
+                                    </div>
+                                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.4rem 1.5rem; font-size: 0.875rem;">Répondre</button>
                                 </div>
-                                <button type="button" id="voice-btn-{{ $question->id }}" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording('{{ $question->id }}')">
-                                    <span id="voice-icon-{{ $question->id }}">🎤</span> <span id="voice-text-{{ $question->id }}">Réponse Vocale</span>
-                                </button>
                             </div>
                         </form>
                     </div>
@@ -194,38 +205,49 @@
         });
     }
 
-    let recognition;
+    let mediaRecorder;
+    let audioChunks = [];
     let isRecording = false;
     let voiceTimerInterval;
     let voiceSeconds = 0;
     let currentRecordingId = null;
 
-    function toggleVoiceRecording(questionId) {
-        if (!('webkitSpeechRecognition' in window)) {
-            alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
-            return;
-        }
-
+    async function toggleVoiceRecording(questionId) {
         const btn = document.getElementById('voice-btn-' + questionId);
         const icon = document.getElementById('voice-icon-' + questionId);
         const text = document.getElementById('voice-text-' + questionId);
         const status = document.getElementById('voice-status-' + questionId);
         const timer = document.getElementById('voice-timer-' + questionId);
+        const audioInput = document.getElementById('audio-input-' + questionId);
 
         if (!isRecording) {
-            // Start Recording
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = 'fr-FR';
-            recognition.interimResults = true;
-            recognition.continuous = true;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
 
-            recognition.onstart = function() {
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const file = new File([audioBlob], "vocal_reply.webm", { type: 'audio/webm' });
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    audioInput.files = dataTransfer.files;
+                    
+                    alert("Réponse vocale enregistrée ! Cliquez sur Répondre.");
+                };
+
+                mediaRecorder.start();
                 isRecording = true;
                 currentRecordingId = questionId;
                 btn.style.background = '#dc2626';
                 btn.style.color = '#fff';
                 icon.textContent = '⏹';
-                text.textContent = 'Arrêter';
+                text.textContent = 'Stop';
                 status.style.display = 'flex';
                 
                 voiceSeconds = 0;
@@ -234,55 +256,24 @@
                     voiceSeconds++;
                     timer.textContent = voiceSeconds + 's';
                 }, 1000);
-            };
 
-            recognition.onresult = function(event) {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    }
-                }
-                if (finalTranscript) {
-                    const textarea = document.getElementById('ai-response-' + questionId);
-                    textarea.value += (textarea.value ? ' ' : '') + finalTranscript;
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Speech recognition error', event.error);
-                stopRecordingUI(questionId);
-            };
-
-            recognition.onend = function() {
-                stopRecordingUI(questionId);
-            };
-
-            recognition.start();
+            } catch (err) {
+                console.error("Microphone error:", err);
+                alert("Erreur micro. Vérifiez les permissions.");
+            }
         } else {
-            // Stop Recording
             if (currentRecordingId === questionId) {
-                recognition.stop();
-                stopRecordingUI(questionId);
+                mediaRecorder.stop();
+                isRecording = false;
+                currentRecordingId = null;
+                btn.style.background = '#f3f4f6';
+                btn.style.color = '#374151';
+                icon.textContent = '🎤';
+                text.textContent = 'Vocal';
+                status.style.display = 'none';
+                clearInterval(voiceTimerInterval);
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
-        }
-
-        function stopRecordingUI(id) {
-            isRecording = false;
-            currentRecordingId = null;
-            const b = document.getElementById('voice-btn-' + id);
-            const i = document.getElementById('voice-icon-' + id);
-            const t = document.getElementById('voice-text-' + id);
-            const s = document.getElementById('voice-status-' + id);
-            
-            if (b) {
-                b.style.background = '#f3f4f6';
-                b.style.color = '#374151';
-            }
-            if (i) i.textContent = '🎤';
-            if (t) t.textContent = 'Réponse Vocale';
-            if (s) s.style.display = 'none';
-            clearInterval(voiceTimerInterval);
         }
     }
 </script>
