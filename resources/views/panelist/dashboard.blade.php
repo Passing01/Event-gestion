@@ -73,7 +73,7 @@
                                         </button>
                                     </form>
                                 @endif
-                                <button class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="suggestAI('{{ $question->id }}')">
+                                <button class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="suggestAI('{{ $question->id }}', this)">
                                     💡 Suggestion IA
                                 </button>
                                 <span class="badge" style="font-size: 0.625rem; padding: 0.25rem 0.5rem; border-radius: 9999px; background: {{ $question->status === 'pending' ? '#f59e0b' : ($question->status === 'approved' ? '#10b981' : ($question->status === 'answering' ? '#3b82f6' : '#6b7280')) }}; color: white;">
@@ -126,7 +126,7 @@
                                             <span id="voice-icon-{{ $question->id }}">🎤</span> <span id="voice-text-{{ $question->id }}">Vocal</span>
                                         </button>
                                     </div>
-                                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.4rem 1.5rem; font-size: 0.875rem;">Répondre</button>
+                                    <button type="submit" id="submit-btn-{{ $question->id }}" class="btn-brand" style="width: auto; padding: 0.4rem 1.5rem; font-size: 0.875rem;">Répondre</button>
                                 </div>
                             </div>
                         </form>
@@ -217,8 +217,13 @@
 
 @push('scripts')
 <script>
-    function suggestAI(questionId) {
+    function suggestAI(questionId, aiBtn) {
         const textarea = document.getElementById('ai-response-' + questionId);
+        const submitBtn = document.getElementById('submit-btn-' + questionId);
+        
+        const originalAiText = aiBtn.innerText;
+        aiBtn.disabled = true;
+        aiBtn.innerText = "⌛...";
         textarea.placeholder = "L'IA réfléchit...";
         
         fetch("{{ route('panelist.ai-suggest', $event->code) }}", {
@@ -232,7 +237,9 @@
         .then(response => response.json())
         .then(data => {
             if (data.suggestion) {
-                textarea.value = data.suggestion;
+                // Nettoyer les éventuels # ou * restants au cas où
+                let cleanText = data.suggestion.replace(/[#*]/g, '').trim();
+                textarea.value = cleanText;
             } else {
                 alert("L'IA n'a pas pu générer de suggestion.");
             }
@@ -241,6 +248,10 @@
         .catch(error => {
             console.error('Error:', error);
             textarea.placeholder = "Votre réponse...";
+        })
+        .finally(() => {
+            aiBtn.disabled = false;
+            aiBtn.innerText = originalAiText;
         });
     }
 

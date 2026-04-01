@@ -54,7 +54,7 @@ class GeminiService
             $prompt .= "Notes du panéliste : " . $panelistNotes . "\n";
         }
         $prompt .= "Question du public : " . $question . "\n";
-        $prompt .= "Propose une réponse concise et pertinente pour le panéliste. Si la question est hors-sujet par rapport au thème, indique-le poliment et réponds brièvement si possible.";
+        $prompt .= "Propose une réponse concise et pertinente pour le panéliste. Réponds uniquement en texte brut, sans aucun formatage Markdown (pas de #, pas de **, etc.). Si la question est hors-sujet par rapport au thème, indique-le poliment et réponds brièvement si possible.";
 
         return $this->generateResponse($prompt);
     }
