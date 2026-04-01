@@ -118,7 +118,7 @@ class PanelistController extends Controller
 
         $questions = $event->questions()
             ->where('status', 'approved')
-            ->with(['replies', 'user'])
+            ->with(['replies'])
             ->orderBy('created_at', 'desc')
             ->get();
 

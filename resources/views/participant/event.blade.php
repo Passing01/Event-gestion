@@ -288,7 +288,11 @@
                     dataTransfer.items.add(file);
                     audioInput.files = dataTransfer.files;
                     
-                    alert("Message vocal enregistré ! Cliquez sur Envoyer.");
+                    // Si on a un callback de fin (pour l'envoi auto), on l'appelle
+                    if (window.onRecordingStopped) {
+                        window.onRecordingStopped();
+                        window.onRecordingStopped = null;
+                    }
                 };
 
                 mediaRecorder.start();
@@ -312,16 +316,40 @@
             }
         } else {
             mediaRecorder.stop();
-            isRecording = false;
-            btn.style.background = '#f3f4f6';
-            btn.style.color = '#374151';
-            icon.textContent = '🎤';
-            text.textContent = 'Vocal';
-            status.style.display = 'none';
-            clearInterval(voiceTimerInterval);
+            stopRecordingUI();
+        }
+    }
+
+    function stopRecordingUI() {
+        const btn = document.getElementById('voice-btn');
+        const icon = document.getElementById('voice-icon');
+        const text = document.getElementById('voice-text');
+        const status = document.getElementById('voice-status');
+        
+        isRecording = false;
+        btn.style.background = '#f3f4f6';
+        btn.style.color = '#374151';
+        icon.textContent = '🎤';
+        text.textContent = 'Vocal';
+        status.style.display = 'none';
+        clearInterval(voiceTimerInterval);
+        if (mediaRecorder && mediaRecorder.stream) {
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
         }
     }
+
+    // Gérer l'envoi auto si on enregistre
+    document.getElementById('question-form').addEventListener('submit', function(e) {
+        if (isRecording) {
+            e.preventDefault();
+            const form = this;
+            window.onRecordingStopped = () => {
+                form.submit();
+            };
+            mediaRecorder.stop();
+            stopRecordingUI();
+        }
+    });
 
     setInterval(sendHeartbeat, 15000);
     setInterval(fetchParticipants, 5000);

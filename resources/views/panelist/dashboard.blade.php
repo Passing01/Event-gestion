@@ -49,10 +49,10 @@
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <div style="width: 2rem; height: 2rem; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">
-                                    {{ substr($question->user->pseudo ?? 'A', 0, 1) }}
+                                    {{ substr($question->pseudo ?? 'A', 0, 1) }}
                                 </div>
                                 <div>
-                                    <p style="font-weight: 600; font-size: 0.875rem;">{{ $question->user->pseudo ?? 'Anonyme' }}</p>
+                                    <p style="font-weight: 600; font-size: 0.875rem;">{{ $question->pseudo ?? 'Anonyme' }}</p>
                                     <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $question->created_at->diffForHumans() }}</p>
                                 </div>
                             </div>
@@ -147,8 +147,28 @@
             <button onclick="document.getElementById('view-doc-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
         
-        <div style="background: var(--muted); padding: 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;">
-            {{ $panelist->notes ?? 'Aucun contenu textuel extrait.' }}
+        <div style="background: var(--muted); padding: 1rem; border-radius: 0.75rem; height: 60vh;">
+            @php
+                $extension = pathinfo($panelist->presentation_path, PATHINFO_EXTENSION);
+                $fileUrl = asset('storage/' . $panelist->presentation_path);
+            @endphp
+
+            @if(in_array(strtolower($extension), ['pdf']))
+                <iframe src="{{ $fileUrl }}" style="width: 100%; height: 100%; border: none; border-radius: 0.5rem;"></iframe>
+            @elseif(in_array(strtolower($extension), ['ppt', 'pptx']))
+                <iframe src="https://view.officeapps.live.com/op/embed.aspx?src={{ urlencode($fileUrl) }}" style="width: 100%; height: 100%; border: none; border-radius: 0.5rem;"></iframe>
+            @elseif(in_array(strtolower($extension), ['txt']))
+                <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; height: 100%; overflow-y: auto; padding: 0.5rem;">
+                    {{ $panelist->notes }}
+                </div>
+            @else
+                <div style="display: grid; place-items: center; height: 100%; text-align: center;">
+                    <div>
+                        <p style="margin-bottom: 1rem;">Aperçu non disponible pour ce type de fichier ({{ $extension }}).</p>
+                        <a href="{{ $fileUrl }}" target="_blank" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Ouvrir le fichier</a>
+                    </div>
+                </div>
+            @endif
         </div>
         
         <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
@@ -238,7 +258,10 @@
                     dataTransfer.items.add(file);
                     audioInput.files = dataTransfer.files;
                     
-                    alert("Réponse vocale enregistrée ! Cliquez sur Répondre.");
+                    if (window.onRecordingStopped) {
+                        window.onRecordingStopped();
+                        window.onRecordingStopped = null;
+                    }
                 };
 
                 mediaRecorder.start();
@@ -264,18 +287,47 @@
         } else {
             if (currentRecordingId === questionId) {
                 mediaRecorder.stop();
-                isRecording = false;
-                currentRecordingId = null;
-                btn.style.background = '#f3f4f6';
-                btn.style.color = '#374151';
-                icon.textContent = '🎤';
-                text.textContent = 'Vocal';
-                status.style.display = 'none';
-                clearInterval(voiceTimerInterval);
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                stopRecordingUI(questionId);
             }
         }
     }
+
+    function stopRecordingUI(id) {
+        isRecording = false;
+        currentRecordingId = null;
+        const b = document.getElementById('voice-btn-' + id);
+        const i = document.getElementById('voice-icon-' + id);
+        const t = document.getElementById('voice-text-' + id);
+        const s = document.getElementById('voice-status-' + id);
+        
+        if (b) {
+            b.style.background = '#f3f4f6';
+            b.style.color = '#374151';
+        }
+        if (i) i.textContent = '🎤';
+        if (t) t.textContent = 'Vocal';
+        if (s) s.style.display = 'none';
+        clearInterval(voiceTimerInterval);
+        if (mediaRecorder && mediaRecorder.stream) {
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    // Gérer l'envoi auto pour tous les formulaires de réponse
+    document.querySelectorAll('form[action*="reply"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (isRecording && currentRecordingId) {
+                e.preventDefault();
+                const currentForm = this;
+                const recordingId = currentRecordingId;
+                window.onRecordingStopped = () => {
+                    currentForm.submit();
+                };
+                mediaRecorder.stop();
+                stopRecordingUI(recordingId);
+            }
+        });
+    });
 </script>
 @endpush
 
