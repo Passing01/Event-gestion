@@ -79,8 +79,12 @@
                 <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" required maxlength="200"></textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button type="button" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="startVoiceRecording()">
-                            🎤 Vocal
+                        <div id="voice-status" style="display: none; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                            <span style="width: 0.5rem; height: 0.5rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                            Enregistrement... <span id="voice-timer">0s</span>
+                        </div>
+                        <button type="button" id="voice-btn" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording()">
+                            <span id="voice-icon">🎤</span> <span id="voice-text">Vocal</span>
                         </button>
                         <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 200 caractères</span>
                     </div>
@@ -231,31 +235,83 @@
         } catch (e) {}
     }
 
-    function startVoiceRecording() {
+    let recognition;
+    let isRecording = false;
+    let voiceTimerInterval;
+    let voiceSeconds = 0;
+
+    function toggleVoiceRecording() {
         if (!('webkitSpeechRecognition' in window)) {
             alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
             return;
         }
 
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = 'fr-FR';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        const btn = document.getElementById('voice-btn');
+        const icon = document.getElementById('voice-icon');
+        const text = document.getElementById('voice-text');
+        const status = document.getElementById('voice-status');
+        const timer = document.getElementById('voice-timer');
 
-        recognition.onstart = function() {
-            console.log('Voice recognition started');
-        };
+        if (!isRecording) {
+            // Start Recording
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = 'fr-FR';
+            recognition.interimResults = true;
+            recognition.continuous = true;
 
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('question-content').value = transcript;
-        };
+            recognition.onstart = function() {
+                isRecording = true;
+                btn.style.background = '#dc2626';
+                btn.style.color = '#fff';
+                icon.textContent = '⏹';
+                text.textContent = 'Arrêter';
+                status.style.display = 'flex';
+                
+                voiceSeconds = 0;
+                timer.textContent = '0s';
+                voiceTimerInterval = setInterval(() => {
+                    voiceSeconds++;
+                    timer.textContent = voiceSeconds + 's';
+                }, 1000);
+            };
 
-        recognition.onerror = function(event) {
-            console.error('Speech recognition error', event.error);
-        };
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    document.getElementById('question-content').value += (document.getElementById('question-content').value ? ' ' : '') + finalTranscript;
+                }
+            };
 
-        recognition.start();
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error', event.error);
+                stopRecordingUI();
+            };
+
+            recognition.onend = function() {
+                stopRecordingUI();
+            };
+
+            recognition.start();
+        } else {
+            // Stop Recording
+            recognition.stop();
+            stopRecordingUI();
+        }
+
+        function stopRecordingUI() {
+            isRecording = false;
+            btn.style.background = '#f3f4f6';
+            btn.style.color = '#374151';
+            icon.textContent = '🎤';
+            text.textContent = 'Vocal';
+            status.style.display = 'none';
+            clearInterval(voiceTimerInterval);
+        }
     }
 
     setInterval(sendHeartbeat, 15000);
