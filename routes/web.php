@@ -118,13 +118,6 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         Route::delete('/panelists/{panelistId}', [PanelistController::class, 'destroy'])->name('panelists.destroy');
     });
 
-    // Console de Modération
-    Route::get('/event/{id}/moderation', [ModeratorController::class, 'index'])->name('moderator.index');
-    Route::post('/question/{id}/status', [ModeratorController::class, 'updateStatus'])->name('moderator.status');
-    Route::post('/question/{id}/edit',   [ModeratorController::class, 'updateContent'])->name('moderator.edit');
-    Route::post('/question/{id}/reply',  [ModeratorController::class, 'storeReply'])->name('moderator.reply');
-    Route::post('/hand/{id}/status',     [ModeratorController::class, 'updateHandStatus'])->name('moderator.hand-status');
-
     // Profil
     Route::get('/profile',          [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile',          [ProfileController::class, 'update'])->name('profile.update');
@@ -143,6 +136,15 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
     // Abonnement
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
+});
+
+// Console de Modération (Accessible aussi par les panélistes, donc hors onboarding.completed)
+Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::get('/event/{id}/moderation', [ModeratorController::class, 'index'])->name('moderator.index');
+    Route::post('/question/{id}/status', [ModeratorController::class, 'updateStatus'])->name('moderator.status');
+    Route::post('/question/{id}/edit',   [ModeratorController::class, 'updateContent'])->name('moderator.edit');
+    Route::post('/question/{id}/reply',  [ModeratorController::class, 'storeReply'])->name('moderator.reply');
+    Route::post('/hand/{id}/status',     [ModeratorController::class, 'updateHandStatus'])->name('moderator.hand-status');
 });
 
 // ──────────────────────────────────────────────

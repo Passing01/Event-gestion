@@ -75,6 +75,7 @@ class ModeratorController extends Controller
      */
     public function storeReply(Request $request, $id)
     {
+        \Illuminate\Support\Facades\Log::info("storeReply called for question ID: " . $id);
         $question = Question::findOrFail($id);
         $event = $question->event;
         
@@ -86,10 +87,15 @@ class ModeratorController extends Controller
             abort(403);
         }
 
-        $data = $request->validate([
-            'content' => 'nullable|string|max:500',
-            'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120',
-        ]);
+        try {
+            $data = $request->validate([
+                'content' => 'nullable|string|max:500',
+                'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error("Validation failed in storeReply: " . json_encode($e->errors()));
+            throw $e;
+        }
 
         $audioPath = null;
         if ($request->hasFile('audio')) {
