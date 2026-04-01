@@ -28,6 +28,12 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            $user = Auth::user();
+            if ($user->role === 'panelist') {
+                return redirect()->route('panelist.join.form');
+            }
+
             return redirect()->intended(route('dashboard.index'));
         }
 

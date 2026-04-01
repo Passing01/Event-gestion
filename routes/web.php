@@ -148,6 +148,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
 //  Routes Panéliste
 // ──────────────────────────────────────────────
 Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->group(function () {
+    Route::get('/join', [PanelistController::class, 'joinForm'])->name('join.form');
     Route::post('/join', [PanelistController::class, 'join'])->name('join');
     Route::get('/e/{code}', [PanelistController::class, 'dashboard'])->name('dashboard');
     Route::post('/e/{code}/upload', [PanelistController::class, 'upload'])->name('upload');

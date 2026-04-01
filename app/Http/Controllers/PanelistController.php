@@ -56,6 +56,14 @@ class PanelistController extends Controller
     }
 
     /**
+     * Display the join form for panelists.
+     */
+    public function joinForm()
+    {
+        return view('panelist.join');
+    }
+
+    /**
      * Panelist login with event code.
      */
     public function join(Request $request)
