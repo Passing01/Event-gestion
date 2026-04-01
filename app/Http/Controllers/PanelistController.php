@@ -34,7 +34,7 @@ class PanelistController extends Controller
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'password' => Hash::make($password),
+                'password' => $password, // Le modèle s'occupe du hachage via le cast
                 'role' => 'panelist',
                 'onboarding_completed' => true,
                 'email_verified_at' => now(), // Auto-vérification pour les panélistes
