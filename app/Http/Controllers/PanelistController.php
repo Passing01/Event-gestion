@@ -169,7 +169,9 @@ class PanelistController extends Controller
 
         $question = \App\Models\Question::findOrFail($request->question_id);
 
+        \Illuminate\Support\Facades\Log::info("AI Suggestion requested for question ID: " . $request->question_id);
         $suggestion = $gemini->suggestAnswer($question->content, $event->description, $panelist->notes);
+        \Illuminate\Support\Facades\Log::info("AI Suggestion generated successfully.");
 
         return response()->json(['suggestion' => $suggestion]);
     }

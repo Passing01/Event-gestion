@@ -75,7 +75,7 @@ class ModeratorController extends Controller
      */
     public function storeReply(Request $request, $id)
     {
-        \Illuminate\Support\Facades\Log::info("storeReply called for question ID: " . $id);
+        \Illuminate\Support\Facades\Log::info("storeReply called for question ID: " . $id, $request->all());
         $question = Question::findOrFail($id);
         $event = $question->event;
         

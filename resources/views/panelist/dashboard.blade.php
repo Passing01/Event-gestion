@@ -346,15 +346,20 @@
     // Gérer l'envoi auto pour tous les formulaires de réponse
     document.querySelectorAll('form[action*="reply"]').forEach(form => {
         form.addEventListener('submit', function(e) {
+            console.log("Form submission detected for action:", form.action);
             if (isRecording && currentRecordingId) {
+                console.log("Recording in progress, stopping before submit...");
                 e.preventDefault();
                 const currentForm = this;
                 const recordingId = currentRecordingId;
                 window.onRecordingStopped = () => {
+                    console.log("Recording stopped, submitting form now.");
                     currentForm.submit();
                 };
                 mediaRecorder.stop();
                 stopRecordingUI(recordingId);
+            } else {
+                console.log("No recording in progress, submitting normally.");
             }
         });
     });
