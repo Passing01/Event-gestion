@@ -6,6 +6,12 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\OnboardingController;
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/linkstorage', function () {
+    Artisan::call('storage:link');
+    return 'Le lien symbolique a été créé avec succès !';
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +154,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
 //  Routes Panéliste
 // ──────────────────────────────────────────────
 Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->group(function () {
+    Route::get('/', [PanelistController::class, 'index'])->name('index');
     Route::get('/join', [PanelistController::class, 'joinForm'])->name('join.form');
     Route::post('/join', [PanelistController::class, 'join'])->name('join');
     Route::get('/e/{code}', [PanelistController::class, 'dashboard'])->name('dashboard');

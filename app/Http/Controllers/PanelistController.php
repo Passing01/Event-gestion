@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\Auth;
 class PanelistController extends Controller
 {
     /**
+     * List all events for the current panelist.
+     */
+    public function index()
+    {
+        $panelistEntries = Panelist::where('user_id', Auth::id())
+            ->with('event')
+            ->get();
+
+        return view('panelist.index', compact('panelistEntries'));
+    }
+
+    /**
      * Store a new panelist.
      */
     public function store(Request $request, $eventId)

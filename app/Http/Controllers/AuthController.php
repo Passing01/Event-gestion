@@ -35,7 +35,7 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Log::info("Connexion réussie - User ID: " . $user->id . " - Role: " . $user->role);
             
             if ($user->role === 'panelist') {
-                return redirect()->route('panelist.join.form');
+                return redirect()->route('panelist.index');
             }
 
             return redirect()->intended(route('dashboard.index'));

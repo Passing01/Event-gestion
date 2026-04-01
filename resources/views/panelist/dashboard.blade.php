@@ -23,14 +23,19 @@
     </div>
 
     @if($panelist->presentation_path)
-        <div style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.75rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.5rem;height:1.5rem;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-                <p style="font-weight: 600;">Document chargé</p>
-                <p style="font-size: 0.875rem;">L'IA analyse votre document pour vous assister dans les réponses.</p>
+        <div style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 1rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.5rem;height:1.5rem;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <p style="font-weight: 600;">Document chargé</p>
+                    <p style="font-size: 0.875rem;">L'IA analyse votre document pour vous assister dans les réponses.</p>
+                </div>
             </div>
+            <button class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: #fff; color: #065f46; border: 1px solid #10b981;" onclick="document.getElementById('view-doc-modal').style.display='flex'">
+                Voir le document
+            </button>
         </div>
     @endif
 
@@ -106,6 +111,24 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal View Document -->
+<div id="view-doc-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
+    <div class="card" style="max-width: 50rem; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">Document chargé</h2>
+            <button onclick="document.getElementById('view-doc-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        
+        <div style="background: var(--muted); padding: 1.5rem; border-radius: 0.75rem; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap;">
+            {{ $panelist->notes ?? 'Aucun contenu textuel extrait.' }}
+        </div>
+        
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+            <a href="{{ asset('storage/' . $panelist->presentation_path) }}" target="_blank" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Télécharger le fichier original</a>
         </div>
     </div>
 </div>
