@@ -13,6 +13,7 @@ class Question extends Model
         'event_id',
         'pseudo',
         'content',
+        'audio_path',
         'status',
         'votes_count',
     ];

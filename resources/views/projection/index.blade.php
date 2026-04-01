@@ -167,13 +167,30 @@
                     const container = document.getElementById('projection-content');
                     
                     if (data.id) {
+                        let contentHtml = data.content ? `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>` : '';
+                        let audioHtml = data.audio_path ? `
+                            <div style="margin-top: 1rem; opacity: 0; transform: translateY(10px); transition: all 0.5s;" class="audio-container">
+                                <div style="font-size: 1.5rem; color: var(--brand); margin-bottom: 1rem;">🎤 Message Vocal</div>
+                                <audio controls style="height: 50px; width: 400px;">
+                                    <source src="/storage/${data.audio_path}" type="audio/webm">
+                                </audio>
+                            </div>
+                        ` : '';
+                        
                         container.innerHTML = `
-                            <div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>
+                            ${contentHtml}
+                            ${audioHtml}
                             <div class="question-author" style="opacity: 0; transform: translateY(10px); transition: all 0.5s;">${data.pseudo}</div>
                         `;
                         setTimeout(() => {
-                            container.querySelector('.question-content').style.opacity = '1';
-                            container.querySelector('.question-content').style.transform = 'translateY(0)';
+                            if (container.querySelector('.question-content')) {
+                                container.querySelector('.question-content').style.opacity = '1';
+                                container.querySelector('.question-content').style.transform = 'translateY(0)';
+                            }
+                            if (container.querySelector('.audio-container')) {
+                                container.querySelector('.audio-container').style.opacity = '1';
+                                container.querySelector('.audio-container').style.transform = 'translateY(0)';
+                            }
                             container.querySelector('.question-author').style.opacity = '1';
                             container.querySelector('.question-author').style.transform = 'translateY(0)';
                         }, 50);
@@ -187,7 +204,10 @@
                 if (data.all_questions) {
                     qaList.innerHTML = data.all_questions.map(q => `
                         <div class="qa-item">
-                            <div class="q">${q.content}</div>
+                            <div class="q">
+                                ${q.content ? q.content : ''}
+                                ${q.audio_path ? '<div style="font-size: 0.75rem; color: var(--brand); margin-top: 0.25rem;">🎤 Message Vocal</div>' : ''}
+                            </div>
                             ${q.replies.length > 0 ? `<div class="a">${q.replies[0].content}</div>` : ''}
                         </div>
                     `).join('');

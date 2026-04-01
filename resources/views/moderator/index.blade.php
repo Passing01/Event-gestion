@@ -69,6 +69,16 @@
                             {{ strtoupper($q->status == 'answering' ? 'en cours' : ($q->status == 'answered' ? 'répondu' : $q->status)) }}
                         </span>
                         <p style="font-size: 1rem; font-weight: 500;">{{ $q->content }}</p>
+                        
+                        @if($q->audio_path)
+                            <div style="margin-top: 0.5rem;">
+                                <audio controls style="height: 30px; max-width: 100%;">
+                                    <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
+                                    Votre navigateur ne supporte pas l'élément audio.
+                                </audio>
+                            </div>
+                        @endif
+
                         <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
                             <span>Par <strong>{{ $q->pseudo }}</strong></span>
                             <span>•</span>

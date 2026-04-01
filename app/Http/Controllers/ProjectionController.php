@@ -41,6 +41,7 @@ class ProjectionController extends Controller
             'id' => $answering ? $answering->id : null,
             'pseudo' => $answering ? $answering->pseudo : null,
             'content' => $answering ? $answering->content : null,
+            'audio_path' => $answering ? $answering->audio_path : null,
             'status' => $answering ? $answering->status : null,
             'raised_hands' => $raisedHands,
             'all_questions' => $allQuestions

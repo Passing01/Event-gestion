@@ -88,17 +88,28 @@ class ParticipantController extends Controller
         }
 
         $data = $request->validate([
-            'content' => 'required|string|max:200',
+            'content' => 'nullable|string|max:200',
+            'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120', // 5MB max
         ]);
+
+        $audioPath = null;
+        if ($request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->store('questions/audio', 'public');
+        }
+
+        if (!$data['content'] && !$audioPath) {
+            return back()->with('error', 'Vous devez fournir une question ou un message vocal.');
+        }
 
         $question = $event->questions()->create([
             'pseudo' => session('participant_pseudo'),
             'content' => $data['content'],
+            'audio_path' => $audioPath,
             'status' => $event->moderation_enabled ? 'pending' : 'approved',
         ]);
 
-        // AI Check for off-topic
-        if ($event->description) {
+        // AI Check for off-topic (only if content exists)
+        if ($data['content'] && $event->description) {
             $prompt = "L'événement a pour thème : " . $event->description . "\n";
             $prompt .= "La question suivante est-elle hors-sujet ? Réponds par 'OUI' ou 'NON' uniquement.\n";
             $prompt .= "Question : " . $data['content'];

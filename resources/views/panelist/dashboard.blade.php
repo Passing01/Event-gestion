@@ -64,6 +64,15 @@
                         </div>
                         <p style="font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">{{ $question->content }}</p>
                         
+                        @if($question->audio_path)
+                            <div style="margin-bottom: 1rem;">
+                                <audio controls style="height: 30px; max-width: 100%;">
+                                    <source src="{{ asset('storage/' . $question->audio_path) }}" type="audio/webm">
+                                    Votre navigateur ne supporte pas l'élément audio.
+                                </audio>
+                            </div>
+                        @endif
+                        
                         <!-- Réponses existantes -->
                         <div id="replies-{{ $question->id }}" class="space-y-2" style="margin-left: 1rem; border-left: 2px solid var(--border); padding-left: 1rem;">
                             @foreach($question->replies as $reply)
