@@ -96,7 +96,7 @@
                         <div id="replies-{{ $question->id }}" class="space-y-2" style="margin-left: 1rem; border-left: 2px solid var(--border); padding-left: 1rem;">
                             @foreach($question->replies as $reply)
                                 <div style="font-size: 0.875rem; background: white; padding: 0.75rem; border-radius: 0.5rem;">
-                                    <p style="font-weight: 600;">{{ $reply->user->name ?? 'Panéliste' }}</p>
+                                    <p style="font-weight: 600;">{{ $reply->pseudo ?? 'Panéliste' }}</p>
                                     <p>{{ $reply->content }}</p>
                                     @if($reply->audio_path)
                                         <div style="margin-top: 0.5rem;">
