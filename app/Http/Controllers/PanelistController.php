@@ -43,8 +43,12 @@ class PanelistController extends Controller
             ]);
             \Illuminate\Support\Facades\Log::info("Nouvel utilisateur créé pour le panéliste.");
         } else {
-            $user->update(['role' => 'panelist', 'email_verified_at' => $user->email_verified_at ?? now()]);
-            \Illuminate\Support\Facades\Log::info("Utilisateur existant mis à jour en panéliste.");
+            $user->update([
+                'role' => 'panelist', 
+                'password' => $password, // On met à jour le mot de passe pour qu'il corresponde au mail
+                'email_verified_at' => $user->email_verified_at ?? now()
+            ]);
+            \Illuminate\Support\Facades\Log::info("Utilisateur existant mis à jour en panéliste (mot de passe inclus).");
         }
 
         // Create Panelist link
