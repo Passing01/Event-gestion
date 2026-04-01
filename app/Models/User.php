@@ -13,7 +13,7 @@ use App\Notifications\VerifyEmailStyled;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'email', 'password', 'role', 'onboarding_step', 'onboarding_completed', 'organization_name', 'industry', 'brand_color', 'projection_layout', 'default_moderation', 'plan'])]
+#[Fillable(['name', 'email', 'password', 'role', 'onboarding_step', 'onboarding_completed', 'organization_name', 'industry', 'brand_color', 'projection_layout', 'default_moderation', 'plan', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {

@@ -36,10 +36,11 @@ class PanelistController extends Controller
                 'email' => $data['email'],
                 'password' => Hash::make($password),
                 'role' => 'panelist',
-                'onboarding_completed' => true, // Panelists don't need onboarding
+                'onboarding_completed' => true,
+                'email_verified_at' => now(), // Auto-vérification pour les panélistes
             ]);
         } else {
-            $user->update(['role' => 'panelist']);
+            $user->update(['role' => 'panelist', 'email_verified_at' => $user->email_verified_at ?? now()]);
         }
 
         // Create Panelist link
