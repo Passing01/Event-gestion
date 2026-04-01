@@ -117,7 +117,7 @@ class PanelistController extends Controller
             ->firstOrFail();
 
         $questions = $event->questions()
-            ->where('status', 'approved')
+            ->whereIn('status', ['approved', 'answering', 'answered'])
             ->with(['replies'])
             ->orderBy('created_at', 'desc')
             ->get();
