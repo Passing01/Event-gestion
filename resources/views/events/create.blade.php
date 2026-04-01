@@ -26,6 +26,15 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label" for="description">Description (pour l'IA)</label>
+                <textarea id="description" name="description" class="form-input" rows="4"
+                          placeholder="Décrivez le thème et les objectifs de l'événement pour aider l'IA à mieux répondre aux questions.">{{ old('description') }}</textarea>
+                @error('description')
+                    <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="form-group">
                 <label class="form-label" for="date">Date de l'événement</label>
                 <input type="date" id="date" name="date" class="form-input"
                        value="{{ old('date') }}"

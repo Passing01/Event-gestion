@@ -109,6 +109,9 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         Route::put('/{id}',            [EventController::class, 'update'])->name('update');
         Route::delete('/{id}',         [EventController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-status', [EventController::class, 'toggleStatus'])->name('toggle-status');
+        
+        // Panelists
+        Route::post('/{id}/panelists', [PanelistController::class, 'store'])->name('panelists.store');
     });
 
     // Console de Modération
@@ -136,4 +139,14 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
     // Abonnement
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
+});
+
+// ──────────────────────────────────────────────
+//  Routes Panéliste
+// ──────────────────────────────────────────────
+Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->group(function () {
+    Route::post('/join', [PanelistController::class, 'join'])->name('join');
+    Route::get('/e/{code}', [PanelistController::class, 'dashboard'])->name('dashboard');
+    Route::post('/e/{code}/upload', [PanelistController::class, 'upload'])->name('upload');
+    Route::post('/e/{code}/ai-suggest', [PanelistController::class, 'aiSuggest'])->name('ai-suggest');
 });

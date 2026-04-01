@@ -76,9 +76,14 @@
             <h2 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Posez votre question</h2>
             <form action="{{ route('participant.ask', $event->code) }}" method="POST">
                 @csrf
-                <textarea name="content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" required maxlength="200"></textarea>
+                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" required maxlength="200"></textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 200 caractères</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button type="button" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="startVoiceRecording()">
+                            🎤 Vocal
+                        </button>
+                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 200 caractères</span>
+                    </div>
                     <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Envoyer</button>
                 </div>
             </form>
@@ -224,6 +229,33 @@
                 </div>
             `).join('');
         } catch (e) {}
+    }
+
+    function startVoiceRecording() {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
+            return;
+        }
+
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = function() {
+            console.log('Voice recognition started');
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('question-content').value = transcript;
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error', event.error);
+        };
+
+        recognition.start();
     }
 
     setInterval(sendHeartbeat, 15000);

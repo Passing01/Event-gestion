@@ -136,12 +136,6 @@
                         </div>
                         @endforeach
                     </div>
-                    
-                    <form action="{{ route('dashboard.moderator.reply', $q->id) }}" method="POST" style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
-                        @csrf
-                        <input type="text" name="content" class="form-input" placeholder="Votre réponse..." style="font-size: 0.875rem; padding: 0.375rem 0.75rem;" required>
-                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.375rem 1rem; font-size: 0.875rem;">Répondre</button>
-                    </form>
                 </div>
             </div>
             @empty

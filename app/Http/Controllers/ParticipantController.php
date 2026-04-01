@@ -79,7 +79,7 @@ class ParticipantController extends Controller
     /**
      * Poser une question.
      */
-    public function storeQuestion(Request $request, $code)
+    public function storeQuestion(Request $request, $code, \App\Services\GeminiService $gemini)
     {
         $event = Event::where('code', $code)->firstOrFail();
         
@@ -91,11 +91,39 @@ class ParticipantController extends Controller
             'content' => 'required|string|max:200',
         ]);
 
-        $event->questions()->create([
+        $question = $event->questions()->create([
             'pseudo' => session('participant_pseudo'),
             'content' => $data['content'],
             'status' => $event->moderation_enabled ? 'pending' : 'approved',
         ]);
+
+        // AI Check for off-topic
+        if ($event->description) {
+            $prompt = "L'événement a pour thème : " . $event->description . "\n";
+            $prompt .= "La question suivante est-elle hors-sujet ? Réponds par 'OUI' ou 'NON' uniquement.\n";
+            $prompt .= "Question : " . $data['content'];
+
+            $isOffTopic = $gemini->generateResponse($prompt);
+
+            if (trim(strtoupper($isOffTopic)) === 'OUI') {
+                // Auto-reply and mark as answered
+                $replyPrompt = "L'événement a pour thème : " . $event->description . "\n";
+                $replyPrompt .= "La question suivante est hors-sujet : " . $data['content'] . "\n";
+                $replyPrompt .= "Réponds poliment que la question est hors-thème et donne une brève explication si possible.";
+                
+                $aiReply = $gemini->generateResponse($replyPrompt);
+                
+                $question->replies()->create([
+                    'pseudo' => 'Assistant IA',
+                    'content' => $aiReply ?? "Désolé, cette question semble être hors-sujet par rapport au thème de l'événement.",
+                    'is_moderator' => true,
+                ]);
+
+                $question->update(['status' => 'answered']);
+                
+                return back()->with('success', 'Votre question a été traitée par l\'IA car elle semblait hors-sujet.');
+            }
+        }
 
         return back()->with('success', 'Votre question a été envoyée !' . ($event->moderation_enabled ? ' Elle sera visible après modération.' : ''));
     }

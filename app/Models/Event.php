@@ -12,6 +12,7 @@ class Event extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'description',
         'code',
         'date',
         'moderation_enabled',
@@ -28,6 +29,11 @@ class Event extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function panelists(): HasMany
+    {
+        return $this->hasMany(Panelist::class);
     }
 
     public function questions(): HasMany

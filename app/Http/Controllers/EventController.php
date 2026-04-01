@@ -33,6 +33,7 @@ class EventController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'date' => 'required|date|after_or_equal:today',
             'moderation_enabled' => 'boolean',
             'anonymous_allowed' => 'boolean',
@@ -40,6 +41,7 @@ class EventController extends Controller
 
         $event = Auth::user()->events()->create([
             'name' => $data['name'],
+            'description' => $data['description'],
             'date' => $data['date'],
             'code' => strtoupper(Str::random(6)),
             'moderation_enabled' => $request->has('moderation_enabled'),
@@ -55,7 +57,7 @@ class EventController extends Controller
      */
     public function show($id)
     {
-        $event = Auth::user()->events()->withCount('questions')->findOrFail($id);
+        $event = Auth::user()->events()->with(['questions', 'panelists.user'])->withCount('questions')->findOrFail($id);
         return view('events.show', compact('event'));
     }
 
@@ -77,12 +79,14 @@ class EventController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'date' => 'required|date',
             'status' => 'required|string|in:active,archived',
         ]);
 
         $event->update([
             'name' => $data['name'],
+            'description' => $data['description'],
             'date' => $data['date'],
             'status' => $data['status'],
             'moderation_enabled' => $request->has('moderation_enabled'),

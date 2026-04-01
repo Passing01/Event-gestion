@@ -31,12 +31,19 @@ class ProjectionController extends Controller
             ->orderBy('created_at', 'asc')
             ->get(['pseudo', 'status']);
 
+        $allQuestions = $event->questions()
+            ->whereIn('status', ['approved', 'answering', 'answered'])
+            ->with('replies')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return response()->json([
             'id' => $answering ? $answering->id : null,
             'pseudo' => $answering ? $answering->pseudo : null,
             'content' => $answering ? $answering->content : null,
             'status' => $answering ? $answering->status : null,
-            'raised_hands' => $raisedHands
+            'raised_hands' => $raisedHands,
+            'all_questions' => $allQuestions
         ]);
     }
 }
