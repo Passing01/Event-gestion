@@ -29,6 +29,8 @@ class PanelistController extends Controller
         // Check if user exists, or create one
         $user = User::where('email', $data['email'])->first();
         $password = Str::random(10);
+        
+        \Illuminate\Support\Facades\Log::info("Création panéliste - Email: " . $data['email'] . " - Password généré: " . $password);
 
         if (!$user) {
             $user = User::create([
@@ -39,8 +41,10 @@ class PanelistController extends Controller
                 'onboarding_completed' => true,
                 'email_verified_at' => now(), // Auto-vérification pour les panélistes
             ]);
+            \Illuminate\Support\Facades\Log::info("Nouvel utilisateur créé pour le panéliste.");
         } else {
             $user->update(['role' => 'panelist', 'email_verified_at' => $user->email_verified_at ?? now()]);
+            \Illuminate\Support\Facades\Log::info("Utilisateur existant mis à jour en panéliste.");
         }
 
         // Create Panelist link

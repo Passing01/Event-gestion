@@ -26,16 +26,22 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        \Illuminate\Support\Facades\Log::info("Tentative de connexion - Email: " . $credentials['email']);
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             
             $user = Auth::user();
+            \Illuminate\Support\Facades\Log::info("Connexion réussie - User ID: " . $user->id . " - Role: " . $user->role);
+            
             if ($user->role === 'panelist') {
                 return redirect()->route('panelist.join.form');
             }
 
             return redirect()->intended(route('dashboard.index'));
         }
+
+        \Illuminate\Support\Facades\Log::warning("Connexion échouée - Email: " . $credentials['email']);
 
         return back()
             ->withInput($request->only('email'))
