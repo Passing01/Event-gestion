@@ -145,4 +145,45 @@ class PanelistController extends Controller
 
         return response()->json(['suggestion' => $suggestion]);
     }
+
+    /**
+     * Update panelist details.
+     */
+    public function update(Request $request, $panelistId)
+    {
+        $panelist = Panelist::findOrFail($panelistId);
+        $event = $panelist->event;
+
+        if ($event->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'sector' => 'nullable|string|max:255',
+        ]);
+
+        $panelist->user->update(['name' => $data['name']]);
+        $panelist->update(['sector' => $data['sector']]);
+
+        return back()->with('success', 'Panéliste mis à jour.');
+    }
+
+    /**
+     * Remove a panelist.
+     */
+    public function destroy($panelistId)
+    {
+        $panelist = Panelist::findOrFail($panelistId);
+        $event = $panelist->event;
+
+        if ($event->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // We keep the user but remove the panelist link for this event
+        $panelist->delete();
+
+        return back()->with('success', 'Panéliste retiré de l\'événement.');
+    }
 }

@@ -113,6 +113,8 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         
         // Panelists
         Route::post('/{id}/panelists', [PanelistController::class, 'store'])->name('panelists.store');
+        Route::put('/panelists/{panelistId}', [PanelistController::class, 'update'])->name('panelists.update');
+        Route::delete('/panelists/{panelistId}', [PanelistController::class, 'destroy'])->name('panelists.destroy');
     });
 
     // Console de Modération
