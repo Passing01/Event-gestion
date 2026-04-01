@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\OnboardingController;
 use Illuminate\Support\Facades\Artisan;
 
-Route::get('/linkstorage', function () {
+Route::get('/symlink', function () {
     Artisan::call('storage:link');
     return 'Le lien symbolique a été créé avec succès !';
 });
