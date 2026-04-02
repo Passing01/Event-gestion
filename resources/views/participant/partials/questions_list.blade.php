@@ -14,6 +14,13 @@
                     <span style="font-size: 10px; color: var(--muted-foreground);">{{ $q->created_at->diffForHumans() }}</span>
                 </div>
                 <p style="font-size: 0.95rem; font-weight: 500; line-height: 1.4; margin: 0;">{{ $q->content }}</p>
+                @if($q->audio_path)
+                    <div style="margin-top: 0.5rem;">
+                        <audio controls style="height: 30px; max-width: 100%;">
+                            <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
+                        </audio>
+                    </div>
+                @endif
             </div>
             
             <div style="flex-shrink: 0;">
@@ -40,6 +47,13 @@
                         @endif
                     </div>
                     <p>{{ $reply->content }}</p>
+                    @if($reply->audio_path)
+                        <div style="margin-top: 0.5rem;">
+                            <audio controls style="height: 25px; max-width: 100%;">
+                                <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
+                            </audio>
+                        </div>
+                    @endif
                 </div>
                 @endforeach
             </div>
