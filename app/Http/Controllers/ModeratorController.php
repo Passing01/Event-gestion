@@ -42,6 +42,7 @@ class ModeratorController extends Controller
     {
         $question = Question::findOrFail($id);
         $event = $question->event;
+        $newStatus = $request->status;
         
         // Vérifier que l'utilisateur est soit le propriétaire, soit un panéliste
         $isOwner = $event->user_id === Auth::id();
@@ -51,18 +52,52 @@ class ModeratorController extends Controller
             abort(403);
         }
 
-        $data = $request->validate([
-            'status' => 'required|string|in:pending,approved,rejected,archived,answering,answered',
-        ]);
+        // Si on approuve une question qui était rejetée par l'IA (doublon/hors-sujet), on supprime la réponse auto de l'IA
+        if ($newStatus === 'approved' && $question->status === 'rejected') {
+            $question->replies()->where('pseudo', 'Assistant Modérateur')->delete();
+        }
 
         // Si on passe une question en "answering", on remet les autres questions "answering" en "approved"
-        if ($data['status'] === 'answering') {
+        if ($newStatus === 'answering') {
             $question->event->questions()->where('status', 'answering')->update(['status' => 'approved']);
         }
 
-        $question->update(['status' => $data['status']]);
+        $question->update(['status' => $newStatus]);
 
         return back()->with('success', 'Statut mis à jour.');
+    }
+
+    /**
+     * Fetch questions HTML partials for polling.
+     */
+    public function fetchQuestionsPartial($id)
+    {
+        $event = Event::findOrFail($id);
+        
+        $allQuestions = $event->questions()
+            ->with(['replies'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filteredByAI = $allQuestions->filter(function($q) {
+            return $q->status == 'rejected' && $q->replies->contains('pseudo', 'Assistant Modérateur');
+        });
+
+        $questions = $allQuestions->reject(function($q) use ($filteredByAI) {
+            return $filteredByAI->contains('id', $q->id);
+        });
+
+        return response()->json([
+            'main_html' => view('moderator.partials.questions_list', compact('questions'))->render(),
+            'filtered_html' => view('moderator.partials.filtered_list', compact('filteredByAI'))->render(),
+            'counts' => [
+                'active' => $questions->count(),
+                'filtered' => $filteredByAI->count(),
+                'pending' => $questions->where('status', 'pending')->count(),
+                'answered' => $questions->where('status', 'answered')->count(),
+                'total' => $allQuestions->count()
+            ]
+        ]);
     }
 
     /**

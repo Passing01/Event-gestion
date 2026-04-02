@@ -126,8 +126,8 @@ class PanelistController extends Controller
             return $q->status == 'rejected' && $q->replies->contains('pseudo', 'Assistant Modérateur');
         });
 
-        // Questions normales pour le panéliste (approuvées, en cours, répondues)
-        $questions = $allQuestions->whereIn('status', ['approved', 'answering', 'answered'])->reject(function($q) use ($filteredByAI) {
+        // Questions normales pour le panéliste (y compris celles en attente)
+        $questions = $allQuestions->reject(function($q) use ($filteredByAI) {
             return $filteredByAI->contains('id', $q->id);
         });
 
@@ -150,7 +150,7 @@ class PanelistController extends Controller
             return $q->status == 'rejected' && $q->replies->contains('pseudo', 'Assistant Modérateur');
         });
 
-        $questions = $allQuestions->whereIn('status', ['approved', 'answering', 'answered'])->reject(function($q) use ($filteredByAI) {
+        $questions = $allQuestions->reject(function($q) use ($filteredByAI) {
             return $filteredByAI->contains('id', $q->id);
         });
 
