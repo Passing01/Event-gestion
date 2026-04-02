@@ -88,7 +88,7 @@ class ParticipantController extends Controller
         }
 
         $data = $request->validate([
-            'content' => 'nullable|string|max:200',
+            'content' => 'nullable|string|max:5000',
             'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120', // 5MB max
         ]);
 
@@ -172,7 +172,7 @@ class ParticipantController extends Controller
         }
 
         $data = $request->validate([
-            'content' => 'required|string|max:200',
+            'content' => 'required|string|max:5000',
         ]);
 
         $question->replies()->create([

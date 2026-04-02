@@ -76,7 +76,7 @@
             <h2 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Posez votre question</h2>
             <form id="question-form" action="{{ route('participant.ask', $event->code) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" maxlength="200"></textarea>
+                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" maxlength="5000">{{ old('content') }}</textarea>
                 <input type="file" name="audio" id="audio-input" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -87,7 +87,7 @@
                         <button type="button" id="voice-btn" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording()">
                             <span id="voice-icon">🎤</span> <span id="voice-text">Vocal</span>
                         </button>
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 200 car.</span>
+                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 5000 car.</span>
                     </div>
                     <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Envoyer</button>
                 </div>
@@ -171,7 +171,7 @@
                         @if(session('participant_pseudo'))
                         <form action="{{ route('participant.reply', $q->id) }}" method="POST" style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
                             @csrf
-                            <input type="text" name="content" class="form-input" placeholder="Répondre..." style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" required maxlength="200">
+                            <input type="text" name="content" class="form-input" placeholder="Répondre..." style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" required maxlength="5000">
                             <button type="submit" class="btn-brand" style="width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem;">Envoyer</button>
                         </form>
                         @endif

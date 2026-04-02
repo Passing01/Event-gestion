@@ -113,7 +113,7 @@
                         <form action="{{ route('dashboard.moderator.reply', $question->id) }}" method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
                             @csrf
                             <div style="display: flex; gap: 0.5rem; flex-direction: column;">
-                                <textarea name="content" id="ai-response-{{ $question->id }}" class="form-input" rows="2" placeholder="Votre réponse..." style="font-size: 0.875rem;"></textarea>
+                                <textarea name="content" id="ai-response-{{ $question->id }}" class="form-input" rows="3" placeholder="Votre réponse..." style="font-size: 0.875rem;" maxlength="5000"></textarea>
                                 <input type="file" name="audio" id="audio-input-{{ $question->id }}" style="display: none;">
                                 
                                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">

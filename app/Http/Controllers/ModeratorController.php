@@ -62,7 +62,7 @@ class ModeratorController extends Controller
         }
 
         $data = $request->validate([
-            'content' => 'required|string|max:500',
+            'content' => 'required|string|max:5000',
         ]);
 
         $question->update(['content' => $data['content']]);
@@ -89,7 +89,7 @@ class ModeratorController extends Controller
 
         try {
             $data = $request->validate([
-                'content' => 'nullable|string|max:500',
+                'content' => 'nullable|string|max:5000',
                 'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
