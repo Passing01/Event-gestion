@@ -47,7 +47,6 @@
                 @include('panelist.partials.questions_list', ['questions' => $questions])
             </div>
         </div>
-        </div>
 
         <!-- Sidebar Panéliste -->
         <div class="space-y-5">

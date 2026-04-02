@@ -1,57 +1,78 @@
-<div class="space-y-4">
-    @forelse($questions as $q)
-    <div class="card" id="q-{{ $q->id }}" style="border-left: 4px solid {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'approved' ? '#059669' : ($q->status == 'answered' ? '#6b7280' : 'var(--border)')) }};">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-            <div style="flex: 1;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <span class="badge" style="background: {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'answered' ? '#f3f4f6' : '#ecfdf5') }}; color: {{ $q->status == 'answering' ? '#fff' : ($q->status == 'answered' ? '#6b7280' : '#059669') }};">
-                        {{ strtoupper($q->status == 'answering' ? 'en cours' : ($q->status == 'answered' ? 'répondu' : 'approuvé')) }}
-                    </span>
-                    <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $q->votes_count }} votes</span>
+@forelse($questions as $question)
+    <div class="question-card" style="background: var(--muted); padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 2rem; height: 2rem; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">
+                    {{ substr($question->pseudo ?? 'A', 0, 1) }}
                 </div>
-                <p style="font-size: 1.125rem; font-weight: 500; color: var(--foreground);">{{ $q->content }}</p>
-                
-                @if($q->audio_path)
-                    <div style="margin-top: 0.75rem;">
-                        <audio controls style="height: 35px; width: 100%; max-width: 300px;">
-                            <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
-                        </audio>
-                    </div>
-                @endif
+                <div>
+                    <p style="font-weight: 600; font-size: 0.875rem;">{{ $question->pseudo ?? 'Anonyme' }}</p>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $question->created_at->diffForHumans() }}</p>
+                </div>
             </div>
-
-            <div style="display: flex; gap: 0.5rem;">
-                <button onclick="getAISuggestion('{{ $q->id }}')" class="btn-brand" style="background: var(--muted); color: var(--brand); padding: 0.5rem; border: 1px solid var(--brand); font-size: 0.75rem;" title="Demander à l'IA">
-                    ✨ IA
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="suggestAI('{{ $question->id }}', this)">
+                    💡 Suggestion IA
                 </button>
-                <button onclick="openReplyModal('{{ $q->id }}', '{{ addslashes($q->content) }}')" class="btn-brand" style="padding: 0.5rem 1rem; font-size: 0.75rem;">
-                    Répondre
-                </button>
+                <span class="badge" style="font-size: 0.625rem; padding: 0.25rem 0.5rem; border-radius: 9999px; background: {{ $question->status === 'pending' ? '#f59e0b' : ($question->status === 'approved' ? '#10b981' : ($question->status === 'answering' ? '#3b82f6' : '#6b7280')) }}; color: white;">
+                    {{ strtoupper($question->status) }}
+                </span>
             </div>
         </div>
-
-        {{-- Réponses existantes --}}
-        @if($q->replies->count() > 0)
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-            <div class="space-y-3">
-                @foreach($q->replies as $reply)
-                <div style="background: var(--muted); padding: 0.75rem; border-radius: 0.75rem; font-size: 0.875rem;">
+        <p style="font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">{{ $question->content }}</p>
+        
+        @if($question->audio_path)
+            <div style="margin-bottom: 1rem;">
+                <audio controls style="height: 30px; max-width: 100%;">
+                    <source src="{{ asset('storage/' . $question->audio_path) }}" type="audio/webm">
+                </audio>
+            </div>
+        @endif
+        
+        <!-- Réponses existantes -->
+        <div id="replies-{{ $question->id }}" class="space-y-2" style="margin-left: 1rem; border-left: 2px solid var(--border); padding-left: 1rem;">
+            @foreach($question->replies as $reply)
+                <div style="font-size: 0.875rem; background: white; padding: 0.75rem; border-radius: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-weight: 700;">{{ $reply->pseudo }}</span>
+                        <span style="font-weight: 700;">{{ $reply->pseudo ?? 'Panéliste' }}</span>
                         @if($reply->is_moderator)
-                        <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">PANÉLISTE</span>
+                            <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">PANÉLISTE</span>
                         @endif
                     </div>
-                    <p style="color: var(--muted-foreground);">{{ $reply->content }}</p>
+                    <p>{{ $reply->content }}</p>
+                    @if($reply->audio_path)
+                        <div style="margin-top: 0.5rem;">
+                            <audio controls style="height: 25px; max-width: 100%;">
+                                <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
+                            </audio>
+                        </div>
+                    @endif
                 </div>
-                @endforeach
-            </div>
+            @endforeach
         </div>
-        @endif
+
+        <!-- Formulaire de réponse -->
+        <form action="{{ route('dashboard.moderator.reply', $question->id) }}" method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
+            @csrf
+            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                <textarea name="content" id="ai-response-{{ $question->id }}" class="form-input" rows="3" placeholder="Votre réponse..." style="font-size: 0.875rem;" maxlength="5000"></textarea>
+                <input type="file" name="audio" id="audio-input-{{ $question->id }}" style="display: none;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <div id="voice-status-{{ $question->id }}" style="display: none; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                            <span style="width: 0.4rem; height: 0.4rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                            <span id="voice-timer-{{ $question->id }}">0s</span>
+                        </div>
+                        <button type="button" id="voice-btn-{{ $question->id }}" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording('{{ $question->id }}')">
+                            <span id="voice-icon-{{ $question->id }}">🎤</span> <span id="voice-text-{{ $question->id }}">Vocal</span>
+                        </button>
+                    </div>
+                    <button type="submit" id="submit-btn-{{ $question->id }}" class="btn-brand" style="width: auto; padding: 0.4rem 1.5rem; font-size: 0.875rem;">Répondre</button>
+                </div>
+            </div>
+        </form>
     </div>
-    @empty
-    <div style="text-align: center; padding: 4rem 2rem; background: #fff; border-radius: 1rem; border: 2px dashed var(--border);">
-        <p style="color: var(--muted-foreground); font-size: 1rem;">En attente de questions approuvées par les modérateurs...</p>
-    </div>
-    @endforelse
-</div>
+@empty
+    <p style="text-align: center; color: var(--muted-foreground); padding: 2rem;">Aucune question pour le moment.</p>
+@endforelse
