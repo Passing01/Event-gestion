@@ -116,13 +116,53 @@ class PanelistController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        $questions = $event->questions()
-            ->whereIn('status', ['pending', 'approved', 'answering', 'answered'])
+        $allQuestions = $event->questions()
             ->with(['replies'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('panelist.dashboard', compact('event', 'panelist', 'questions'));
+        // Séparer les questions filtrées (rejetées par l'Assistant Modérateur)
+        $filteredByAI = $allQuestions->filter(function($q) {
+            return $q->status == 'rejected' && $q->replies->contains('pseudo', 'Assistant Modérateur');
+        });
+
+        // Questions normales pour le panéliste (approuvées, en cours, répondues)
+        $questions = $allQuestions->whereIn('status', ['approved', 'answering', 'answered'])->reject(function($q) use ($filteredByAI) {
+            return $filteredByAI->contains('id', $q->id);
+        });
+
+        return view('panelist.dashboard', compact('event', 'panelist', 'questions', 'filteredByAI'));
+    }
+
+    /**
+     * Fetch questions HTML partials for polling (Panelist).
+     */
+    public function fetchQuestionsPartial($id)
+    {
+        $event = Event::findOrFail($id);
+        
+        $allQuestions = $event->questions()
+            ->with(['replies'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filteredByAI = $allQuestions->filter(function($q) {
+            return $q->status == 'rejected' && $q->replies->contains('pseudo', 'Assistant Modérateur');
+        });
+
+        $questions = $allQuestions->whereIn('status', ['approved', 'answering', 'answered'])->reject(function($q) use ($filteredByAI) {
+            return $filteredByAI->contains('id', $q->id);
+        });
+
+        return response()->json([
+            'main_html' => view('panelist.partials.questions_list', compact('questions'))->render(),
+            'filtered_html' => view('panelist.partials.filtered_list', compact('filteredByAI'))->render(),
+            'counts' => [
+                'active' => $questions->count(),
+                'filtered' => $filteredByAI->count(),
+                'total' => $questions->count() + $filteredByAI->count()
+            ]
+        ]);
     }
 
     /**

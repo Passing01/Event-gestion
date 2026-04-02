@@ -39,32 +39,51 @@
         </div>
     @endif
 
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-        <!-- Liste des Questions -->
-        <div class="card">
-            <h2 class="section-title">Questions du Public</h2>
-            <div id="questions-container" class="space-y-4" style="margin-top: 1rem;">
-                @include('panelist.partials.questions_list', ['questions' => $questions])
-            </div>
-        </div>
+    {{-- Tabs de navigation --}}
+    <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;">
+        <button onclick="switchTab('active')" id="tab-btn-active" class="tab-btn active-tab" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 500; font-size: 0.875rem;">
+            🎯 Flux Actif ({{ $questions->count() }})
+        </button>
+        <button onclick="switchTab('filtered')" id="tab-btn-filtered" class="tab-btn" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 500; font-size: 0.875rem; color: var(--muted-foreground);">
+            🤖 Filtrées par l'IA ({{ $filteredByAI->count() }})
+        </button>
+    </div>
 
-        <!-- Sidebar Panéliste -->
-        <div class="space-y-5">
+    <div id="tab-content-active" class="tab-content">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+            <!-- Liste des Questions -->
             <div class="card">
-                <h2 class="section-title">Thème de l'événement</h2>
-                <p style="font-size: 0.875rem; color: var(--muted-foreground); line-height: 1.6;">
-                    {{ $event->description ?? 'Aucune description fournie.' }}
-                </p>
-            </div>
-            
-            <div class="card">
-                <h2 class="section-title">Actions Rapides</h2>
-                <div style="display: grid; gap: 0.75rem;">
-                    <a href="{{ route('projection.index', $event->code) }}" target="_blank" class="btn-brand" style="background: var(--muted); color: var(--foreground); text-align: center;">
-                        Voir la Projection
-                    </a>
+                <h2 class="section-title">Questions du Public</h2>
+                <div id="questions-container" class="space-y-4" style="margin-top: 1rem;">
+                    @include('panelist.partials.questions_list', ['questions' => $questions])
                 </div>
             </div>
+
+            <!-- Sidebar Panéliste -->
+            <div class="space-y-5">
+                <div class="card">
+                    <h2 class="section-title">Thème de l'événement</h2>
+                    <p style="font-size: 0.875rem; color: var(--muted-foreground); line-height: 1.6;">
+                        {{ $event->description ?? 'Aucune description fournie.' }}
+                    </p>
+                </div>
+                
+                <div class="card">
+                    <h2 class="section-title">Actions Rapides</h2>
+                    <div style="display: grid; gap: 0.75rem;">
+                        <a href="{{ route('projection.index', $event->code) }}" target="_blank" class="btn-brand" style="background: var(--muted); color: var(--foreground); text-align: center;">
+                            Voir la Projection
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Onglet Filtré par l'IA --}}
+    <div id="tab-content-filtered" class="tab-content" style="display:none;">
+        <div id="questions-container-filtered">
+            @include('panelist.partials.filtered_list', ['filteredByAI' => $filteredByAI])
         </div>
     </div>
 </div>
@@ -279,6 +298,21 @@
     let isInteracting = false;
     const eventId = '{{ $event->id }}';
 
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--muted-foreground)';
+            b.style.borderBottom = 'none';
+            b.classList.remove('active-tab');
+        });
+
+        document.getElementById('tab-content-' + tab).style.display = 'block';
+        const btn = document.getElementById('tab-btn-' + tab);
+        btn.style.color = 'var(--foreground)';
+        btn.style.borderBottom = '2px solid var(--brand)';
+        btn.classList.add('active-tab');
+    }
+
     async function fetchQuestions() {
         // Détecter si un modal est ouvert
         const isModalOpen = document.getElementById('upload-modal').style.display === 'flex' || 
@@ -293,7 +327,19 @@
         try {
             const response = await fetch(`/dashboard/${eventId}/panelist/questions-fetch`);
             const data = await response.json();
-            document.getElementById('questions-container').innerHTML = data.html;
+            
+            // Mise à jour des containers
+            if (document.getElementById('questions-container')) {
+                document.getElementById('questions-container').innerHTML = data.main_html;
+            }
+            if (document.getElementById('questions-container-filtered')) {
+                document.getElementById('questions-container-filtered').innerHTML = data.filtered_html;
+            }
+
+            // Mise à jour des badges d'onglets
+            document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;
+            document.getElementById('tab-btn-filtered').textContent = `🤖 Filtrées par l'IA (${data.counts.filtered})`;
+
         } catch (e) {
             console.error("Polling error:", e);
         }
@@ -302,6 +348,12 @@
     // Lancer le polling
     setInterval(fetchQuestions, 5000);
 </script>
-@endpush
 
+<style>
+.active-tab {
+    border-bottom: 2px solid var(--brand) !important;
+    color: var(--foreground) !important;
+}
+</style>
+@endpush
 @endsection
