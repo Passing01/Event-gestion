@@ -74,11 +74,14 @@
 <script>
 (function() {
     // ─── Configuration EmailJS ───────────────────────────────
-    // Remplacez ces valeurs par celles de votre compte EmailJS
-    const EMAILJS_PUBLIC_KEY  = '{{ env("EMAILJS_PUBLIC_KEY", "") }}';
-    const EMAILJS_SERVICE_ID  = '{{ env("EMAILJS_SERVICE_ID", "") }}';
-    const EMAILJS_TEMPLATE_ID = '{{ env("EMAILJS_RESET_TEMPLATE_ID", "") }}';
+    // On utilise les noms exacts avec le préfixe VITE_
+    const EMAILJS_PUBLIC_KEY  = '{{ env("VITE_EMAILJS_PUBLIC_KEY", "") }}';
+    const EMAILJS_SERVICE_ID  = '{{ env("VITE_EMAILJS_SERVICE_ID", "") }}';
+    const EMAILJS_TEMPLATE_ID = '{{ env("VITE_EMAILJS_RESET_TEMPLATE_ID", "") }}';
     // ─────────────────────────────────────────────────────────
+
+    // Log pour vérification (optionnel, à retirer plus tard)
+    console.log('EmailJS Public Key:', EMAILJS_PUBLIC_KEY ? 'OK' : 'VIDE');
 
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
