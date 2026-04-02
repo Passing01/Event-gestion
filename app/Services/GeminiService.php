@@ -62,20 +62,24 @@ class GeminiService
     /**
      * Analyse une question pour détecter les doublons ou le hors-sujet.
      */
-    public function moderateQuestion($content, $eventDescription, $existingQuestions = [])
+    public function moderateQuestion($content, $event)
     {
-        $prompt = "Tu es un modérateur IA pour un événement interactif.\n";
-        $prompt .= "Thème de l'événement : " . $eventDescription . "\n\n";
+        $existingQuestions = $event->questions()
+            ->whereIn('status', ['pending', 'approved', 'answering', 'answered'])
+            ->pluck('content')
+            ->implode("\n- ");
+
+        $prompt = "Vous êtes un Assistant Modérateur pour un événement intitulé '{$event->name}'.
+        Le thème de l'événement est : {$event->description}.
         
-        if (!empty($existingQuestions)) {
-            $prompt .= "Voici les questions déjà posées et répondues :\n";
-            foreach ($existingQuestions as $q) {
-                $prompt .= "- Question : " . $q->content . " | Réponse : " . ($q->replies->first()->content ?? 'En attente') . "\n";
-            }
-            $prompt .= "\n";
-        }
+        Votre rôle est de filtrer les questions des participants selon deux critères :
+        1. DOUBLON : Si la question a déjà été posée (même si la formulation est un peu différente).
+        2. HORS-SUJET : Si la question n'a aucun rapport avec le thème de l'événement.
         
-        $prompt .= "Nouvelle question posée : \"" . $content . "\"\n\n";
+        Voici les questions déjà présentes sur cet événement :
+        - {$existingQuestions}
+        
+        Nouvelle question posée : \"" . $content . "\"\n\n";
         
         $prompt .= "Analyse cette question selon 3 critères :\n";
         $prompt .= "1. Est-elle hors-sujet par rapport au thème ?\n";

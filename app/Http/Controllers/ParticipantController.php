@@ -103,13 +103,7 @@ class ParticipantController extends Controller
 
         // AI Auto-Moderation (only if content exists)
         if ($data['content'] && $event->description) {
-            // Récupérer les questions déjà répondues pour détection de doublons
-            $existingQuestions = $event->questions()
-                ->where('status', 'answered')
-                ->with(['replies' => function($q) { $q->where('is_moderator', true)->orWhere('pseudo', '!=', 'Assistant IA'); }])
-                ->get();
-
-            $moderation = $gemini->moderateQuestion($data['content'], $event->description, $existingQuestions);
+            $moderation = $gemini->moderateQuestion($data['content'], $event);
 
             if ($moderation['status'] !== 'ok') {
                 // Créer la question quand même, mais en mode "rejected" (filtrée par IA)
