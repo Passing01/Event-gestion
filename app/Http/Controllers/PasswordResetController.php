@@ -55,12 +55,23 @@ class PasswordResetController extends Controller
             'email' => $request->email,
         ]);
 
-        // Passer à la vue qui enverra via EmailJS
-        return view('auth.forgot-password-send', [
-            'resetUrl'  => $resetUrl,
-            'userEmail' => $request->email,
-            'userName'  => $user->name,
-        ]);
+        // Envoyer le mail via Laravel (SMTP Brevo)
+        try {
+            \Illuminate\Support\Facades\Mail::send('emails.reset-password', [
+                'resetUrl' => $resetUrl,
+                'userName' => $user->name,
+                'appName'  => config('app.name', 'Event Q&A'),
+            ], function($message) use ($user) {
+                $message->to($user->email, $user->name)
+                        ->subject('[' . config('app.name', 'Event Q&A') . '] Réinitialisation de votre mot de passe');
+            });
+
+            return redirect()->route('password.request')
+                ->with('status', 'Un lien de réinitialisation vous a été envoyé par e-mail.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erreur envoi mail reset: ' . $e->getMessage());
+            return back()->with('error', 'Désolé, une erreur est survenue lors de l\'envoi du mail. Veuillez réessayer.');
+        }
     }
 
     /**

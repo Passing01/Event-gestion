@@ -34,12 +34,12 @@
             <tr>
                 <td class="content">
                     <h1>Réinitialisation de votre mot de passe</h1>
-                    <p>Bonjour <strong>{{to_name}}</strong>,</p>
-                    <p>Nous avons reçu une demande de réinitialisation du mot de passe associé à votre compte <strong>{{app_name}}</strong>.</p>
+                    <p>Bonjour <strong>{{ $userName }}</strong>,</p>
+                    <p>Nous avons reçu une demande de réinitialisation du mot de passe associé à votre compte <strong>{{ $appName }}</strong>.</p>
                     <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
 
                     <div class="button-container">
-                        <a href="{{reset_url}}" class="button">Réinitialiser mon mot de passe</a>
+                        <a href="{{ $resetUrl }}" class="button">Réinitialiser mon mot de passe</a>
                     </div>
 
                     <div class="warning-box">
@@ -47,7 +47,7 @@
                     </div>
 
                     <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
-                    <p class="small" style="word-break: break-all; color: #7c3aed;">{{reset_url}}</p>
+                    <p class="small" style="word-break: break-all; color: #7c3aed;">{{ $resetUrl }}</p>
 
                     <div class="divider"></div>
 
