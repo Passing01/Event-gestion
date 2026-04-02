@@ -158,6 +158,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     // Nouvelles routes pour le temps réel (Polling)
     Route::get('/{id}/moderator/questions-fetch', [ModeratorController::class, 'fetchQuestionsPartial'])->name('dashboard.moderator.fetch');
     Route::get('/{id}/panelist/questions-fetch', [PanelistController::class, 'fetchQuestionsPartial'])->name('dashboard.panelist.fetch');
+    Route::get('/{id}/participant/questions-fetch', [ParticipantController::class, 'fetchQuestionsPartial'])->name('dashboard.participant.fetch');
 });
 
 // ──────────────────────────────────────────────

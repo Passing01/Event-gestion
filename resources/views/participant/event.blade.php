@@ -98,92 +98,13 @@
         <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2 style="font-size: 1rem; font-weight: 600;">Questions du public</h2>
-                <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $questions->count() }} questions visibles</span>
+                <span id="questions-count-badge" style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $questions->count() }} questions visibles</span>
             </div>
 
-            <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-                @forelse($questions as $q)
-                <div class="card" style="padding: 1rem; {{ $q->status == 'answering' ? 'border: 2px solid var(--brand);' : '' }}">
-                    @if($q->status == 'answering')
-                        <div style="font-size: 0.625rem; font-weight: 700; color: var(--brand); text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
-                            <span style="width: 0.5rem; height: 0.5rem; background: var(--brand); border-radius: 9999px; display: inline-block; animation: pulse 1.5s infinite;"></span>
-                            En cours de réponse
-                        </div>
-                    @endif
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="flex: 1; padding-right: 1rem;">
-                            @if($q->content)
-                                <p style="font-size: 0.875rem; margin-bottom: 0.5rem; line-height: 1.4;">{{ $q->content }}</p>
-                            @endif
-                            
-                            @if($q->audio_path)
-                                <div style="margin-bottom: 0.5rem;">
-                                    <audio controls style="height: 30px; max-width: 100%;">
-                                        <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
-                                        Votre navigateur ne supporte pas l'élément audio.
-                                    </audio>
-                                </div>
-                            @endif
-
-                            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground);">
-                                <span>Par <strong>{{ $q->pseudo }}</strong></span>
-                                <span>•</span>
-                                <span>{{ $q->created_at->diffForHumans() }}</span>
-                            </div>
-                        </div>
-                        <form action="{{ route('participant.vote', $q->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" style="background: {{ in_array($q->id, session('voted_questions', [])) ? 'var(--brand)' : 'var(--muted)' }}; color: {{ in_array($q->id, session('voted_questions', [])) ? '#fff' : 'var(--foreground)' }}; border: none; border-radius: 0.5rem; padding: 0.375rem 0.625rem; display: flex; align-items: center; gap: 0.375rem; cursor: pointer; transition: all 0.2s;">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1rem; height: 1rem;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                                </svg>
-                                <span style="font-weight: 600;">{{ $q->votes_count }}</span>
-                            </button>
-                        </form>
-                    </div>
-
-                    {{-- Réponses --}}
-                    @if($q->replies->count() > 0 || session('participant_pseudo'))
-                    <div style="margin-top: 1rem; padding-left: 1rem; border-left: 2px solid var(--muted);">
-                        <div style="display: grid; gap: 0.5rem;">
-                            @foreach($q->replies as $reply)
-                            <div style="background: var(--muted); padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                    <span style="font-weight: 600;">{{ $reply->pseudo }}</span>
-                                    @if($reply->is_moderator)
-                                    <span style="font-size: 0.625rem; background: var(--brand); color: #fff; padding: 0.125rem 0.375rem; border-radius: 9999px;">MODÉRATEUR</span>
-                                    @endif
-                                    <span style="font-size: 0.625rem; color: var(--muted-foreground);">{{ $reply->created_at->diffForHumans() }}</span>
-                                </div>
-                                <p>{{ $reply->content }}</p>
-                                @if($reply->audio_path)
-                                    <div style="margin-top: 0.5rem;">
-                                        <audio controls style="height: 25px; max-width: 100%;">
-                                            <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
-                                        </audio>
-                                    </div>
-                                @endif
-
-                            </div>
-                            @endforeach
-                        </div>
-                        
-                        @if(session('participant_pseudo'))
-                        <form action="{{ route('participant.reply', $q->id) }}" method="POST" style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
-                            @csrf
-                            <input type="text" name="content" class="form-input" placeholder="Répondre..." style="font-size: 0.75rem; padding: 0.25rem 0.5rem;" required maxlength="5000">
-                            <button type="submit" class="btn-brand" style="width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem;">Envoyer</button>
-                        </form>
-                        @endif
-                    </div>
-                    @endif
-                </div>
-                @empty
-                <div style="text-align: center; padding: 2rem; color: var(--muted-foreground); font-size: 0.875rem;">
-                    Aucune question pour le moment. Soyez le premier à en poser une !
-                </div>
-                @endforelse
+            <div id="questions-container">
+                @include('participant.partials.questions_list', ['questions' => $questions])
             </div>
+        </div>
         </div>
 
         {{-- Participants List --}}
@@ -351,10 +272,38 @@
         }
     });
 
+    // --- TEMPS RÉEL : Questions ---
+    async function fetchQuestions() {
+        // Détecter si on est en train de taper dans une réponse ou une question
+        const activeElement = document.activeElement;
+        const isTyping = activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT');
+        
+        if (isTyping || isRecording) return;
+
+        try {
+            const response = await fetch(`/e/${eventCode}/participant/questions-fetch`);
+            const data = await response.json();
+            
+            if (document.getElementById('questions-container')) {
+                document.getElementById('questions-container').innerHTML = data.html;
+            }
+        } catch (e) {}
+    }
+
+    function toggleReplyForm(id) {
+        const form = document.getElementById('reply-form-' + id);
+        form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+        if (form.style.display === 'flex') {
+            form.querySelector('input').focus();
+        }
+    }
+
     setInterval(sendHeartbeat, 15000);
     setInterval(fetchParticipants, 5000);
+    setInterval(fetchQuestions, 5000);
     sendHeartbeat();
     fetchParticipants();
+    fetchQuestions();
 </script>
 
 <style>

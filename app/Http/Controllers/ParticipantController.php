@@ -60,12 +60,13 @@ class ParticipantController extends Controller
         $pseudo = session('participant_pseudo');
 
         // Récupérer les questions approuvées, en cours, répondues 
-        // OU les questions en attente de l'utilisateur actuel
+        // OU les questions en attente/rejetées de l'utilisateur actuel
         $questions = $event->questions()
+            ->with(['replies'])
             ->where(function($query) use ($pseudo) {
                 $query->whereIn('status', ['approved', 'answering', 'answered'])
                       ->orWhere(function($q) use ($pseudo) {
-                          $q->where('status', 'pending')
+                          $q->whereIn('status', ['pending', 'rejected'])
                             ->where('pseudo', $pseudo);
                       });
             })
@@ -74,6 +75,34 @@ class ParticipantController extends Controller
             ->get();
 
         return view('participant.event', compact('event', 'questions'));
+    }
+
+    /**
+     * Fetch questions HTML partials for polling (Participant).
+     */
+    public function fetchQuestionsPartial($id)
+    {
+        $event = Event::findOrFail($id);
+        $pseudo = session('participant_pseudo');
+
+        if (!$pseudo) return response()->json(['html' => '']);
+
+        $questions = $event->questions()
+            ->with(['replies'])
+            ->where(function($query) use ($pseudo) {
+                $query->whereIn('status', ['approved', 'answering', 'answered'])
+                      ->orWhere(function($q) use ($pseudo) {
+                          $q->whereIn('status', ['pending', 'rejected'])
+                            ->where('pseudo', $pseudo);
+                      });
+            })
+            ->orderBy('votes_count', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'html' => view('participant.partials.questions_list', compact('questions'))->render()
+        ]);
     }
 
     /**
