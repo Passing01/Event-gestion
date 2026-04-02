@@ -11,6 +11,22 @@
                 </div>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
+                @if($question->status === 'pending')
+                    <form action="{{ route('dashboard.moderator.status', $question->id) }}" method="POST" style="display: inline;">
+                        @csrf
+                        <input type="hidden" name="status" value="approved">
+                        <button type="submit" class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #10b981;">
+                            Approuver
+                        </button>
+                    </form>
+                    <form action="{{ route('dashboard.moderator.status', $question->id) }}" method="POST" style="display: inline;">
+                        @csrf
+                        <input type="hidden" name="status" value="rejected">
+                        <button type="submit" class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #ef4444;">
+                            Rejeter
+                        </button>
+                    </form>
+                @endif
                 <button class="btn-brand" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;" onclick="suggestAI('{{ $question->id }}', this)">
                     💡 Suggestion IA
                 </button>
