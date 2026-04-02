@@ -57,146 +57,76 @@
         </div>
     @endif
 
-    <div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start;">
-        
-        {{-- Flux de questions --}}
-        <div class="space-y-4">
-            @forelse($questions as $q)
-            <div class="card" style="border-left: 4px solid {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'approved' ? '#059669' : ($q->status == 'answered' ? '#6b7280' : ($q->status == 'rejected' ? '#dc2626' : 'var(--border)'))) }};">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                    <div>
-                        <span class="badge" style="margin-bottom: 0.5rem; background: {{ $q->status == 'answered' ? '#f3f4f6' : '' }}; color: {{ $q->status == 'answered' ? '#6b7280' : '' }};">
-                            {{ strtoupper($q->status == 'answering' ? 'en cours' : ($q->status == 'answered' ? 'répondu' : $q->status)) }}
-                        </span>
-                        <p style="font-size: 1rem; font-weight: 500;">{{ $q->content }}</p>
-                        
-                        @if($q->audio_path)
-                            <div style="margin-top: 0.5rem;">
-                                <audio controls style="height: 30px; max-width: 100%;">
-                                    <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
-                                    Votre navigateur ne supporte pas l'élément audio.
-                                </audio>
-                            </div>
-                        @endif
+    {{-- Tabs de navigation --}}
+    <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;">
+        <button onclick="switchTab('active')" id="tab-btn-active" class="tab-btn active-tab" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 500; font-size: 0.875rem;">
+            🎯 Flux Actif ({{ $questions->count() }})
+        </button>
+        <button onclick="switchTab('filtered')" id="tab-btn-filtered" class="tab-btn" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 500; font-size: 0.875rem; color: var(--muted-foreground);">
+            🤖 Filtrées par l'IA ({{ $filteredByAI->count() }})
+        </button>
+    </div>
 
-                        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.5rem;">
-                            <span>Par <strong>{{ $q->pseudo }}</strong></span>
-                            <span>•</span>
-                            <span>{{ $q->created_at->diffForHumans() }}</span>
-                            <span>•</span>
-                            <span>{{ $q->votes_count }} votes</span>
+    <div id="tab-content-active" class="tab-content">
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start;">
+            
+            {{-- Flux de questions NORMALES --}}
+            <div id="questions-container-active" class="space-y-4">
+                @include('moderator.partials.questions_list', ['questions' => $questions])
+            </div>
+
+            {{-- Sidebar Stats & Participants --}}
+            <div class="space-y-4">
+                <div class="card">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem;">Statistiques</h3>
+                    <div id="stats-container" style="display: grid; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.875rem; color: var(--muted-foreground);">Total questions</span>
+                            <span id="stat-total" style="font-weight: 600;">{{ $questions->count() + $filteredByAI->count() }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.875rem; color: var(--muted-foreground);">🎯 Flux Actif</span>
+                            <span id="stat-active" style="font-weight: 600;">{{ $questions->count() }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.875rem; color: var(--muted-foreground);">🤖 Filtrées par l'IA</span>
+                            <span id="stat-filtered" style="font-weight: 600; color: #f97316;">{{ $filteredByAI->count() }}</span>
+                        </div>
+                        <hr style="border: 0.5px solid var(--border); margin: 0.25rem 0;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.875rem; color: var(--muted-foreground);">En attente</span>
+                            <span id="stat-pending" style="font-weight: 600; color: var(--brand);">{{ $questions->where('status', 'pending')->count() }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.875rem; color: var(--muted-foreground);">Répondues</span>
+                            <span id="stat-answered" style="font-weight: 600; color: #6b7280;">{{ $questions->where('status', 'answered')->count() }}</span>
                         </div>
                     </div>
-                    
-                    {{-- Actions --}}
-                    <div style="display: flex; gap: 0.5rem;">
-                        @if($q->status == 'approved')
-                        <form action="{{ route('dashboard.moderator.status', $q->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="status" value="answering">
-                            <button type="submit" class="btn-brand" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" title="Projeter la question">Projeter</button>
-                        </form>
-                        @endif
-
-                        @if($q->status == 'answering')
-                        <form action="{{ route('dashboard.moderator.status', $q->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="status" value="answered">
-                            <button type="submit" class="btn-brand" style="background: #6b7280; padding: 0.375rem 0.75rem; font-size: 0.75rem;" title="Marquer comme répondu">Terminer</button>
-                        </form>
-                        @endif
-
-                        @if($q->status == 'pending' || $q->status == 'rejected')
-                        <form action="{{ route('dashboard.moderator.status', $q->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="status" value="approved">
-                            <button type="submit" style="background: #ecfdf5; color: #059669; border: none; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; cursor: pointer;">Approuver</button>
-                        </form>
-                        @endif
-
-                        @if($q->status != 'rejected' && $q->status != 'answered')
-                        <form action="{{ route('dashboard.moderator.status', $q->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="status" value="rejected">
-                            <button type="submit" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; cursor: pointer;">Rejeter</button>
-                        </form>
-                        @endif
-
-                        <button onclick="openEditModal('{{ $q->id }}', '{{ addslashes($q->content) }}')" style="background: var(--muted); border: none; border-radius: 0.5rem; padding: 0.375rem; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1rem; height: 1rem;">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                            </svg>
-                        </button>
-                    </div>
                 </div>
 
-                {{-- Réponses --}}
-                <div style="margin-top: 1rem; padding-left: 1.5rem; border-left: 2px solid var(--muted);">
-                    <div class="space-y-2">
-                        @foreach($q->replies as $reply)
-                        <div style="background: var(--muted); padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                <span style="font-weight: 600;">{{ $reply->pseudo }}</span>
-                                @if($reply->is_moderator)
-                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">MODÉRATEUR</span>
-                                @endif
-                                <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $reply->created_at->diffForHumans() }}</span>
-                            </div>
-                            <p>{{ $reply->content }}</p>
-                            @if($reply->audio_path)
-                                <div style="margin-top: 0.5rem;">
-                                    <audio controls style="height: 25px; max-width: 100%;">
-                                        <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
-                                    </audio>
-                                </div>
-                            @endif
-                        </div>
-                        @endforeach
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.875rem; font-weight: 600;">Participants en ligne</h3>
+                        <span id="participant-count" style="font-size: 0.75rem; color: var(--muted-foreground);">0</span>
                     </div>
-                </div>
-            </div>
-            @empty
-            <div class="card" style="text-align: center; padding: 3rem; color: var(--muted-foreground);">
-                Aucune question pour le moment.
-            </div>
-            @endforelse
-        </div>
-
-        {{-- Sidebar Stats & Participants --}}
-        <div class="space-y-4">
-            <div class="card">
-                <h3 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem;">Statistiques</h3>
-                <div style="display: grid; gap: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">Total</span>
-                        <span style="font-weight: 600;">{{ $questions->count() }}</span>
+                    <div id="participants-list" style="display: grid; gap: 0.5rem; max-height: 300px; overflow-y: auto;">
+                        <!-- Rempli par JS -->
                     </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">En attente</span>
-                        <span style="font-weight: 600; color: var(--brand);">{{ $questions->where('status', 'pending')->count() }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">Approuvées</span>
-                        <span style="font-weight: 600; color: #059669;">{{ $questions->where('status', 'approved')->count() }}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">Répondues</span>
-                        <span style="font-weight: 600; color: #6b7280;">{{ $questions->where('status', 'answered')->count() }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="font-size: 0.875rem; font-weight: 600;">Participants en ligne</h3>
-                    <span id="participant-count" style="font-size: 0.75rem; color: var(--muted-foreground);">0</span>
-                </div>
-                <div id="participants-list" style="display: grid; gap: 0.5rem; max-height: 300px; overflow-y: auto;">
-                    <!-- Rempli par JS -->
                 </div>
             </div>
         </div>
+    </div>
 
+    {{-- --- Onglet Filtré par IA --- --}}
+    <div id="tab-content-filtered" class="tab-content" style="display:none;">
+        <div style="background: var(--muted); border-radius: 1rem; padding: 2rem; text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--brand);">Réception des questions filtrées par l'Assistant IA</h2>
+            <p style="color: var(--muted-foreground);">Ces questions ont été classées comme doublons ou hors-sujet. Vous pouvez les réviser et les remettre dans le flux principal.</p>
+        </div>
+
+        <div id="questions-container-filtered" class="space-y-4">
+            @include('moderator.partials.filtered_list', ['filteredByAI' => $filteredByAI])
+        </div>
     </div>
 </div>
 
@@ -221,7 +151,28 @@
 
 @push('scripts')
 <script>
+    let isEditing = false; // Flag pour savoir si on est en train d'éditer
+    const eventId = '{{ $event->id }}';
+
+    // --- Gestion des onglets ---
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.color = 'var(--muted-foreground)';
+            b.style.borderBottom = 'none';
+            b.classList.remove('active-tab');
+        });
+
+        document.getElementById('tab-content-' + tab).style.display = 'block';
+        const btn = document.getElementById('tab-btn-' + tab);
+        btn.style.color = 'var(--foreground)';
+        btn.style.borderBottom = '2px solid var(--brand)';
+        btn.classList.add('active-tab');
+    }
+
+    // --- Fonctions existantes ---
     function openEditModal(id, content) {
+        isEditing = true; // Activer le flag
         const modal = document.getElementById('edit-modal');
         const form = document.getElementById('edit-form');
         const textarea = document.getElementById('edit-content');
@@ -231,18 +182,20 @@
         modal.style.display = 'flex';
     }
 
-    // --- Active Participants List ---
+    // Fermer le modal
+    document.querySelector('#edit-modal button').onclick = function() {
+        isEditing = false; // Désactiver le flag
+        document.getElementById('edit-modal').style.display = 'none';
+    };
+
     const eventCode = '{{ $event->code }}';
     async function fetchParticipants() {
         try {
             const response = await fetch(`/e/${eventCode}/active-participants`);
             const data = await response.json();
-            
             const list = document.getElementById('participants-list');
             const count = document.getElementById('participant-count');
-            
             count.textContent = data.length;
-            
             list.innerHTML = data.map(p => `
                 <div style="background: var(--muted); padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.5rem; ${p.is_speaking ? 'border: 1px solid var(--brand); background: var(--brand-light);' : ''}">
                     <span style="width: 0.5rem; height: 0.5rem; background: ${p.is_speaking ? 'var(--brand)' : '#10b981'}; border-radius: 50%;"></span>
@@ -254,11 +207,44 @@
         } catch (e) {}
     }
 
+    // --- TEMPS RÉEL : Questions Polling ---
+    async function fetchQuestions() {
+        if (isEditing) return; // Ne pas rafraîchir si on édite
+
+        try {
+            const response = await fetch(`/dashboard/${eventId}/moderator/questions-fetch`);
+            const data = await response.json();
+            
+            // Mise à jour des containers
+            document.getElementById('questions-container-active').innerHTML = data.main_html;
+            document.getElementById('questions-container-filtered').innerHTML = data.filtered_html;
+            
+            // Mise à jour des badges d'onglets
+            document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;
+            document.getElementById('tab-btn-filtered').textContent = `🤖 Filtrées par l'IA (${data.counts.filtered})`;
+            
+            // Mise à jour de la sidebar
+            document.getElementById('stat-total').textContent = data.counts.total;
+            document.getElementById('stat-active').textContent = data.counts.active;
+            document.getElementById('stat-filtered').textContent = data.counts.filtered;
+            document.getElementById('stat-pending').textContent = data.counts.pending;
+            document.getElementById('stat-answered').textContent = data.counts.answered;
+
+        } catch (e) {
+            console.error("Polling error:", e);
+        }
+    }
+
     setInterval(fetchParticipants, 5000);
+    setInterval(fetchQuestions, 5000); // Rafraîchir toutes les 5 secondes
     fetchParticipants();
 </script>
 
 <style>
+.active-tab {
+    border-bottom: 2px solid var(--brand) !important;
+    color: var(--foreground) !important;
+}
 .typing-dot {
     font-weight: 800;
     color: var(--brand);

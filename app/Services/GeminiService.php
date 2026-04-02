@@ -58,4 +58,38 @@ class GeminiService
 
         return $this->generateResponse($prompt);
     }
+
+    /**
+     * Analyse une question pour détecter les doublons ou le hors-sujet.
+     */
+    public function moderateQuestion($content, $eventDescription, $existingQuestions = [])
+    {
+        $prompt = "Tu es un modérateur IA pour un événement interactif.\n";
+        $prompt .= "Thème de l'événement : " . $eventDescription . "\n\n";
+        
+        if (!empty($existingQuestions)) {
+            $prompt .= "Voici les questions déjà posées et répondues :\n";
+            foreach ($existingQuestions as $q) {
+                $prompt .= "- Question : " . $q->content . " | Réponse : " . ($q->replies->first()->content ?? 'En attente') . "\n";
+            }
+            $prompt .= "\n";
+        }
+        
+        $prompt .= "Nouvelle question posée : \"" . $content . "\"\n\n";
+        
+        $prompt .= "Analyse cette question selon 3 critères :\n";
+        $prompt .= "1. Est-elle hors-sujet par rapport au thème ?\n";
+        $prompt .= "2. Est-elle un doublon d'une question déjà répondue ?\n";
+        $prompt .= "3. Est-elle pertinente et respectueuse ?\n\n";
+        
+        $prompt .= "Réponds uniquement au format JSON strict avec ces clés :\n";
+        $prompt .= "{ \"status\": \"ok|duplicate|off_topic\", \"message\": \"ton message d'explication court en français\", \"suggestion\": \"en cas de doublon, indique la réponse déjà donnée\" }";
+
+        $response = $this->generateResponse($prompt);
+        
+        // Nettoyage de la réponse si Gemini ajoute du markdown json
+        $cleanJson = trim(str_replace(['```json', '```'], '', $response));
+        
+        return json_decode($cleanJson, true) ?? ['status' => 'ok', 'message' => ''];
+    }
 }

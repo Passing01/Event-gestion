@@ -101,40 +101,48 @@ class ParticipantController extends Controller
             return back()->with('error', 'Vous devez fournir une question ou un message vocal.');
         }
 
-        $question = $event->questions()->create([
+        // AI Auto-Moderation (only if content exists)
+        if ($data['content'] && $event->description) {
+            // Récupérer les questions déjà répondues pour détection de doublons
+            $existingQuestions = $event->questions()
+                ->where('status', 'answered')
+                ->with(['replies' => function($q) { $q->where('is_moderator', true)->orWhere('pseudo', '!=', 'Assistant IA'); }])
+                ->get();
+
+            $moderation = $gemini->moderateQuestion($data['content'], $event->description, $existingQuestions);
+
+            if ($moderation['status'] !== 'ok') {
+                // Créer la question quand même, mais en mode "rejected" (filtrée par IA)
+                $question = $event->questions()->create([
+                    'pseudo' => session('participant_pseudo'),
+                    'content' => $data['content'],
+                    'audio_path' => $audioPath,
+                    'status' => 'rejected', // On utilise rejected pour les cacher du flux principal
+                ]);
+
+                $replyContent = $moderation['message'];
+                if ($moderation['status'] === 'duplicate' && !empty($moderation['suggestion'])) {
+                    $replyContent .= " Voici la réponse déjà donnée : " . $moderation['suggestion'];
+                }
+
+                $question->replies()->create([
+                    'pseudo' => 'Assistant Modérateur', // Pseudo spécial
+                    'content' => $replyContent,
+                    'is_moderator' => true,
+                ]);
+
+                $msg = $moderation['status'] === 'duplicate' ? 'Cette question a déjà été traitée.' : 'Cette question semble hors-sujet.';
+                return back()->with('success', 'Votre question a été traitée automatiquement : ' . $msg);
+            }
+        }
+
+        // Si tout est OK, on crée la question normalement
+        $event->questions()->create([
             'pseudo' => session('participant_pseudo'),
             'content' => $data['content'],
             'audio_path' => $audioPath,
             'status' => $event->moderation_enabled ? 'pending' : 'approved',
         ]);
-
-        // AI Check for off-topic (only if content exists)
-        if ($data['content'] && $event->description) {
-            $prompt = "L'événement a pour thème : " . $event->description . "\n";
-            $prompt .= "La question suivante est-elle hors-sujet ? Réponds par 'OUI' ou 'NON' uniquement.\n";
-            $prompt .= "Question : " . $data['content'];
-
-            $isOffTopic = $gemini->generateResponse($prompt);
-
-            if (trim(strtoupper($isOffTopic)) === 'OUI') {
-                // Auto-reply and mark as answered
-                $replyPrompt = "L'événement a pour thème : " . $event->description . "\n";
-                $replyPrompt .= "La question suivante est hors-sujet : " . $data['content'] . "\n";
-                $replyPrompt .= "Réponds poliment que la question est hors-thème et donne une brève explication si possible.";
-                
-                $aiReply = $gemini->generateResponse($replyPrompt);
-                
-                $question->replies()->create([
-                    'pseudo' => 'Assistant IA',
-                    'content' => $aiReply ?? "Désolé, cette question semble être hors-sujet par rapport au thème de l'événement.",
-                    'is_moderator' => true,
-                ]);
-
-                $question->update(['status' => 'answered']);
-                
-                return back()->with('success', 'Votre question a été traitée par l\'IA car elle semblait hors-sujet.');
-            }
-        }
 
         return back()->with('success', 'Votre question a été envoyée !' . ($event->moderation_enabled ? ' Elle sera visible après modération.' : ''));
     }

@@ -14,10 +14,25 @@ class ModeratorController extends Controller
      */
     public function index($id)
     {
-        $event = Auth::user()->events()->findOrFail($id);
-        $questions = $event->questions()->orderBy('votes_count', 'desc')->orderBy('created_at', 'desc')->get();
+        $event = Event::findOrFail($id);
         
-        return view('moderator.index', compact('event', 'questions'));
+        // Toutes les questions sauf celles rejetées par l'IA
+        $allQuestions = $event->questions()
+            ->with(['replies'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Séparer les questions filtrées (rejetées par l'Assistant Modérateur)
+        $filteredByAI = $allQuestions->filter(function($q) {
+            return $q->status == 'rejected' && $q->replies->contains('pseudo', 'Assistant Modérateur');
+        });
+
+        // Questions normales (non filtrées par lia ou filtrées manuellement)
+        $questions = $allQuestions->reject(function($q) use ($filteredByAI) {
+            return $filteredByAI->contains('id', $q->id);
+        });
+
+        return view('moderator.index', compact('event', 'questions', 'filteredByAI'));
     }
 
     /**

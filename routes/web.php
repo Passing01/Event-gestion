@@ -154,6 +154,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::post('/question/{id}/edit',   [ModeratorController::class, 'updateContent'])->name('moderator.edit');
     Route::post('/question/{id}/reply',  [ModeratorController::class, 'storeReply'])->name('moderator.reply');
     Route::post('/hand/{id}/status',     [ModeratorController::class, 'updateHandStatus'])->name('moderator.hand-status');
+
+    // Nouvelles routes pour le temps réel (Polling)
+    Route::get('/{id}/moderator/questions-fetch', [ModeratorController::class, 'fetchQuestionsPartial'])->name('dashboard.moderator.fetch');
+    Route::get('/{id}/panelist/questions-fetch', [PanelistController::class, 'fetchQuestionsPartial'])->name('dashboard.panelist.fetch');
 });
 
 // ──────────────────────────────────────────────
