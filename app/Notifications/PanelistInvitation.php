@@ -40,15 +40,15 @@ class PanelistInvitation extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Invitation en tant que Panéliste - ' . $this->event->name)
-                    ->greeting('Bonjour ' . $notifiable->name . ' !')
-                    ->line('Vous avez été invité en tant que panéliste pour l\'événement : ' . $this->event->name)
-                    ->line('Voici vos informations de connexion :')
-                    ->line('Email : ' . $notifiable->email)
-                    ->line('Mot de passe : ' . $this->password)
-                    ->line('Code de l\'événement : ' . $this->event->code)
-                    ->action('Accéder à l\'événement', url('/join'))
-                    ->line('Veuillez changer votre mot de passe après votre première connexion.');
+                    ->subject('[' . config('app.name', 'Event Q&A') . '] Vos accès Panéliste - ' . $this->event->name)
+                    ->view('emails.panelist-access', [
+                        'userName'  => $notifiable->name,
+                        'userEmail' => $notifiable->email,
+                        'password'  => $this->password,
+                        'eventName' => $this->event->name,
+                        'appName'   => config('app.name', 'Event Q&A'),
+                        'loginUrl'  => url('/signin'),
+                    ]);
     }
 
     /**

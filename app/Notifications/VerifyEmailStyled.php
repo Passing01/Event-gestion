@@ -10,29 +10,23 @@ use App\Notifications\Channels\EmailJSChannel;
 
 class VerifyEmailStyled extends VerifyEmail
 {
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
     public function via($notifiable)
     {
-        return [EmailJSChannel::class];
+        return ['mail'];
     }
 
     /**
-     * Get the EmailJS representation of the notification.
+     * Get the mail representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
+     * @return \Illuminate\Notifications\Messages\MailMessage
      */
-    public function toEmailJS($notifiable)
+    public function toMail($notifiable)
     {
-        return [
-            'user_name' => $notifiable->name,
-            'user_email' => $notifiable->email,
-            'verification_url' => $this->verificationUrl($notifiable),
-        ];
+        $verificationUrl = $this->verificationUrl($notifiable);
+
+        return (new MailMessage)
+                    ->subject('[' . config('app.name', 'Event Q&A') . '] Vérifiez votre adresse e-mail')
+                    ->view('emails.verify', ['url' => $verificationUrl]);
     }
 }
