@@ -6,6 +6,8 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PasswordResetController;
+
 
 
 /*
@@ -33,7 +35,14 @@ Route::prefix('auth')->group(function () {
 
     // Déconnexion
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+    // Mot de passe oublié
+    Route::get('/forgot-password', [PasswordResetController::class, 'requestForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'resetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
+
 
 // ──────────────────────────────────────────────
 //  Routes de Vérification d'Email
