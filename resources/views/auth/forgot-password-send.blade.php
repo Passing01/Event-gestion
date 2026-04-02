@@ -74,14 +74,15 @@
 <script>
 (function() {
     // ─── Configuration EmailJS ───────────────────────────────
-    // On utilise les noms exacts avec le préfixe VITE_
     const EMAILJS_PUBLIC_KEY  = '{{ env("VITE_EMAILJS_PUBLIC_KEY", "") }}';
     const EMAILJS_SERVICE_ID  = '{{ env("VITE_EMAILJS_SERVICE_ID", "") }}';
     const EMAILJS_TEMPLATE_ID = '{{ env("VITE_EMAILJS_RESET_TEMPLATE_ID", "") }}';
     // ─────────────────────────────────────────────────────────
 
-    // Log pour vérification (optionnel, à retirer plus tard)
-    console.log('EmailJS Public Key:', EMAILJS_PUBLIC_KEY ? 'OK' : 'VIDE');
+    console.log('--- DEBUG EMAILJS ---');
+    console.log('Public Key:', EMAILJS_PUBLIC_KEY ? 'OK' : 'VIDE');
+    console.log('Service ID:', EMAILJS_SERVICE_ID || 'VIDE');
+    console.log('Template ID:', EMAILJS_TEMPLATE_ID || 'VIDE');
 
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
@@ -91,6 +92,8 @@
         reset_url: '{{ $resetUrl }}',
         app_name:  'Event Q&A',
     };
+    
+    console.log('Paramètres envoyés:', params);
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
         .then(function() {
