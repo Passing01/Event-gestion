@@ -1,34 +1,26 @@
 <div class="space-y-4">
     @forelse($questions as $q)
-    <div class="card" id="q-{{ $q->id }}" style="border-left: 4px solid {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'answered' ? '#6b7280' : ($q->status == 'rejected' ? '#dc2626' : 'var(--border)')) }};">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+    <div class="card" id="q-{{ $q->id }}" style="padding: 1rem; border-left: 4px solid {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'answered' ? '#6b7280' : ($q->status == 'rejected' ? '#dc2626' : 'var(--border)')) }};">
+        <div style="display: flex; justify-content: space-between; gap:0.5rem; margin-bottom: 0.75rem;">
             <div style="flex: 1;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                     @if($q->status == 'rejected')
-                        <span class="badge" style="background: #fee2e2; color: #dc2626;">FILTRÉ PAR IA 🤖</span>
+                        <span class="badge" style="background: #fee2e2; color: #dc2626; font-size: 10px;">FILTRÉ PAR IA 🤖</span>
                     @elseif($q->status == 'pending')
-                        <span class="badge" style="background: #fef3c7; color: #d97706;">EN ATTENTE DE MODÉRATION</span>
+                        <span class="badge" style="background: #fef3c7; color: #d97706; font-size: 10px;">EN ATTENTE</span>
                     @elseif($q->status == 'answering')
-                        <span class="badge" style="background: var(--brand); color: white;">EN COURS DE RÉPONSE 🎤</span>
+                        <span class="badge" style="background: var(--brand); color: white; font-size: 10px;">EN COURS🎤</span>
                     @endif
-                    <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $q->created_at->diffForHumans() }}</span>
+                    <span style="font-size: 10px; color: var(--muted-foreground);">{{ $q->created_at->diffForHumans() }}</span>
                 </div>
-                <p style="font-size: 1rem; font-weight: 500;">{{ $q->content }}</p>
-
-                @if($q->audio_path)
-                    <div style="margin-top: 0.5rem;">
-                        <audio controls style="height: 30px; max-width: 100%;">
-                            <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
-                        </audio>
-                    </div>
-                @endif
+                <p style="font-size: 0.95rem; font-weight: 500; line-height: 1.4; margin: 0;">{{ $q->content }}</p>
             </div>
-
-            <div style="text-align: right; min-width: 60px;">
+            
+            <div style="flex-shrink: 0;">
                 <form action="{{ route('participant.vote', $q->id) }}" method="POST">
                     @csrf
-                    <button type="submit" style="background: none; border: 1px solid var(--border); border-radius: 0.5rem; padding: 0.5rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
-                        <span style="font-size: 1.25rem;">👍</span>
+                    <button type="submit" style="background: {{ in_array($q->id, session('voted_questions', [])) ? 'var(--brand)' : '#f3f4f6' }}; color: {{ in_array($q->id, session('voted_questions', [])) ? '#fff' : 'var(--foreground)' }}; border: none; border-radius: 0.5rem; padding: 0.4rem 0.6rem; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                        <span style="font-size: 1rem;">👍</span>
                         <span style="font-size: 0.75rem; font-weight: 700;">{{ $q->votes_count }}</span>
                     </button>
                 </form>

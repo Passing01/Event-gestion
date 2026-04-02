@@ -69,25 +69,25 @@ class GeminiService
             ->pluck('content')
             ->implode("\n- ");
 
-        $prompt = "Vous êtes un Assistant Modérateur pour un événement intitulé '{$event->name}'.
-        Le thème de l'événement est : {$event->description}.
+        $prompt = "Vous êtes un Assistant Modérateur EXPERT pour l'événement '{$event->name}'.
+        Thème : {$event->description}.
         
-        Votre rôle est de filtrer les questions des participants selon deux critères :
-        1. DOUBLON : Si la question a déjà été posée (même si la formulation est un peu différente).
-        2. HORS-SUJET : Si la question n'a aucun rapport avec le thème de l'événement.
+        CRITÈRES DE FILTRAGE STRICTS :
+        1. DOUBLON (duplicate) : La question a déjà été posée ou une question très similaire existe déjà. Ne soyez pas seulement sur l'exactitude des mots, mais sur le SENS. Si l'idée est la même, c'est un DOUBLON.
+        2. HORS-SUJET (off_topic) : La question n'a aucun lien direct avec le thème.
         
-        Voici les questions déjà présentes sur cet événement :
+        LISTE DES QUESTIONS DÉJÀ PRÉSENTES (À COMPARER) :
         - {$existingQuestions}
         
-        Nouvelle question posée : \"" . $content . "\"\n\n";
+        NOUVELLE QUESTION À ANALYSER : \"{$content}\"
         
-        $prompt .= "Analyse cette question selon 3 critères :\n";
-        $prompt .= "1. Est-elle hors-sujet par rapport au thème ?\n";
-        $prompt .= "2. Est-elle un doublon d'une question déjà répondue ?\n";
-        $prompt .= "3. Est-elle pertinente et respectueuse ?\n\n";
+        ACTIONS :
+        - Si c'est un DOUBLON : status = 'duplicate'. Message = 'Cette question a déjà été posée.'. Suggestion = [Donnez un résumé de la réponse si elle existe déjà dans la liste, sinon laissez vide].
+        - Si c'est HORS-SUJET : status = 'off_topic'. Message = 'Désolé, cette question n'est pas dans le thème de l'événement.'.
+        - Sinon : status = 'ok'.
         
-        $prompt .= "Réponds uniquement au format JSON strict avec ces clés :\n";
-        $prompt .= "{ \"status\": \"ok|duplicate|off_topic\", \"message\": \"ton message d'explication court en français\", \"suggestion\": \"en cas de doublon, indique la réponse déjà donnée\" }";
+        RÉPONDEZ UNIQUEMENT EN JSON STRICT :
+        { \"status\": \"ok|duplicate|off_topic\", \"message\": \"...\", \"suggestion\": \"...\" }";
 
         $response = $this->generateResponse($prompt);
         
