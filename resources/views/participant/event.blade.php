@@ -105,7 +105,6 @@
                 @include('participant.partials.questions_list', ['questions' => $questions])
             </div>
         </div>
-        </div>
 
         {{-- Participants List --}}
         <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
@@ -286,6 +285,9 @@
             
             if (document.getElementById('questions-container')) {
                 document.getElementById('questions-container').innerHTML = data.html;
+            }
+            if (document.getElementById('questions-count-badge')) {
+                document.getElementById('questions-count-badge').textContent = `${data.count} questions visibles`;
             }
         } catch (e) {}
     }

@@ -101,7 +101,8 @@ class ParticipantController extends Controller
             ->get();
 
         return response()->json([
-            'html' => view('participant.partials.questions_list', compact('questions'))->render()
+            'html' => view('participant.partials.questions_list', compact('questions'))->render(),
+            'count' => $questions->count()
         ]);
     }
 
