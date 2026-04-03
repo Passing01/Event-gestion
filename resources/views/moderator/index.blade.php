@@ -62,10 +62,13 @@
 
     {{-- Tabs de navigation --}}
     <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem;">
-        <button onclick="switchTab('active')" id="tab-btn-active" class="tab-btn active-tab" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 500; font-size: 0.875rem;">
+        <button onclick="switchTab('active')" id="tab-btn-active" class="tab-btn active-tab" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">
             🎯 Flux Actif ({{ $questions->count() }})
         </button>
-        <button onclick="switchTab('filtered')" id="tab-btn-filtered" class="tab-btn" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 500; font-size: 0.875rem; color: var(--muted-foreground);">
+        <button onclick="switchTab('panelists')" id="tab-btn-panelists" class="tab-btn" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-foreground);">
+            📊 Experts & Chronos
+        </button>
+        <button onclick="switchTab('filtered')" id="tab-btn-filtered" class="tab-btn" style="padding: 0.75rem 1rem; cursor: pointer; border: none; background: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-foreground);">
             🤖 Filtrées par l'IA ({{ $filteredByAI->count() }})
         </button>
     </div>
@@ -117,14 +120,22 @@
                     </div>
                 </div>
 
-                {{-- Panelistes & Chronos --}}
-                <div class="card" style="border-top: 3px solid #10b981;">
-                    <h3 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem;">📊 Experts & Chronos</h3>
-                    <div id="panelists-container">
-                        @include('moderator.partials.panelists_list', ['panelists' => $panelists])
-                    </div>
-                </div>
             </div>
+        </div>
+    </div>
+
+    {{-- --- Nouvel Onglet : Experts & Chronos --- --}}
+    <div id="tab-content-panelists" class="tab-content" style="display:none;">
+        <div style="background: var(--brand-light); border-radius: 1.5rem; padding: 2.5rem; border: 1px solid var(--brand-soft); margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden;">
+            <div style="position: relative; z-index: 2;">
+                <h2 style="font-size: 1.75rem; font-weight: 950; color: var(--brand); margin: 0; letter-spacing: -0.02em;">Gestion des Experts</h2>
+                <p style="color: var(--muted-foreground); margin: 0.6rem 0 0; font-size: 1.1rem; font-weight: 500;">Pilotez les temps de parole et les projections en temps réel.</p>
+            </div>
+            <div style="font-size: 5rem; opacity: 0.1; position: absolute; right: -1rem; bottom: -1.5rem; transform: rotate(-15deg);">📊</div>
+        </div>
+
+        <div id="panelists-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+            @include('moderator.partials.panelists_list', ['panelists' => $panelists])
         </div>
     </div>
 
