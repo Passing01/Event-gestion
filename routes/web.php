@@ -18,7 +18,8 @@ use App\Http\Controllers\PasswordResetController;
 
 // Redirection de la racine vers le dashboard
 Route::get('/', function () {
-    return view('landing');
+    $marketplaceEvents = \App\Models\Event::where('is_marketplace', true)->with('user')->latest()->get();
+    return view('landing', compact('marketplaceEvents'));
 });
 
 // ──────────────────────────────────────────────

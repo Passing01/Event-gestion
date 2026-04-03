@@ -62,12 +62,19 @@
                 {{-- État "En Ligne" --}}
                 <div id="mic-active-status" style="display: none; width: 100%;">
                     <div style="background: #ecfdf5; border: 1px solid #10b981; color: #059669; padding: 1rem; border-radius: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1rem;">
-                        <span style="width: 0.75rem; height: 0.75rem; background: #10b981; border-radius: 50%; animation: pulse-green 1s infinite;"></span>
-                        MICRO EN DIRECT
+                        <span id="mic-pulse-dot" style="width: 0.75rem; height: 0.75rem; background: #10b981; border-radius: 50%; animation: pulse-green 1s infinite;"></span>
+                        <span id="mic-status-text">MICRO EN DIRECT</span>
                     </div>
-                    <button type="button" class="btn-brand" style="background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 1rem; font-weight: 800; width: 100%; border: none;" onclick="stopLiveMicManually()">
-                        Couper mon micro
-                    </button>
+
+                    <div style="display: flex; gap: 0.75rem; width: 100%;">
+                        <button type="button" id="mute-btn" class="btn-brand" style="background: #f1f5f9; color: #475569; flex: 1; padding: 1rem; border-radius: 1rem; font-weight: 800; border: none;" onclick="toggleMute()">
+                            <span id="mute-icon">🔇</span> <span id="mute-text">Couper le son</span>
+                        </button>
+                        
+                        <button type="button" class="btn-brand" style="background: #fee2e2; color: #dc2626; flex: 1; padding: 1rem; border-radius: 1rem; font-weight: 800; border: none;" onclick="stopLiveMicManually()">
+                            Déconnecter
+                        </button>
+                    </div>
                 </div>
             @else
                 {{-- UI Attente ou Bouton Lever Main (IDEM PRECEDENT) --}}
@@ -308,11 +315,14 @@
         document.getElementById('mic-active-status').style.display = 'block';
     }
 
+    let isMuted = false;
+    let localStream;
+
     async function startLiveMic() {
         console.log("Démarrage du Micro Live...");
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            currentCall = myPeer.call(`${eventCode}-PROJECTOR`, stream, {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            currentCall = myPeer.call(`${eventCode}-PROJECTOR`, localStream, {
                 metadata: { name: participantPseudo }
             });
             console.log("Appel en cours vers le projecteur...");
@@ -320,6 +330,40 @@
             console.error("Erreur micro:", err);
             alert("Microphone requis pour intervenir en direct.");
             location.reload();
+        }
+    }
+
+    function toggleMute() {
+        if (!localStream) return;
+        
+        isMuted = !isMuted;
+        localStream.getAudioTracks().forEach(track => {
+            track.enabled = !isMuted;
+        });
+
+        // UI Update
+        const btn = document.getElementById('mute-btn');
+        const icon = document.getElementById('mute-icon');
+        const text = document.getElementById('mute-text');
+        const statusText = document.getElementById('mic-status-text');
+        const pulse = document.getElementById('mic-pulse-dot');
+
+        if (isMuted) {
+            btn.style.background = 'var(--brand)';
+            btn.style.color = '#fff';
+            icon.textContent = '🎙️';
+            text.textContent = 'Réactiver son';
+            statusText.textContent = 'MICRO COUPÉ';
+            pulse.style.animation = 'none';
+            pulse.style.background = '#94a3b8';
+        } else {
+            btn.style.background = '#f1f5f9';
+            btn.style.color = '#475569';
+            icon.textContent = '🔇';
+            text.textContent = 'Couper le son';
+            statusText.textContent = 'MICRO EN DIRECT';
+            pulse.style.animation = 'pulse-green 1s infinite';
+            pulse.style.background = '#10b981';
         }
     }
 
