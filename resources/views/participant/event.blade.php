@@ -94,15 +94,52 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-                    <button type="button" id="voice-btn" class="btn-brand" style="background: #f1f5f9; color: #475569; width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 0.75rem; border: none;" onclick="toggleVoiceRecording()">
-                        <span id="voice-icon" style="font-size: 1rem;">🎤</span> <span id="voice-text">Vocal</span>
-                    </button>
+                <div id="normal-form-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 1fr; width: 100%;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" id="voice-btn" class="btn-brand" style="background: #f1f5f9; color: #475569; width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 0.75rem; border: none;" onclick="toggleVoiceRecording()">
+                            <span id="voice-icon" style="font-size: 1rem;">🎤</span> <span id="voice-text">Vocal</span>
+                        </button>
+                    </div>
                     
                     <button type="submit" class="btn-brand" style="width: auto; padding: 0.6rem 2rem; border-radius: 0.75rem; font-weight: 700; box-shadow: 0 4px 12px var(--brand-soft);">
                         Envoyer
                     </button>
                 </div>
+
+                {{-- Barre d'enregistrement (Style WhatsApp) --}}
+                <div id="recording-bar" style="display: none; align-items: center; gap: 1rem; width: 100%; background: #f8fafc; padding: 0.5rem 1rem; border-radius: 1rem; border: 1px solid #fee2e2;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                        <span style="width: 0.75rem; height: 0.75rem; background: #ef4444; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                        <span id="rec-timer" style="font-family: monospace; font-weight: 700; color: #ef4444; font-size: 0.9rem;">00:00</span>
+                        <canvas id="waveform" style="flex: 1; height: 30px;"></canvas>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" onclick="togglePauseResume()" id="pause-btn" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 50%; width: 2.25rem; height: 2.25rem; cursor: pointer;"><span id="pause-icon">⏸</span></button>
+                        <button type="button" onclick="cancelRecording()" style="background: #fee2e2; border: none; color: #ef4444; border-radius: 50%; width: 2.25rem; height: 2.25rem; cursor: pointer;">✕</button>
+                        <button type="button" onclick="stopRecordingAndReview()" style="background: var(--brand); border: none; color: #fff; border-radius: 50%; width: 2.25rem; height: 2.25rem; cursor: pointer;">✅</button>
+                    </div>
+                </div>
+
+                {{-- Barre de Pré-écoute & Filtres --}}
+                <div id="voice-preview-bar" style="display: none; flex-direction: column; gap: 0.75rem; width: 100%; background: #fdfcfe; padding: 1rem; border-radius: 1rem; border: 1px solid var(--brand-soft);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <audio id="preview-audio" controls style="flex: 1; height: 35px;"></audio>
+                        <button type="button" onclick="resetVoice()" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0.5rem;">🗑️</button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: var(--muted-foreground); text-transform: uppercase;">Filtre :</span>
+                            <select id="voice-filter" onchange="applyVoiceFilter()" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 0.5rem; border: 1px solid var(--border);">
+                                <option value="none">Normal</option>
+                                <option value="robot">🤖 Robot</option>
+                                <option value="deep">🌑 Grave</option>
+                                <option value="high">🐿️ Aigu</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem; font-size: 0.8rem; border-radius: 0.5rem;">Confirmer</button>
+                    </div>
+                </div>
+
                 <input type="file" name="audio" id="audio-input" style="display: none;">
             </form>
         </div>
@@ -248,6 +285,17 @@
     let voiceSeconds = 0;
     let originalBlob = null;
     let filteredBlob = null;
+    let isRecording = false;
+
+    function toggleVoiceRecording() {
+        if (!isRecording) {
+            startVoiceRecording();
+            isRecording = true;
+        } else {
+            stopRecordingAndReview();
+            isRecording = false;
+        }
+    }
 
     async function startVoiceRecording() {
         try {
@@ -328,14 +376,16 @@
     }
 
     function cancelRecording() {
-        mediaRecorder.stop();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
         stopAudioTracks();
+        isRecording = false;
         resetVoice();
     }
 
     function stopRecordingAndReview() {
-        mediaRecorder.stop();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
         stopAudioTracks();
+        isRecording = false;
     }
 
     function stopAudioTracks() {
