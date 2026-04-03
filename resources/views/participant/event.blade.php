@@ -641,6 +641,18 @@
         document.getElementById('audio-input').files = dt.files;
     }
 
+    // --- GESTION DES COMMENTAIRES ---
+    function toggleReplyForm(id) {
+        const form = document.getElementById('reply-form-' + id);
+        if (form.style.display === 'none') {
+            form.style.display = 'flex';
+            const input = form.querySelector('input');
+            if (input) input.focus();
+        } else {
+            form.style.display = 'none';
+        }
+    }
+
     // Helper pour convertir un AudioBuffer en WAV (simplifié)
     function bufferToWav(abuffer) {
         let numOfChan = abuffer.numberOfChannels,
