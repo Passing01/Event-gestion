@@ -93,8 +93,10 @@ Route::get('/e/{code}/participant/questions-fetch', [ParticipantController::clas
 // ──────────────────────────────────────────────
 //  Routes de Projection (Public/Régie)
 // ──────────────────────────────────────────────
+// Projection
 Route::get('/e/{code}/projection', [ProjectionController::class, 'index'])->name('projection.index');
 Route::get('/e/{code}/projection/api', [ProjectionController::class, 'getAnswering'])->name('projection.api');
+Route::post('/projection/{code}/set-question/{id}', [ProjectionController::class, 'setQuestion']);
 
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;

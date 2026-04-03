@@ -129,7 +129,8 @@
             transition: all 0.3s ease;
         }
         .qa-item:hover { transform: translateX(-5px); border-color: var(--brand); }
-        .qa-header {
+            display: flex;
+            justify-content: space-between;
             padding: 0.5rem 1rem;
             font-size: 0.75rem;
             font-weight: 800;
@@ -137,8 +138,14 @@
             letter-spacing: 0.05em;
             background: var(--brand);
             color: #fff;
-            display: flex;
-            justify-content: space-between;
+        }
+        .qa-item {
+            cursor: pointer;
+            position: relative;
+        }
+        .qa-item.active-playing {
+            border: 2px solid var(--brand) !important;
+            box-shadow: 0 0 20px var(--brand-soft);
         }
         .qa-body {
             padding: 1rem;
@@ -288,6 +295,7 @@
         let currentStatus = '{{ $answering ? $answering->status : "" }}';
         let lastProjectingPath = null;
         let lastProjectingPage = null;
+        let wasProjecting = false;
 
         async function fetchAnswering() {
             try {
@@ -301,6 +309,7 @@
 
                 // 1. GESTION DE LA PROJECTION (PANÉLISTE)
                 if (data.projecting_panelist) {
+                    wasProjecting = true;
                     wrap.classList.add('full-mode');
                     badge.style.display = 'flex';
                     nameSpan.textContent = "EN DIRECT : " + data.projecting_panelist.name;
@@ -339,7 +348,8 @@
                 }
 
                 // 2. GESTION DES QUESTIONS (SI PAS DE PROJECTION)
-                if (data.id !== currentQuestionId || data.status !== currentStatus) {
+                if (data.id !== currentQuestionId || data.status !== currentStatus || wasProjecting) {
+                    wasProjecting = false; 
                     currentQuestionId = data.id;
                     currentStatus = data.status;
                     
@@ -377,12 +387,12 @@
                 }
 
                 const qaList = document.getElementById('qa-list');
-                if (data.all_questions) {
                     const colors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
                     qaList.innerHTML = data.all_questions.map((q, idx) => {
                         const color = colors[idx % colors.length];
+                        const isActive = q.id === currentQuestionId;
                         return `
-                        <div class="qa-item" style="border-left: 4px solid ${color}">
+                        <div class="qa-item ${isActive ? 'active-playing' : ''}" style="border-left: 4px solid ${color}" onclick="setMainQuestion(${q.id})">
                             <div class="qa-header" style="background: ${color}">
                                 <span>${q.pseudo}</span>
                                 <span>#${q.id}</span>
@@ -438,6 +448,38 @@
                 }
             }
         }
+
+        async function setMainQuestion(questionId) {
+            try {
+                await fetch(`{{ url('/projection') }}/{{ $event->code }}/set-question/${questionId}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                });
+                fetchAnswering(); // Refresh immediately
+            } catch (err) {
+                console.error("Error setting main question:", err);
+            }
+        }
+
+        // --- Défilement Automatique de la Sidebar ---
+        const sidebar = document.querySelector('.qa-sidebar');
+        let scrollSpeed = 0.5; // Vitesse de défilement (pixels/frame)
+        let isPaused = false;
+
+        sidebar.addEventListener('mouseenter', () => isPaused = true);
+        sidebar.addEventListener('mouseleave', () => isPaused = false);
+
+        function autoScroll() {
+            if (!isPaused && sidebar.scrollHeight > sidebar.clientHeight) {
+                sidebar.scrollTop += scrollSpeed;
+                // Si on arrive au bout, on repart à zéro
+                if (sidebar.scrollTop + sidebar.clientHeight >= sidebar.scrollHeight - 1) {
+                    sidebar.scrollTop = 0;
+                }
+            }
+            requestAnimationFrame(autoScroll);
+        }
+        autoScroll();
 
         setInterval(fetchAnswering, 3000);
         fetchAnswering();

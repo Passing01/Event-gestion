@@ -140,6 +140,7 @@ class PanelistController extends Controller
     public function fetchQuestionsPartial($id)
     {
         $event = Event::findOrFail($id);
+        $panelist = Panelist::where('event_id', $event->id)->where('user_id', Auth::id())->firstOrFail();
         
         $allQuestions = $event->questions()
             ->with(['replies'])
@@ -154,9 +155,20 @@ class PanelistController extends Controller
             return $filteredByAI->contains('id', $q->id);
         });
 
+        // Calcul du temps restant précis avec gestion de la dérive horaire
+        $remainingSeconds = 0;
+        if ($panelist->presentation_started_at) {
+            $startTime = \Carbon\Carbon::parse($panelist->presentation_started_at);
+            $totalDurationSeconds = (int) $panelist->presentation_duration * 60;
+            // Utilisation d'un diff signé pour être robuste
+            $elapsedSeconds = $startTime->diffInSeconds(now(), false);
+            $remainingSeconds = max(0, $totalDurationSeconds - $elapsedSeconds);
+        }
+
         return response()->json([
             'main_html' => view('panelist.partials.questions_list', compact('questions'))->render(),
             'filtered_html' => view('panelist.partials.filtered_list', compact('filteredByAI'))->render(),
+            'remaining_seconds' => $remainingSeconds,
             'counts' => [
                 'active' => $questions->count(),
                 'filtered' => $filteredByAI->count(),

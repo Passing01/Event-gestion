@@ -390,6 +390,15 @@
                 document.getElementById('questions-container-filtered').innerHTML = data.filtered_html;
             }
 
+            // Sync timer from server
+            if (data.hasOwnProperty('remaining_seconds')) {
+                const timerBox = document.getElementById('live-timer-box');
+                const display = document.getElementById('timer-display');
+                if (timerBox && display) {
+                    timerBox.setAttribute('data-remaining', data.remaining_seconds);
+                }
+            }
+
             // Mise à jour des badges d'onglets
             document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;
             document.getElementById('tab-btn-filtered').textContent = `🤖 Filtrées par l'IA (${data.counts.filtered})`;

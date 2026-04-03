@@ -57,4 +57,21 @@ class ProjectionController extends Controller
             ] : null
         ]);
     }
+
+    /**
+     * Changer la question mise en avant (via clic sur le projecteur).
+     */
+    public function setQuestion($code, $id)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        
+        // On remet les autres questions en "approuvées" si elles étaient en train d'être répondues
+        $event->questions()->where('status', 'answering')->update(['status' => 'approved']);
+        
+        // On met la nouvelle question en avant
+        $question = $event->questions()->findOrFail($id);
+        $question->update(['status' => 'answering']);
+        
+        return response()->json(['status' => 'ok', 'question_id' => $id]);
+    }
 }
