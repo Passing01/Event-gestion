@@ -99,8 +99,8 @@ class PanelistController extends Controller
             ->where('user_id', Auth::id())
             ->exists();
 
-        if (!$isPanelist) {
-            return back()->with('error', "Vous n'êtes pas autorisé à accéder à cet événement en tant que panelyste.");
+        if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
+            return back()->with('error', "Cet événement n'a pas encore commencé. Accès autorisé à partir de : " . $event->scheduled_at->format('d/m/Y H:i'));
         }
 
         return redirect()->route('panelist.dashboard', $event->code);
@@ -237,6 +237,63 @@ class PanelistController extends Controller
         $panelist->update(['sector' => $data['sector']]);
 
         return back()->with('success', 'Panéliste mis à jour.');
+    }
+
+    /**
+     * Delete document.
+     */
+    public function deleteDocument($code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        $panelist = Panelist::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if ($panelist->presentation_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($panelist->presentation_path);
+        }
+
+        $panelist->update([
+            'presentation_path' => null,
+            'notes' => null,
+            'is_projecting' => false
+        ]);
+
+        return back()->with('success', 'Document supprimé.');
+    }
+
+    /**
+     * Toggle document share with moderator.
+     */
+    public function toggleShare($code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        $panelist = Panelist::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $panelist->update(['is_document_shared' => !$panelist->is_document_shared]);
+
+        return back()->with('success', $panelist->is_document_shared ? 'Document partagé avec le modérateur.' : 'Document privé.');
+    }
+
+    /**
+     * Toggle document projection.
+     */
+    public function toggleProject($code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        
+        // Unset any other panelist projecting for this event
+        Panelist::where('event_id', $event->id)->update(['is_projecting' => false]);
+
+        $panelist = Panelist::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $panelist->update(['is_projecting' => !$panelist->is_projecting]);
+
+        return back()->with('success', $panelist->is_projecting ? 'Projection lancée !' : 'Projection arrêtée.');
     }
 
     /**

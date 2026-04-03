@@ -4,6 +4,16 @@
         <div style="display: flex; justify-content: space-between; gap:0.5rem; margin-bottom: 0.75rem;">
             <div style="flex: 1;">
                 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    @if($q->type == 'contribution')
+                        <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 10px;">💡 APPORT</span>
+                    @else
+                        <span class="badge" style="background: #f0fdf4; color: #15803d; font-size: 10px;">❓ QUESTION</span>
+                    @endif
+
+                    @if($q->panelist)
+                        <span class="badge" style="background: #f3f4f6; color: #374151; font-size: 10px; border: 1px solid var(--border);">@ {{ $q->panelist->pseudo }}</span>
+                    @endif
+
                     @if($q->status == 'rejected')
                         <span class="badge" style="background: #fee2e2; color: #dc2626; font-size: 10px;">FILTRÉ PAR IA 🤖</span>
                     @elseif($q->status == 'pending')
@@ -42,8 +52,12 @@
                 <div style="background: var(--muted); padding: 0.75rem; border-radius: 0.75rem; font-size: 0.875rem; {{ $reply->pseudo == 'Assistant Modérateur' ? 'border: 1px solid #fed7aa; background: #fffaf5;' : '' }}">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                         <span style="font-weight: 700;">{{ $reply->pseudo }}</span>
-                        @if($reply->is_moderator && $reply->pseudo != 'Assistant Modérateur')
-                            <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">OFFICIEL</span>
+                        @if($reply->is_moderator)
+                            @if($reply->pseudo == 'Modérateur')
+                                <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 0.625rem;">SUGGESTION MODÉRATEUR</span>
+                            @elseif($reply->pseudo != 'Assistant Modérateur')
+                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">OFFICIEL</span>
+                            @endif
                         @endif
                     </div>
                     <p>{{ $reply->content }}</p>

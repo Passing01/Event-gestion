@@ -34,14 +34,24 @@
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label class="form-label" for="date">Date de l'événement</label>
-                <input type="date" id="date" name="date" class="form-input"
-                       value="{{ old('date') }}"
-                       required>
-                @error('date')
-                    <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
-                @enderror
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="date">Date de l'événement</label>
+                    <input type="date" id="date" name="date" class="form-input"
+                           value="{{ old('date') }}"
+                           required>
+                    @error('date')
+                        <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="scheduled_at">Heure de démarrage</label>
+                    <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-input"
+                           value="{{ old('scheduled_at') }}">
+                    @error('scheduled_at')
+                        <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
+                    @enderror
+                </div>
             </div>
 
             <div style="height: 1px; background: var(--border); margin: 1.5rem 0;"></div>

@@ -90,10 +90,23 @@ class GeminiService
         { \"status\": \"ok|duplicate|off_topic\", \"message\": \"...\", \"suggestion\": \"...\" }";
 
         $response = $this->generateResponse($prompt);
+        Log::info("Gemini Moderation Raw Response: " . $response);
+
+        if (!$response) {
+            return ['status' => 'ok', 'message' => ''];
+        }
+
+        // Extraction robuste du JSON avec une regex
+        preg_match('/\{.*\}/s', $response, $matches);
+        $cleanJson = $matches[0] ?? $response;
         
-        // Nettoyage de la réponse si Gemini ajoute du markdown json
-        $cleanJson = trim(str_replace(['```json', '```'], '', $response));
+        $result = json_decode($cleanJson, true);
         
-        return json_decode($cleanJson, true) ?? ['status' => 'ok', 'message' => ''];
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error("Gemini JSON Parse Error: " . json_last_error_msg());
+            return ['status' => 'ok', 'message' => ''];
+        }
+
+        return $result;
     }
 }

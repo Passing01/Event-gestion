@@ -88,6 +88,7 @@ Route::post('/e/{code}/lower-hand', [ParticipantController::class, 'lowerHand'])
 Route::post('/e/{code}/heartbeat', [ParticipantController::class, 'heartbeat'])->name('participant.heartbeat');
 Route::post('/e/{code}/typing', [ParticipantController::class, 'updateTyping'])->name('participant.typing');
 Route::get('/e/{code}/active-participants', [ParticipantController::class, 'getActiveParticipants'])->name('participant.active-participants');
+Route::get('/e/{code}/participant/questions-fetch', [ParticipantController::class, 'fetchQuestionsPartial'])->name('participant.fetch-questions');
 
 // ──────────────────────────────────────────────
 //  Routes de Projection (Public/Régie)
@@ -158,7 +159,12 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     // Nouvelles routes pour le temps réel (Polling)
     Route::get('/{id}/moderator/questions-fetch', [ModeratorController::class, 'fetchQuestionsPartial'])->name('dashboard.moderator.fetch');
     Route::get('/{id}/panelist/questions-fetch', [PanelistController::class, 'fetchQuestionsPartial'])->name('dashboard.panelist.fetch');
-    Route::get('/{id}/participant/questions-fetch', [ParticipantController::class, 'fetchQuestionsPartial'])->name('dashboard.participant.fetch');
+
+    // Gestion du temps et paramètres
+    Route::post('/event/{id}/settings',  [ModeratorController::class, 'updateSettings'])->name('moderator.settings');
+    Route::post('/panelist/{id}/start',  [ModeratorController::class, 'startPresentation'])->name('moderator.panelist.start');
+    Route::post('/panelist/{id}/extend', [ModeratorController::class, 'addPresentationTime'])->name('moderator.panelist.extend');
+    Route::post('/panelist/{id}/stop',   [ModeratorController::class, 'stopPresentation'])->name('moderator.panelist.stop');
 });
 
 // ──────────────────────────────────────────────
@@ -170,5 +176,8 @@ Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->
     Route::post('/join', [PanelistController::class, 'join'])->name('join');
     Route::get('/e/{code}', [PanelistController::class, 'dashboard'])->name('dashboard');
     Route::post('/e/{code}/upload', [PanelistController::class, 'upload'])->name('upload');
+    Route::post('/e/{code}/delete-doc', [PanelistController::class, 'deleteDocument'])->name('delete-doc');
+    Route::post('/e/{code}/toggle-share', [PanelistController::class, 'toggleShare'])->name('toggle-share');
+    Route::post('/e/{code}/toggle-project', [PanelistController::class, 'toggleProject'])->name('toggle-project');
     Route::post('/e/{code}/ai-suggest', [PanelistController::class, 'aiSuggest'])->name('ai-suggest');
 });

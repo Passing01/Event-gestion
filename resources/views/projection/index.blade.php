@@ -12,11 +12,48 @@
             background: #000;
             color: #fff;
             height: 100vh;
+            width: 100vw;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
             font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+        .event-header {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px);
+            padding: 0.75rem 1.75rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            animation: slideDown 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .event-logo-box {
+            background: var(--brand);
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+        }
+        .event-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
         .projection-container {
             display: grid;
@@ -25,7 +62,19 @@
             height: 100%;
             padding: 2rem;
             gap: 2rem;
-            transition: all 0.5s ease-in-out;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .projection-container.full-mode {
+            grid-template-columns: 1fr 0%;
+            padding: 0;
+            gap: 0;
+        }
+        .projection-container.full-mode .qa-sidebar {
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            margin: 0;
+            padding: 0;
         }
         .main-content {
             display: flex;
@@ -58,24 +107,94 @@
             letter-spacing: 0.1em;
         }
         .qa-sidebar {
-            background: rgba(255,255,255,0.05);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            border-radius: 2rem;
+            padding: 1.75rem;
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.08);
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.25rem;
             overflow-y: auto;
+            position: relative;
         }
         .qa-item {
-            background: rgba(255,255,255,0.1);
-            padding: 1rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
+            background: rgba(255,255,255,0.05);
+            padding: 0;
+            border-radius: 1.25rem;
+            font-size: 0.9375rem;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
         }
-        .qa-item .q { font-weight: 700; margin-bottom: 0.5rem; color: var(--brand); }
-        .qa-item .a { font-size: 0.75rem; opacity: 0.8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem; margin-top: 0.5rem; }
+        .qa-item:hover { transform: translateX(-5px); border-color: var(--brand); }
+        .qa-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--brand);
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+        }
+        .qa-body {
+            padding: 1rem;
+        }
+        .qa-item .q { font-weight: 600; line-height: 1.5; color: #fff; }
+        .qa-item .a { 
+            font-size: 0.8125rem; 
+            opacity: 0.9; 
+            border-top: 1px dotted rgba(255,255,255,0.2); 
+            padding-top: 0.75rem; 
+            margin-top: 0.75rem;
+            color: var(--brand);
+            font-style: italic;
+        }
+
+        .hands-footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.15);
+            max-width: 80%;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .hands-footer::-webkit-scrollbar { display: none; }
+        .hand-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #fff;
+            color: #000;
+            padding: 0.5rem 1.25rem;
+            border-radius: 999px;
+            white-space: nowrap;
+            animation: fadeIn 0.5s ease;
+        }
+        .hand-card .status-dot {
+            width: 0.625rem;
+            height: 0.625rem;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse-green 1.5s infinite;
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
         
         .fullscreen-btn {
             position: absolute;
@@ -112,20 +231,33 @@
 </head>
 <body data-brand="{{ $event->user->brand_color ?? 'purple' }}">
 
-    <div class="event-logo">
-        <div class="event-logo-box">Q&A</div>
-        <span>{{ $event->name }}</span>
+    <div class="event-header">
+        <div class="event-logo-box">LIVE</div>
+        <span class="event-title">{{ $event->name }}</span>
+    </div>
+
+    {{-- Bandeau Permanent des Intervenants (Reste visible même en projection) --}}
+    <div id="hands-footer" class="hands-footer" style="display: none;">
+        <!-- Rempli par JS -->
     </div>
 
     <div class="projection-container" id="projection-wrap">
         <div class="main-content">
             <div class="question-box" id="projection-content">
-                @if($answering)
+                @if($projectingPanelist)
+                    {{-- Initial State if already projecting --}}
+                @elseif($answering)
                     <div class="question-content">"{{ $answering->content }}"</div>
                     <div class="question-author">{{ $answering->pseudo }}</div>
                 @else
                     <div class="empty-state" style="font-size: 2rem; color: var(--muted-foreground); font-style: italic;">En attente de la prochaine question...</div>
                 @endif
+            </div>
+
+            {{-- Live Presentation Badge --}}
+            <div id="presentation-badge" style="display: none; position: absolute; bottom: 2rem; left: 2rem; background: var(--brand); color: #fff; padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 700; align-items: center; gap: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 101;">
+                <span style="width: 0.75rem; height: 0.75rem; background: #fff; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                <span id="presenter-name"></span>
             </div>
             
             <div id="voice-indicator" class="voice-indicator" style="display: none;">
@@ -154,17 +286,55 @@
     <script>
         let currentQuestionId = {{ $answering ? $answering->id : 'null' }};
         let currentStatus = '{{ $answering ? $answering->status : "" }}';
+        let currentProjectingName = '{{ $projectingPanelist ? $projectingPanelist->user->name : "" }}';
         
         async function fetchAnswering() {
             try {
                 const response = await fetch('{{ route("projection.api", $event->code) }}');
                 const data = await response.json();
                 
-                // Mise à jour de la question principale
+                const container = document.getElementById('projection-content');
+                const wrap = document.getElementById('projection-wrap');
+                const badge = document.getElementById('presentation-badge');
+                const nameSpan = document.getElementById('presenter-name');
+
+                // 1. GESTION DE LA PROJECTION (PANÉLISTE)
+                if (data.projecting_panelist) {
+                    wrap.classList.add('full-mode');
+                    badge.style.display = 'flex';
+                    nameSpan.textContent = "EN DIRECT : " + data.projecting_panelist.name;
+
+                    if (currentProjectingName !== data.projecting_panelist.name) {
+                        currentProjectingName = data.projecting_panelist.name;
+                        
+                        let docHtml = '';
+                        const ext = data.projecting_panelist.extension.toLowerCase();
+                        if (ext === 'pdf') {
+                            docHtml = `<iframe src="${data.projecting_panelist.url}" style="width:100%; height:100vh; border:none;"></iframe>`;
+                        } else if (['ppt', 'pptx'].includes(ext)) {
+                            docHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.projecting_panelist.url)}" style="width:100%; height:100vh; border:none;"></iframe>`;
+                        } else {
+                            docHtml = `
+                                <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
+                                    <div style="font-size: 2rem; color: #fff;">Document : ${data.projecting_panelist.path}</div>
+                                </div>
+                            `;
+                        }
+                        container.innerHTML = docHtml;
+                    }
+                    
+                    updateHandsFooter(data.raised_hands);
+                    return; 
+                } else {
+                    wrap.classList.remove('full-mode');
+                    badge.style.display = 'none';
+                    currentProjectingName = '';
+                }
+
+                // 2. GESTION DES QUESTIONS (SI PAS DE PROJECTION)
                 if (data.id !== currentQuestionId || data.status !== currentStatus) {
                     currentQuestionId = data.id;
                     currentStatus = data.status;
-                    const container = document.getElementById('projection-content');
                     
                     if (data.id) {
                         let contentHtml = data.content ? `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>` : '';
@@ -199,21 +369,31 @@
                     }
                 }
 
-                // Mise à jour de la liste Q&A
                 const qaList = document.getElementById('qa-list');
                 if (data.all_questions) {
-                    qaList.innerHTML = data.all_questions.map(q => `
-                        <div class="qa-item">
-                            <div class="q">
-                                ${q.content ? q.content : ''}
-                                ${q.audio_path ? '<div style="font-size: 0.75rem; color: var(--brand); margin-top: 0.25rem;">🎤 Message Vocal</div>' : ''}
+                    const colors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+                    qaList.innerHTML = data.all_questions.map((q, idx) => {
+                        const color = colors[idx % colors.length];
+                        return `
+                        <div class="qa-item" style="border-left: 4px solid ${color}">
+                            <div class="qa-header" style="background: ${color}">
+                                <span>${q.pseudo}</span>
+                                <span>#${q.id}</span>
                             </div>
-                            ${q.replies.length > 0 ? `<div class="a">${q.replies[0].content}</div>` : ''}
+                            <div class="qa-body">
+                                <div class="q">
+                                    ${q.content ? q.content : ''}
+                                    ${q.audio_path ? '<div style="font-size: 0.75rem; color: ' + color + '; margin-top: 0.25rem;">🎤 Message Vocal</div>' : ''}
+                                </div>
+                                ${q.replies.length > 0 ? `<div class="a">${q.replies[0].content}</div>` : ''}
+                            </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 }
 
-                // Indicateur vocal (si quelqu'un parle)
+                // Update hands footer
+                updateHandsFooter(data.raised_hands);
+
                 const voiceIndicator = document.getElementById('voice-indicator');
                 if (data.raised_hands && data.raised_hands.some(h => h.status === 'called')) {
                     voiceIndicator.style.display = 'flex';
@@ -223,6 +403,22 @@
 
             } catch (error) {
                 console.error('Erreur polling:', error);
+            }
+        }
+
+        function updateHandsFooter(hands) {
+            const footer = document.getElementById('hands-footer');
+            if (hands && hands.some(h => h.status === 'called')) {
+                footer.style.display = 'flex';
+                footer.innerHTML = hands.filter(h => h.status === 'called').map(h => `
+                    <div class="hand-card">
+                        <div class="status-dot"></div>
+                        <span style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">Direct</span>
+                        <span style="font-weight: 600;">${h.pseudo}</span>
+                    </div>
+                `).join('');
+            } else {
+                footer.style.display = 'none';
             }
         }
 

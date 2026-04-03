@@ -32,6 +32,10 @@ class ParticipantController extends Controller
             return back()->withErrors(['code' => 'Cet événement est actuellement désactivé ou archivé.']);
         }
 
+        if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
+            return back()->withErrors(['code' => 'Cet événement n\'a pas encore commencé. Heure prévue : ' . $event->scheduled_at->format('d/m/Y H:i')]);
+        }
+
         // Stocker le pseudo et l'event en session
         session([
             'participant_pseudo' => $data['pseudo'],
@@ -53,16 +57,23 @@ class ParticipantController extends Controller
             return redirect()->route('participant.join')->withErrors(['code' => 'Cet événement est actuellement désactivé ou archivé.']);
         }
 
+        if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
+            return redirect()->route('participant.join', ['code' => $code])->withErrors(['code' => 'Cet événement n\'a pas encore commencé. Heure prévue : ' . $event->scheduled_at->format('d/m/Y H:i')]);
+        }
+
         if (!session('participant_pseudo') || session('current_event_code') != $code) {
             return redirect()->route('participant.join', ['code' => $code]);
         }
 
         $pseudo = session('participant_pseudo');
 
+        // Récupérer les panélistes de l'événement
+        $panelists = $event->panelists()->get();
+
         // Récupérer les questions approuvées, en cours, répondues 
         // OU les questions en attente/rejetées de l'utilisateur actuel
         $questions = $event->questions()
-            ->with(['replies'])
+            ->with(['replies', 'panelist'])
             ->where(function($query) use ($pseudo) {
                 $query->whereIn('status', ['approved', 'answering', 'answered'])
                       ->orWhere(function($q) use ($pseudo) {
@@ -74,21 +85,21 @@ class ParticipantController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('participant.event', compact('event', 'questions'));
+        return view('participant.event', compact('event', 'questions', 'panelists'));
     }
 
     /**
      * Fetch questions HTML partials for polling (Participant).
      */
-    public function fetchQuestionsPartial($id)
+    public function fetchQuestionsPartial($code)
     {
-        $event = Event::findOrFail($id);
+        $event = Event::where('code', $code)->firstOrFail();
         $pseudo = session('participant_pseudo');
 
         if (!$pseudo) return response()->json(['html' => '']);
 
         $questions = $event->questions()
-            ->with(['replies'])
+            ->with(['replies', 'panelist'])
             ->where(function($query) use ($pseudo) {
                 $query->whereIn('status', ['approved', 'answering', 'answered'])
                       ->orWhere(function($q) use ($pseudo) {
@@ -118,6 +129,8 @@ class ParticipantController extends Controller
         }
 
         $data = $request->validate([
+            'type' => 'nullable|in:question,contribution',
+            'panelist_id' => 'nullable|exists:panelists,id',
             'content' => 'nullable|string|max:5000',
             'audio' => 'nullable|file|mimes:webm,mp3,wav,ogg|max:5120', // 5MB max
         ]);
@@ -139,6 +152,8 @@ class ParticipantController extends Controller
                 // Créer la question quand même, mais en mode "rejected" (filtrée par IA)
                 $question = $event->questions()->create([
                     'pseudo' => session('participant_pseudo'),
+                    'type' => $data['type'] ?? 'question',
+                    'panelist_id' => $data['panelist_id'],
                     'content' => $data['content'],
                     'audio_path' => $audioPath,
                     'status' => 'rejected', // On utilise rejected pour les cacher du flux principal
@@ -163,6 +178,8 @@ class ParticipantController extends Controller
         // Si tout est OK, on crée la question normalement
         $event->questions()->create([
             'pseudo' => session('participant_pseudo'),
+            'type' => $data['type'] ?? 'question',
+            'panelist_id' => $data['panelist_id'],
             'content' => $data['content'],
             'audio_path' => $audioPath,
             'status' => $event->moderation_enabled ? 'pending' : 'approved',

@@ -13,6 +13,7 @@ class Event extends Model
         'user_id',
         'name',
         'description',
+        'scheduled_at',
         'code',
         'date',
         'moderation_enabled',
@@ -22,6 +23,7 @@ class Event extends Model
 
     protected $casts = [
         'date' => 'date',
+        'scheduled_at' => 'datetime',
         'moderation_enabled' => 'boolean',
         'anonymous_allowed' => 'boolean',
     ];

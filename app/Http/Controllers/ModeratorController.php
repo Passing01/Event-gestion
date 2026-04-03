@@ -18,9 +18,11 @@ class ModeratorController extends Controller
         
         // Toutes les questions sauf celles rejetées par l'IA
         $allQuestions = $event->questions()
-            ->with(['replies'])
+            ->with(['replies', 'panelist'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $panelists = $event->panelists()->with('user')->get();
 
         // Séparer les questions filtrées (rejetées par l'Assistant Modérateur)
         $filteredByAI = $allQuestions->filter(function($q) {
@@ -32,7 +34,7 @@ class ModeratorController extends Controller
             return $filteredByAI->contains('id', $q->id);
         });
 
-        return view('moderator.index', compact('event', 'questions', 'filteredByAI'));
+        return view('moderator.index', compact('event', 'questions', 'filteredByAI', 'panelists'));
     }
 
     /**
@@ -75,7 +77,7 @@ class ModeratorController extends Controller
         $event = Event::findOrFail($id);
         
         $allQuestions = $event->questions()
-            ->with(['replies'])
+            ->with(['replies', 'panelist'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -87,9 +89,12 @@ class ModeratorController extends Controller
             return $filteredByAI->contains('id', $q->id);
         });
 
+        $panelists = $event->panelists()->with('user')->get();
+
         return response()->json([
             'main_html' => view('moderator.partials.questions_list', compact('questions'))->render(),
             'filtered_html' => view('moderator.partials.filtered_list', compact('filteredByAI'))->render(),
+            'panelists_html' => view('moderator.partials.panelists_list', compact('panelists'))->render(),
             'counts' => [
                 'active' => $questions->count(),
                 'filtered' => $filteredByAI->count(),
@@ -186,5 +191,77 @@ class ModeratorController extends Controller
         }
 
         return back()->with('success', 'Statut mis à jour.');
+    }
+
+    /**
+     * Update event settings.
+     */
+    public function updateSettings(Request $request, $id)
+    {
+        $event = Event::findOrFail($id);
+        if ($event->user_id !== Auth::id()) abort(403);
+
+        $data = $request->validate([
+            'scheduled_at' => 'nullable|date',
+            'moderation_enabled' => 'boolean',
+            'anonymous_allowed' => 'boolean',
+        ]);
+
+        $event->update([
+            'scheduled_at' => $data['scheduled_at'],
+            'moderation_enabled' => $request->has('moderation_enabled'),
+            'anonymous_allowed' => $request->has('anonymous_allowed'),
+        ]);
+
+        return back()->with('success', 'Paramètres mis à jour.');
+    }
+
+    /**
+     * Start panelist presentation timer.
+     */
+    public function startPresentation(Request $request, $panelistId)
+    {
+        $panelist = \App\Models\Panelist::findOrFail($panelistId);
+        if ($panelist->event->user_id !== Auth::id()) abort(403);
+
+        $request->validate(['duration' => 'required|integer|min:1']);
+
+        $panelist->update([
+            'presentation_duration' => $request->duration,
+            'presentation_started_at' => now(),
+        ]);
+
+        return back()->with('success', 'Chrono lancé pour ' . $panelist->user->name);
+    }
+
+    /**
+     * Add time to presentation.
+     */
+    public function addPresentationTime(Request $request, $panelistId)
+    {
+        $panelist = \App\Models\Panelist::findOrFail($panelistId);
+        if ($panelist->event->user_id !== Auth::id()) abort(403);
+
+        $request->validate(['minutes' => 'required|integer|min:1']);
+
+        $panelist->increment('presentation_duration', $request->minutes);
+
+        return back()->with('success', 'Temps ajouté.');
+    }
+
+    /**
+     * Stop presentation.
+     */
+    public function stopPresentation($panelistId)
+    {
+        $panelist = \App\Models\Panelist::findOrFail($panelistId);
+        if ($panelist->event->user_id !== Auth::id()) abort(403);
+
+        $panelist->update([
+            'presentation_started_at' => null,
+            'is_projecting' => false
+        ]);
+
+        return back()->with('success', 'Présentation terminée.');
     }
 }

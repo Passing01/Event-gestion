@@ -35,6 +35,7 @@ class EventController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date' => 'required|date|after_or_equal:today',
+            'scheduled_at' => 'nullable|date',
             'moderation_enabled' => 'boolean',
             'anonymous_allowed' => 'boolean',
         ]);
@@ -43,6 +44,7 @@ class EventController extends Controller
             'name' => $data['name'],
             'description' => $data['description'],
             'date' => $data['date'],
+            'scheduled_at' => $data['scheduled_at'] ?? $data['date'],
             'code' => strtoupper(Str::random(6)),
             'moderation_enabled' => $request->has('moderation_enabled'),
             'anonymous_allowed' => $request->has('anonymous_allowed'),
@@ -81,6 +83,7 @@ class EventController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date' => 'required|date',
+            'scheduled_at' => 'nullable|date',
             'status' => 'required|string|in:active,archived',
         ]);
 
@@ -88,6 +91,7 @@ class EventController extends Controller
             'name' => $data['name'],
             'description' => $data['description'],
             'date' => $data['date'],
+            'scheduled_at' => $data['scheduled_at'],
             'status' => $data['status'],
             'moderation_enabled' => $request->has('moderation_enabled'),
             'anonymous_allowed' => $request->has('anonymous_allowed'),

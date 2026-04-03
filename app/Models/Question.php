@@ -12,6 +12,8 @@ class Question extends Model
     protected $fillable = [
         'event_id',
         'pseudo',
+        'type',
+        'panelist_id',
         'content',
         'audio_path',
         'status',
@@ -21,6 +23,11 @@ class Question extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function panelist(): BelongsTo
+    {
+        return $this->belongsTo(Panelist::class);
     }
 
     public function replies(): HasMany

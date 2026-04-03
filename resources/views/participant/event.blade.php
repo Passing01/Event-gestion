@@ -18,7 +18,25 @@
             </div>
         </div>
 
-        {{-- Section Main Levée --}}
+               {{-- Panelists Display --}}
+        @if($panelists->count() > 0)
+        <div style="margin-bottom: 1.5rem;">
+            <p style="font-size: 0.75rem; font-weight: 700; color: var(--muted-foreground); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Panel d'experts</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                @foreach($panelists as $p)
+                <div style="background: #fff; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 1rem; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="width: 2rem; height: 2rem; background: var(--brand-light); color: var(--brand); border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.875rem;">
+                        {{ substr($p->pseudo, 0, 1) }}
+                    </div>
+                    <div>
+                        <p style="font-size: 0.875rem; font-weight: 600; margin: 0; line-height: 1;">{{ $p->pseudo }}</p>
+                        <p style="font-size: 0.625rem; color: var(--muted-foreground); margin: 0.25rem 0 0 0;">Panéliste</p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
         @php
             $myHand = $event->raisedHands()->where('pseudo', session('participant_pseudo'))->first();
             $rank = $myHand ? $event->raisedHands()->where('status', 'pending')->where('created_at', '<', $myHand->created_at)->count() + 1 : null;
@@ -76,7 +94,26 @@
             <h2 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Posez votre question</h2>
             <form id="question-form" action="{{ route('participant.ask', $event->code) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre question ici..." style="resize: none; margin-bottom: 0.75rem;" maxlength="5000">{{ old('content') }}</textarea>
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted-foreground); display: block; margin-bottom: 0.25rem;">TYPE</label>
+                        <select name="type" class="form-input" style="font-size: 0.875rem; padding: 0.5rem;">
+                            <option value="question">❓ Question</option>
+                            <option value="contribution">💡 Apport / Témoignage</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted-foreground); display: block; margin-bottom: 0.25rem;">ADRESSÉ À (Optionnel)</label>
+                        <select name="panelist_id" class="form-input" style="font-size: 0.875rem; padding: 0.5rem;">
+                            <option value="">Tout le panel</option>
+                            @foreach($panelists as $p)
+                                <option value="{{ $p->id }}">@ {{ $p->pseudo }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre message ici..." style="resize: none; margin-bottom: 0.75rem;" maxlength="5000">{{ old('content') }}</textarea>
                 <input type="file" name="audio" id="audio-input" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -273,11 +310,14 @@
 
     // --- TEMPS RÉEL : Questions ---
     async function fetchQuestions() {
-        // Détecter si on est en train de taper dans une réponse ou une question
+        // Bloquer si on enregistre un vocal ou si un formulaire est ouvert/focus
         const activeElement = document.activeElement;
         const isTyping = activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT');
         
-        if (isTyping || isRecording) return;
+        // On vérifie aussi si un formulaire de réponse est affiché (pour ne pas le fermer)
+        const isAnyReplyFormOpen = Array.from(document.querySelectorAll('form[id^="reply-form-"]')).some(f => f.style.display === 'flex');
+
+        if (isTyping || isRecording || isAnyReplyFormOpen) return;
 
         try {
             const response = await fetch(`/e/${eventCode}/participant/questions-fetch`);
@@ -289,14 +329,18 @@
             if (document.getElementById('questions-count-badge')) {
                 document.getElementById('questions-count-badge').textContent = `${data.count} questions visibles`;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Polling error:", e);
+        }
     }
 
     function toggleReplyForm(id) {
         const form = document.getElementById('reply-form-' + id);
-        form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-        if (form.style.display === 'flex') {
+        if (form.style.display === 'none' || !form.style.display) {
+            form.style.display = 'flex';
             form.querySelector('input').focus();
+        } else {
+            form.style.display = 'none';
         }
     }
 

@@ -11,7 +11,22 @@
                 <h1 style="margin-top: 0.5rem;">Console Panéliste : {{ $event->name }}</h1>
                 <p>Bienvenue, <strong>{{ Auth::user()->name }}</strong> ({{ $panelist->sector }})</p>
             </div>
-            <div style="display: flex; gap: 0.75rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                @if($panelist->presentation_started_at)
+                    @php
+                        $elapsed = now()->diffInMinutes($panelist->presentation_started_at);
+                        $remaining = max(0, $panelist->presentation_duration - $elapsed);
+                        $isLowTime = $remaining <= 5;
+                    @endphp
+                    <div style="background: {{ $isLowTime ? '#fee2e2' : 'var(--brand-light)' }}; border: 2px solid {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; padding: 0.5rem 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.5rem; animation: {{ $isLowTime ? 'pulse 1s infinite' : 'none' }};">
+                        <span style="font-size: 1.25rem;">⏱️</span>
+                        <div style="text-align: right;">
+                            <p style="font-size: 0.625rem; font-weight: 700; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; margin: 0;">TEMPS RESTANT</p>
+                            <p style="font-size: 1.125rem; font-weight: 800; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; line-height: 1;">{{ $remaining }} MIN</p>
+                        </div>
+                    </div>
+                @endif
+
                 <button class="btn-brand" onclick="document.getElementById('upload-modal').style.display='flex'">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.25rem;height:1.25rem;margin-right:0.5rem;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -23,19 +38,45 @@
     </div>
 
     @if($panelist->presentation_path)
-        <div style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 1rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.5rem;height:1.5rem;">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                    <p style="font-weight: 600;">Document chargé</p>
-                    <p style="font-size: 0.875rem;">L'IA analyse votre document pour vous assister dans les réponses.</p>
+        <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1.25rem; border-radius: 1rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 3rem; height: 3rem; background: #e2e8f0; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        📄
+                    </div>
+                    <div>
+                        <p style="font-weight: 700; font-size: 1rem;">Document chargé</p>
+                        <p style="font-size: 0.8125rem; color: var(--muted-foreground);">Analyse IA et Projection disponibles</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: #fff; color: var(--foreground); border: 1px solid var(--border);" onclick="document.getElementById('view-doc-modal').style.display='flex'">
+                        🖼️ Aperçu
+                    </button>
+
+                    <form action="{{ route('panelist.toggle-share', $event->code) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: {{ $panelist->is_document_shared ? '#dcfce7' : '#fff' }}; color: {{ $panelist->is_document_shared ? '#16a34a' : 'var(--foreground)' }}; border: 1px solid {{ $panelist->is_document_shared ? '#16a34a' : 'var(--border)' }};">
+                            {{ $panelist->is_document_shared ? '🤝 Partagé' : '🔒 Privé' }}
+                        </button>
+                    </form>
+
+                    <form action="{{ route('panelist.toggle-project', $event->code) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: {{ $panelist->is_projecting ? '#4f46e5' : '#fff' }}; color: {{ $panelist->is_projecting ? '#fff' : 'var(--foreground)' }}; border: 1px solid {{ $panelist->is_projecting ? '#4f46e5' : 'var(--border)' }};">
+                            {{ $panelist->is_projecting ? '⏹️ Arrêter Projection' : '📺 Projeter' }}
+                        </button>
+                    </form>
+
+                    <form action="{{ route('panelist.delete-doc', $event->code) }}" method="POST" onsubmit="return confirm('Supprimer ce document ?');">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: #fee2e2; color: #dc2626; border: 1px solid #fee2e2;">
+                            🗑️ Supprimer
+                        </button>
+                    </form>
                 </div>
             </div>
-            <button class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: #fff; color: #065f46; border: 1px solid #10b981;" onclick="document.getElementById('view-doc-modal').style.display='flex'">
-                Voir le document
-            </button>
         </div>
     @endif
 
@@ -353,6 +394,11 @@
 .active-tab {
     border-bottom: 2px solid var(--brand) !important;
     color: var(--foreground) !important;
+}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
 }
 </style>
 @endpush

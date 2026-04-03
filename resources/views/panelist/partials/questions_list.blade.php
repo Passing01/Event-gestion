@@ -7,7 +7,20 @@
                 </div>
                 <div>
                     <p style="font-weight: 600; font-size: 0.875rem;">{{ $question->pseudo ?? 'Anonyme' }}</p>
-                    <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $question->created_at->diffForHumans() }}</p>
+                    <div style="display: flex; gap: 0.25rem; margin-top: 0.25rem; flex-wrap: wrap;">
+                        @if($question->type == 'contribution')
+                            <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 9px; padding: 0.1rem 0.4rem;">💡 APPORT</span>
+                        @else
+                            <span class="badge" style="background: #f0fdf4; color: #15803d; font-size: 9px; padding: 0.1rem 0.4rem;">❓ QUESTION</span>
+                        @endif
+
+                        @if($question->panelist_id == session('panelist_id'))
+                            <span class="badge" style="background: #4f46e5; color: white; font-size: 9px; padding: 0.1rem 0.4rem; animation: pulse 2s infinite;">🎯 CIBLÉE SUR VOUS</span>
+                        @elseif($question->panelist)
+                            <span class="badge" style="background: #f3f4f6; color: #374151; font-size: 9px; padding: 0.1rem 0.4rem; border: 1px solid var(--border);">Pour : {{ $question->panelist->pseudo }}</span>
+                        @endif
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">{{ $question->created_at->diffForHumans() }}</p>
                 </div>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -52,7 +65,11 @@
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                         <span style="font-weight: 700;">{{ $reply->pseudo ?? 'Panéliste' }}</span>
                         @if($reply->is_moderator)
-                            <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">PANÉLISTE</span>
+                            @if($reply->pseudo == 'Modérateur')
+                                <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 0.625rem;">SUGGESTION MODÉRATEUR</span>
+                            @else
+                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">OFFICIEL</span>
+                            @endif
                         @endif
                     </div>
                     <p>{{ $reply->content }}</p>

@@ -44,6 +44,9 @@
                 <p>Événement : <strong>{{ $event->name }}</strong> (Code : {{ $event->code }})</p>
             </div>
             <div style="display: flex; gap: 0.75rem;">
+                <button onclick="openSettingsModal()" class="btn-brand" style="background: var(--muted); color: var(--foreground);">
+                    ⚙️ Paramètres
+                </button>
                 <a href="{{ route('projection.index', $event->code) }}" target="_blank" class="btn-brand" style="background: var(--muted); color: var(--foreground);">
                     Ouvrir la Projection ↗
                 </a>
@@ -113,6 +116,14 @@
                         <!-- Rempli par JS -->
                     </div>
                 </div>
+
+                {{-- Panelistes & Chronos --}}
+                <div class="card" style="border-top: 3px solid #10b981;">
+                    <h3 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem;">📊 Experts & Chronos</h3>
+                    <div id="panelists-container">
+                        @include('moderator.partials.panelists_list', ['panelists' => $panelists])
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -130,12 +141,42 @@
     </div>
 </div>
 
-{{-- Modal Édition --}}
+{{-- Modal Paramètres --}}
+<div id="settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:1rem;">
+    <div class="card" style="width:100%; max-width:28rem;">
+        <div class="section-header">
+            <h2 class="section-title">Paramètres de l'événement</h2>
+            <button onclick="document.getElementById('settings-modal').style.display='none'" style="background:none; border:none; font-size:1.25rem; cursor:pointer;">&times;</button>
+        </div>
+        <form action="{{ route('dashboard.moderator.settings', $event->id) }}" method="POST">
+            @csrf
+            <div class="form-group">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Date et Heure de démarrage</label>
+                <input type="datetime-local" name="scheduled_at" class="form-input" value="{{ $event->scheduled_at ? $event->scheduled_at->format('Y-m-d\TH:i') : '' }}">
+                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">L'accès sera bloqué pour le public avant cette heure.</p>
+            </div>
+            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                    <input type="checkbox" name="moderation_enabled" {{ $event->moderation_enabled ? 'checked' : '' }}>
+                    Activer la modération manuelle
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                    <input type="checkbox" name="anonymous_allowed" {{ $event->anonymous_allowed ? 'checked' : '' }}>
+                    Autoriser l'anonymat
+                </label>
+            </div>
+            <div style="margin-top:1.5rem;">
+                <button type="submit" class="btn-brand">Sauvegarder les paramètres</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:1rem;">
     <div class="card" style="width:100%; max-width:28rem;">
         <div class="section-header">
             <h2 class="section-title">Corriger la question</h2>
-            <button onclick="document.getElementById('edit-modal').style.display='none'" style="background:none; border:none; font-size:1.25rem; cursor:pointer;">&times;</button>
+            <button onclick="isEditing=false; document.getElementById('edit-modal').style.display='none'" style="background:none; border:none; font-size:1.25rem; cursor:pointer;">&times;</button>
         </div>
         <form id="edit-form" method="POST">
             @csrf
@@ -172,7 +213,7 @@
 
     // --- Fonctions existantes ---
     function openEditModal(id, content) {
-        isEditing = true; // Activer le flag
+        isEditing = true;
         const modal = document.getElementById('edit-modal');
         const form = document.getElementById('edit-form');
         const textarea = document.getElementById('edit-content');
@@ -182,11 +223,9 @@
         modal.style.display = 'flex';
     }
 
-    // Fermer le modal
-    document.querySelector('#edit-modal button').onclick = function() {
-        isEditing = false; // Désactiver le flag
-        document.getElementById('edit-modal').style.display = 'none';
-    };
+    function openSettingsModal() {
+        document.getElementById('settings-modal').style.display = 'flex';
+    }
 
     const eventCode = '{{ $event->code }}';
     async function fetchParticipants() {
@@ -218,6 +257,7 @@
             // Mise à jour des containers
             document.getElementById('questions-container-active').innerHTML = data.main_html;
             document.getElementById('questions-container-filtered').innerHTML = data.filtered_html;
+            document.getElementById('panelists-container').innerHTML = data.panelists_html;
             
             // Mise à jour des badges d'onglets
             document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;

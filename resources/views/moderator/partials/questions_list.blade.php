@@ -7,6 +7,16 @@
                 <span class="badge" style="margin-bottom: 0.5rem; background: {{ $q->status == 'answered' ? '#f3f4f6' : '' }}; color: {{ $q->status == 'answered' ? '#6b7280' : '' }};">
                     {{ strtoupper($q->status == 'answering' ? 'en cours' : ($q->status == 'answered' ? 'répondu' : $q->status)) }}
                 </span>
+                
+                @if($q->type == 'contribution')
+                    <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 10px; margin-bottom: 0.5rem;">💡 APPORT</span>
+                @else
+                    <span class="badge" style="background: #f0fdf4; color: #15803d; font-size: 10px; margin-bottom: 0.5rem;">❓ QUESTION</span>
+                @endif
+
+                @if($q->panelist)
+                    <span class="badge" style="background: #f3f4f6; color: #374151; font-size: 10px; border: 1px solid var(--border); margin-bottom: 0.5rem;">ADRESSÉ À : {{ $q->panelist->pseudo }}</span>
+                @endif
                 <p style="font-size: 1rem; font-weight: 500;">{{ $q->content }}</p>
                 
                 @if($q->audio_path)
@@ -76,7 +86,11 @@
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                         <span style="font-weight: 600;">{{ $reply->pseudo }}</span>
                         @if($reply->is_moderator)
-                        <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">MODÉRATEUR</span>
+                            @if($reply->pseudo == 'Modérateur')
+                                <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 0.625rem;">MA SUGGESTION</span>
+                            @else
+                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">RÉPONSE OFFICIELLE</span>
+                            @endif
                         @endif
                         <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $reply->created_at->diffForHumans() }}</span>
                     </div>

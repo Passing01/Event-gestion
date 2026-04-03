@@ -14,8 +14,9 @@ class ProjectionController extends Controller
     {
         $event = Event::where('code', $code)->firstOrFail();
         $answering = $event->questions()->where('status', 'answering')->first();
+        $projectingPanelist = $event->panelists()->where('is_projecting', true)->with('user')->first();
         
-        return view('projection.index', compact('event', 'answering'));
+        return view('projection.index', compact('event', 'answering', 'projectingPanelist'));
     }
 
     /**
@@ -37,6 +38,8 @@ class ProjectionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $projectingPanelist = $event->panelists()->where('is_projecting', true)->with('user')->first();
+
         return response()->json([
             'id' => $answering ? $answering->id : null,
             'pseudo' => $answering ? $answering->pseudo : null,
@@ -44,7 +47,13 @@ class ProjectionController extends Controller
             'audio_path' => $answering ? $answering->audio_path : null,
             'status' => $answering ? $answering->status : null,
             'raised_hands' => $raisedHands,
-            'all_questions' => $allQuestions
+            'all_questions' => $allQuestions,
+            'projecting_panelist' => $projectingPanelist ? [
+                'name' => $projectingPanelist->user->name,
+                'path' => $projectingPanelist->presentation_path,
+                'url' => asset('storage/' . $projectingPanelist->presentation_path),
+                'extension' => pathinfo($projectingPanelist->presentation_path, PATHINFO_EXTENSION)
+            ] : null
         ]);
     }
 }
