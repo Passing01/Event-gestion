@@ -284,16 +284,38 @@ class PanelistController extends Controller
     {
         $event = Event::where('code', $code)->firstOrFail();
         
-        // Unset any other panelist projecting for this event
-        Panelist::where('event_id', $event->id)->update(['is_projecting' => false]);
-
         $panelist = Panelist::where('event_id', $event->id)
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        $panelist->update(['is_projecting' => !$panelist->is_projecting]);
+        $newState = !$panelist->is_projecting;
+
+        // Si on active, on désactive les autres d'abord
+        if ($newState) {
+            Panelist::where('event_id', $event->id)->update(['is_projecting' => false]);
+            $panelist->current_page = 1; 
+        }
+
+        $panelist->is_projecting = $newState;
+        $panelist->save();
 
         return back()->with('success', $panelist->is_projecting ? 'Projection lancée !' : 'Projection arrêtée.');
+    }
+
+    /**
+     * Sync current page for projection.
+     */
+    public function syncPage(Request $request, $code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        $panelist = Panelist::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $page = $request->input('page', 1);
+        $panelist->update(['current_page' => max(1, $page)]);
+
+        return response()->json(['status' => 'ok', 'current_page' => $panelist->current_page]);
     }
 
     /**

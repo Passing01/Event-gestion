@@ -286,8 +286,9 @@
     <script>
         let currentQuestionId = {{ $answering ? $answering->id : 'null' }};
         let currentStatus = '{{ $answering ? $answering->status : "" }}';
-        let currentProjectingName = '{{ $projectingPanelist ? $projectingPanelist->user->name : "" }}';
-        
+        let lastProjectingPath = null;
+        let lastProjectingPage = null;
+
         async function fetchAnswering() {
             try {
                 const response = await fetch('{{ route("projection.api", $event->code) }}');
@@ -304,15 +305,20 @@
                     badge.style.display = 'flex';
                     nameSpan.textContent = "EN DIRECT : " + data.projecting_panelist.name;
 
-                    if (currentProjectingName !== data.projecting_panelist.name) {
-                        currentProjectingName = data.projecting_panelist.name;
+                    const newPath = data.projecting_panelist.path;
+                    const newPage = data.projecting_panelist.current_page || 1;
+
+                    if (newPath !== lastProjectingPath || newPage !== lastProjectingPage) {
+                        lastProjectingPath = newPath;
+                        lastProjectingPage = newPage;
                         
                         let docHtml = '';
                         const ext = data.projecting_panelist.extension.toLowerCase();
                         if (ext === 'pdf') {
-                            docHtml = `<iframe src="${data.projecting_panelist.url}" style="width:100%; height:100vh; border:none;"></iframe>`;
+                            docHtml = `<iframe src="${data.projecting_panelist.url}#page=${newPage}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
                         } else if (['ppt', 'pptx'].includes(ext)) {
-                            docHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.projecting_panelist.url)}" style="width:100%; height:100vh; border:none;"></iframe>`;
+                            // Note: Google/Office viewers might not support page syncing easily via URL here
+                            docHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.projecting_panelist.url)}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
                         } else {
                             docHtml = `
                                 <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
@@ -328,7 +334,8 @@
                 } else {
                     wrap.classList.remove('full-mode');
                     badge.style.display = 'none';
-                    currentProjectingName = '';
+                    lastProjectingPath = null;
+                    lastProjectingPage = null;
                 }
 
                 // 2. GESTION DES QUESTIONS (SI PAS DE PROJECTION)

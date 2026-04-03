@@ -4,62 +4,41 @@
 
 @section('content')
 
-<main class="auth-page" style="padding: 1rem; background: var(--muted);">
-    <div class="auth-card" style="max-width: 40rem; width: 100%; padding: 1.5rem;">
+<main class="auth-page" style="padding: 0.5rem; background: #f1f5f9; min-height: 100vh;">
+    <div class="auth-card" style="max-width: 42rem; width: 100%; padding: 1.25rem; border-radius: 1.5rem; margin-bottom: 2rem;">
 
-        {{-- Header --}}
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-            <div>
-                <h1 style="font-size: 1.25rem; margin-bottom: 0.25rem;">{{ $event->name }}</h1>
-                <p style="font-size: 0.75rem; color: var(--muted-foreground);">Connecté en tant que <strong>{{ session('participant_pseudo') }}</strong></p>
+        {{-- Header Responsif --}}
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem;">
+            <div style="flex: 1;">
+                <h1 style="font-size: 1.125rem; font-weight: 800; margin-bottom: 0.125rem; line-height: 1.2;">{{ $event->name }}</h1>
+                <p style="font-size: 0.75rem; color: var(--muted-foreground); display: flex; align-items: center; gap: 0.4rem;">
+                    <span style="width: 0.5rem; height: 0.5rem; background: #10b981; border-radius: 50%;"></span>
+                    En direct • {{ session('participant_pseudo') }}
+                </p>
             </div>
-            <div style="background: var(--brand); color: #fff; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600;">
-                {{ $event->code }}
+            <div style="background: var(--brand); color: #fff; padding: 0.4rem 0.8rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 12px var(--brand-soft);">
+                #{{ $event->code }}
             </div>
         </div>
 
-               {{-- Panelists Display --}}
-        @if($panelists->count() > 0)
-        <div style="margin-bottom: 1.5rem;">
-            <p style="font-size: 0.75rem; font-weight: 700; color: var(--muted-foreground); text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 0.05em;">Panel d'experts</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                @foreach($panelists as $p)
-                <div style="background: #fff; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 1rem; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                    <div style="width: 2rem; height: 2rem; background: var(--brand-light); color: var(--brand); border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.875rem;">
-                        {{ substr($p->pseudo, 0, 1) }}
-                    </div>
-                    <div>
-                        <p style="font-size: 0.875rem; font-weight: 600; margin: 0; line-height: 1;">{{ $p->pseudo }}</p>
-                        <p style="font-size: 0.625rem; color: var(--muted-foreground); margin: 0.25rem 0 0 0;">Panéliste</p>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
+        {{-- Main Levée & Statut --}}
         @php
             $myHand = $event->raisedHands()->where('pseudo', session('participant_pseudo'))->first();
             $rank = $myHand ? $event->raisedHands()->where('status', 'pending')->where('created_at', '<', $myHand->created_at)->count() + 1 : null;
         @endphp
 
-        <div style="background: var(--muted); padding: 1rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 2.5rem; height: 2.5rem; background: {{ $myHand ? 'var(--brand)' : '#fff' }}; color: {{ $myHand ? '#fff' : 'var(--brand)' }}; border-radius: 50%; display: grid; place-items: center; font-size: 1.25rem; transition: all 0.3s;">
+        <div style="background: #fff; padding: 1rem; border-radius: 1rem; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 2.75rem; height: 2.75rem; background: {{ $myHand ? 'var(--brand)' : '#f8fafc' }}; color: {{ $myHand ? '#fff' : 'var(--brand)' }}; border-radius: 50%; display: grid; place-items: center; font-size: 1.25rem; transition: all 0.3s; border: 1px solid {{ $myHand ? 'var(--brand)' : 'var(--border)' }};">
                     ✋
                 </div>
                 <div>
                     @if($myHand)
-                        <p style="font-size: 0.875rem; font-weight: 700; margin: 0;">Main levée !</p>
-                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">
-                            @if($myHand->status == 'called')
-                                <span style="color: var(--brand); font-weight: 800;">C'est à vous de parler !</span>
-                            @else
-                                Votre rang dans la file : <strong>#{{ $rank }}</strong>
-                            @endif
-                        </p>
+                        <p style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--foreground);">{{ $myHand->status == 'called' ? 'C\'est à vous !' : 'Main levée' }}</p>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">{{ $myHand->status == 'called' ? 'Parlez, on vous écoute.' : 'Rang #' . $rank . ' dans la file' }}</p>
                     @else
-                        <p style="font-size: 0.875rem; font-weight: 700; margin: 0;">Une question à l'oral ?</p>
-                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Signalez-vous au modérateur.</p>
+                        <p style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--foreground);">Besoin de parler ?</p>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Signalez-vous oralement.</p>
                     @endif
                 </div>
             </div>
@@ -67,100 +46,145 @@
             @if($myHand)
                 <form action="{{ route('participant.lower-hand', $event->code) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn-brand" style="background: #fff; color: var(--foreground); border: 1px solid var(--border); width: auto; padding: 0.5rem 1rem; font-size: 0.75rem;">Baisser la main</button>
+                    <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; width: auto; padding: 0.5rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem;">Baisser</button>
                 </form>
             @else
                 <form action="{{ route('participant.raise-hand', $event->code) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem;">Lever la main</button>
+                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem;">Lever</button>
                 </form>
             @endif
         </div>
 
         @if(session('success'))
-            <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;border-radius:0.5rem;padding:0.75rem;margin-bottom:1rem;font-size:0.875rem;">
+            <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;border-radius:0.75rem;padding:0.75rem;margin-bottom:1rem;font-size:0.875rem; animation: slideIn 0.3s ease;">
                 {{ session('success') }}
             </div>
         @endif
 
-        @if(session('error'))
-            <div style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:0.5rem;padding:0.75rem;margin-bottom:1rem;font-size:0.875rem;">
-                {{ session('error') }}
-            </div>
-        @endif
-
         {{-- Input Section --}}
-        <div class="card" style="margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--brand); position: relative;">
-            <h2 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Posez votre question</h2>
+        <div class="card" style="margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--brand-soft); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: #fff;">
             <form id="question-form" action="{{ route('participant.ask', $event->code) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted-foreground); display: block; margin-bottom: 0.25rem;">TYPE</label>
-                        <select name="type" class="form-input" style="font-size: 0.875rem; padding: 0.5rem;">
+                
+                {{-- Sélecteurs Responsifs --}}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="font-size: 0.65rem; font-weight: 800; color: var(--muted-foreground); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em;">Catégorie</label>
+                        <select name="type" class="form-input" style="font-size: 0.85rem; padding: 0.6rem; border-radius: 0.75rem; height: auto; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1rem;">
                             <option value="question">❓ Question</option>
-                            <option value="contribution">💡 Apport / Témoignage</option>
+                            <option value="contribution">💡 Apport</option>
                         </select>
                     </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted-foreground); display: block; margin-bottom: 0.25rem;">ADRESSÉ À (Optionnel)</label>
-                        <select name="panelist_id" class="form-input" style="font-size: 0.875rem; padding: 0.5rem;">
-                            <option value="">Tout le panel</option>
-                            @foreach($panelists as $p)
-                                <option value="{{ $p->id }}">@ {{ $p->pseudo }}</option>
-                            @endforeach
-                        </select>
+                    <div>
+                        <label style="font-size: 0.65rem; font-weight: 800; color: var(--muted-foreground); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em;">Adresser à</label>
+                        <input type="hidden" name="panelist_id" id="panelist_id" value="">
+                        <button type="button" onclick="openPanelistModal()" id="panelist-selector-btn" class="form-input" style="width:100%; font-size: 0.85rem; padding: 0.6rem; text-align: left; background: #f8fafc; border: 1px solid var(--border); border-radius: 0.75rem; height: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            🎯 Tout le panel
+                        </button>
                     </div>
                 </div>
                 
-                <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Votre message ici..." style="resize: none; margin-bottom: 0.75rem;" maxlength="5000">{{ old('content') }}</textarea>
-                <input type="file" name="audio" id="audio-input" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <div id="voice-status" style="display: none; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-                            <span style="width: 0.5rem; height: 0.5rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
-                            <span id="voice-timer">0s</span>
-                        </div>
-                        <button type="button" id="voice-btn" class="btn-brand" style="background: #f3f4f6; color: #374151; width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; display: flex; align-items: center; gap: 0.375rem;" onclick="toggleVoiceRecording()">
-                            <span id="voice-icon">🎤</span> <span id="voice-text">Vocal</span>
-                        </button>
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">Max 5000 car.</span>
+                <div style="position: relative; margin-bottom: 1rem;">
+                    <textarea name="content" id="question-content" class="form-input" rows="3" placeholder="Tapez votre question ici..." style="resize: none; border-radius: 1rem; padding: 1rem; font-size: 0.95rem; border-color: var(--border);" maxlength="5000">{{ old('content') }}</textarea>
+                    
+                    <div id="voice-status" style="display: none; position: absolute; bottom: 0.75rem; left: 0.75rem; align-items: center; gap: 0.5rem; background: #fee2e2; color: #dc2626; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; z-index: 10;">
+                        <span style="width: 0.5rem; height: 0.5rem; background: #dc2626; border-radius: 50%; animation: pulse 1s infinite;"></span>
+                        <span id="voice-timer">0s</span>
                     </div>
-                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Envoyer</button>
                 </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                    <button type="button" id="voice-btn" class="btn-brand" style="background: #f1f5f9; color: #475569; width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 0.75rem; border: none;" onclick="toggleVoiceRecording()">
+                        <span id="voice-icon" style="font-size: 1rem;">🎤</span> <span id="voice-text">Vocal</span>
+                    </button>
+                    
+                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.6rem 2rem; border-radius: 0.75rem; font-weight: 700; box-shadow: 0 4px 12px var(--brand-soft);">
+                        Envoyer
+                    </button>
+                </div>
+                <input type="file" name="audio" id="audio-input" style="display: none;">
             </form>
         </div>
 
-        {{-- Questions List --}}
+        {{-- Flux des Questions --}}
         <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1rem; font-weight: 600;">Questions du public</h2>
-                <span id="questions-count-badge" style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $questions->count() }} questions visibles</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h2 style="font-size: 1rem; font-weight: 800; color: var(--foreground);">Fil de discussion</h2>
+                <div id="questions-count-badge" style="font-size: 0.65rem; background: var(--muted); padding: 0.25rem 0.6rem; border-radius: 999px; font-weight: 700; color: var(--muted-foreground);">
+                    {{ $questions->count() }} question(s)
+                </div>
             </div>
 
-            <div id="questions-container">
+            <div id="questions-container" style="display: grid; gap: 1rem;">
                 @include('participant.partials.questions_list', ['questions' => $questions])
             </div>
         </div>
 
-        {{-- Participants List --}}
-        <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+        {{-- Participants --}}
+        <div style="border-top: 2px solid #f1f5f9; margin-top: 2rem; padding-top: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1rem; font-weight: 600;">Participants connectés</h2>
-                <span id="participant-count" style="font-size: 0.75rem; color: var(--muted-foreground);">0 en ligne</span>
+                <h2 style="font-size: 0.85rem; font-weight: 800; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em;">En ligne</h2>
+                <span id="participant-count" style="font-size: 0.75rem; font-weight: 600; color: var(--brand);">0 participants</span>
             </div>
-            <div id="participants-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                <!-- Rempli par JS -->
-            </div>
+            <div id="participants-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
         </div>
 
-        <div style="margin-top: 2rem; text-align: center;">
-            <a href="{{ route('participant.join') }}" style="font-size: 0.75rem; color: var(--muted-foreground); text-decoration: none;">Quitter l'événement</a>
+        <div style="margin-top: 3rem; text-align: center;">
+            <a href="{{ route('participant.join') }}" style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; text-decoration: none; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.2s;">
+                ← Quitter la session
+            </a>
         </div>
     </div>
 </main>
 
+{{-- MODAL SELECTEUR DE PANELISTE --}}
+<div id="panelist-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: #fff; width: 100%; max-width: 25rem; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); animation: zoomIn 0.3s ease;">
+        <div style="padding: 1.25rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+            <h3 style="font-size: 1rem; font-weight: 800; margin: 0;">À qui s'adresser ?</h3>
+            <button onclick="closePanelistModal()" style="background: #f1f5f9; border: none; width: 2rem; height: 2rem; border-radius: 50%; font-size: 1.25rem; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+        <div style="padding: 0.5rem; max-height: 25rem; overflow-y: auto;">
+            <div onclick="selectPanelist('', '🎯 Tout le panel')" style="padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; border-radius: 1rem; transition: background 0.2s;" class="panelist-option">
+                <div style="width: 2.5rem; height: 2.5rem; background: var(--brand-light); border-radius: 50%; display: grid; place-items: center; font-size: 1.25rem;">🎯</div>
+                <div style="font-weight: 700; font-size: 0.95rem;">Tout le panel</div>
+            </div>
+            
+            @foreach($panelists as $p)
+                <div onclick="selectPanelist('{{ $p->id }}', '@ {{ $p->pseudo }}')" style="padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; border-radius: 1rem; transition: background 0.2s;" class="panelist-option">
+                    <div style="width: 2.5rem; height: 2.5rem; background: #f1f5f9; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: var(--brand); font-size: 1rem; border: 2px solid #fff; box-shadow: 0 0 0 2px var(--brand-soft);">
+                        {{ strtoupper(substr($p->pseudo, 0, 1)) }}
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.95rem;">{{ $p->pseudo }}</div>
+                        <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">{{ $p->sector }}</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        <div style="padding: 1.25rem; text-align: center; background: #f8fafc;">
+            <p style="font-size: 0.75rem; color: #94a3b8; font-style: italic;">Votre question sera mise en avant pour cet expert.</p>
+        </div>
+    </div>
+</div>
+
 <script>
+    // --- Gestion Modal Panéliste ---
+    function openPanelistModal() {
+        document.getElementById('panelist-modal').style.display = 'flex';
+    }
+    function closePanelistModal() {
+        document.getElementById('panelist-modal').style.display = 'none';
+    }
+    function selectPanelist(id, name) {
+        document.getElementById('panelist_id').value = id;
+        document.getElementById('panelist-selector-btn').textContent = name;
+        document.getElementById('panelist-selector-btn').style.borderColor = id ? 'var(--brand)' : 'var(--border)';
+        document.getElementById('panelist-selector-btn').style.color = id ? 'var(--brand)' : 'var(--foreground)';
+        closePanelistModal();
+    }
+
     // --- Heartbeat & Typing ---
     const eventCode = '{{ $event->code }}';
     const csrfToken = '{{ csrf_token() }}';
@@ -200,12 +224,12 @@
             const list = document.getElementById('participants-list');
             const count = document.getElementById('participant-count');
             
-            count.textContent = `${data.length} en ligne`;
+            count.textContent = `${data.length} participant(s)`;
             
             list.innerHTML = data.map(p => `
-                <div style="background: #fff; border: 1px solid var(--border); padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; display: flex; align-items: center; gap: 0.5rem; ${p.is_speaking ? 'border-color: var(--brand); background: var(--brand-light);' : ''}">
-                    <span style="width: 0.5rem; height: 0.5rem; background: ${p.is_speaking ? 'var(--brand)' : '#10b981'}; border-radius: 50%;"></span>
-                    <span style="font-weight: 600;">${p.pseudo}</span>
+                <div style="background: #fff; border: 1px solid ${p.is_speaking ? 'var(--brand)' : '#e2e8f0'}; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.75rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; ${p.is_speaking ? 'box-shadow: 0 4px 10px var(--brand-soft);' : ''}">
+                    <span style="width: 0.4rem; height: 0.4rem; background: ${p.is_speaking ? 'var(--brand)' : '#10b981'}; border-radius: 50%; ${p.is_speaking ? 'animation: pulse-green 1s infinite;' : ''}"></span>
+                    <span style="font-weight: 700; color: ${p.is_speaking ? 'var(--brand)' : '#475569'};">${p.pseudo}</span>
                     ${p.is_typing ? '<span class="typing-dot">...</span>' : ''}
                     ${p.is_speaking ? '🎤' : ''}
                 </div>
@@ -213,89 +237,229 @@
         } catch (e) {}
     }
 
+    // --- NOUVEAU SYSTÈME VOCAL (STYLE WHATSAPP) ---
     let mediaRecorder;
     let audioChunks = [];
-    let isRecording = false;
+    let audioContext;
+    let analyser;
+    let dataArray;
+    let animationId;
     let voiceTimerInterval;
     let voiceSeconds = 0;
+    let originalBlob = null;
+    let filteredBlob = null;
 
-    async function toggleVoiceRecording() {
-        const btn = document.getElementById('voice-btn');
-        const icon = document.getElementById('voice-icon');
-        const text = document.getElementById('voice-text');
-        const status = document.getElementById('voice-status');
-        const timer = document.getElementById('voice-timer');
-        const audioInput = document.getElementById('audio-input');
+    async function startVoiceRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
 
-        if (!isRecording) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
+            // Setup Visualizer
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
+            mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+            mediaRecorder.onstop = async () => {
+                originalBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                showPreview(originalBlob);
+            };
 
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const file = new File([audioBlob], "vocal.webm", { type: 'audio/webm' });
-                    
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(file);
-                    audioInput.files = dataTransfer.files;
-                    
-                    // Si on a un callback de fin (pour l'envoi auto), on l'appelle
-                    if (window.onRecordingStopped) {
-                        window.onRecordingStopped();
-                        window.onRecordingStopped = null;
-                    }
-                };
+            mediaRecorder.start();
+            drawWaveform();
+            
+            // UI Switch
+            document.getElementById('normal-form-actions').style.display = 'none';
+            document.getElementById('recording-bar').style.display = 'flex';
+            
+            voiceSeconds = 0;
+            voiceTimerInterval = setInterval(() => {
+                voiceSeconds++;
+                const mins = String(Math.floor(voiceSeconds / 60)).padStart(2, '0');
+                const secs = String(voiceSeconds % 60).padStart(2, '0');
+                document.getElementById('rec-timer').textContent = `${mins}:${secs}`;
+            }, 1000);
 
-                mediaRecorder.start();
-                isRecording = true;
-                btn.style.background = '#dc2626';
-                btn.style.color = '#fff';
-                icon.textContent = '⏹';
-                text.textContent = 'Stop';
-                status.style.display = 'flex';
-                
-                voiceSeconds = 0;
-                timer.textContent = '0s';
-                voiceTimerInterval = setInterval(() => {
-                    voiceSeconds++;
-                    timer.textContent = voiceSeconds + 's';
-                }, 1000);
-
-            } catch (err) {
-                console.error("Microphone error:", err);
-                alert("Erreur micro. Vérifiez les permissions.");
-            }
-        } else {
-            mediaRecorder.stop();
-            stopRecordingUI();
+        } catch (err) {
+            alert("Microphone inaccessible.");
         }
     }
 
-    function stopRecordingUI() {
-        const btn = document.getElementById('voice-btn');
-        const icon = document.getElementById('voice-icon');
-        const text = document.getElementById('voice-text');
-        const status = document.getElementById('voice-status');
-        
-        isRecording = false;
-        btn.style.background = '#f3f4f6';
-        btn.style.color = '#374151';
-        icon.textContent = '🎤';
-        text.textContent = 'Vocal';
-        status.style.display = 'none';
+    function drawWaveform() {
+        const canvas = document.getElementById('waveform');
+        const ctx = canvas.getContext('2d');
+        animationId = requestAnimationFrame(drawWaveform);
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const barWidth = (canvas.width / dataArray.length) * 2.5;
+        let x = 0;
+
+        for(let i = 0; i < dataArray.length; i++) {
+            const barHeight = (dataArray[i] / 255) * canvas.height;
+            ctx.fillStyle = i % 2 === 0 ? '#8b5cf6' : '#c084fc';
+            ctx.fillRect(x, (canvas.height - barHeight)/2, barWidth, barHeight);
+            x += barWidth + 2;
+        }
+    }
+
+    function togglePauseResume() {
+        const icon = document.getElementById('pause-icon');
+        if (mediaRecorder.state === 'recording') {
+            mediaRecorder.pause();
+            icon.textContent = '▶️';
+            clearInterval(voiceTimerInterval);
+            cancelAnimationFrame(animationId);
+        } else {
+            mediaRecorder.resume();
+            icon.textContent = '⏸';
+            drawWaveform();
+            voiceTimerInterval = setInterval(() => {
+                voiceSeconds++;
+                const mins = String(Math.floor(voiceSeconds / 60)).padStart(2, '0');
+                const secs = String(voiceSeconds % 60).padStart(2, '0');
+                document.getElementById('rec-timer').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+    }
+
+    function cancelRecording() {
+        mediaRecorder.stop();
+        stopAudioTracks();
+        resetVoice();
+    }
+
+    function stopRecordingAndReview() {
+        mediaRecorder.stop();
+        stopAudioTracks();
+    }
+
+    function stopAudioTracks() {
         clearInterval(voiceTimerInterval);
+        cancelAnimationFrame(animationId);
         if (mediaRecorder && mediaRecorder.stream) {
             mediaRecorder.stream.getTracks().forEach(track => track.stop());
         }
     }
 
-    // Gérer l'envoi auto si on enregistre
+    function showPreview(blob) {
+        document.getElementById('recording-bar').style.display = 'none';
+        document.getElementById('voice-preview-bar').style.display = 'flex';
+        const url = URL.createObjectURL(blob);
+        document.getElementById('preview-audio').src = url;
+        filteredBlob = blob; // Par défaut
+        updateFileInput(blob);
+    }
+
+    function resetVoice() {
+        document.getElementById('recording-bar').style.display = 'none';
+        document.getElementById('voice-preview-bar').style.display = 'none';
+        document.getElementById('normal-form-actions').style.display = 'flex';
+        document.getElementById('audio-input').value = '';
+        originalBlob = null;
+        filteredBlob = null;
+    }
+
+    async function applyVoiceFilter() {
+        const filter = document.getElementById('voice-filter').value;
+        if (filter === 'none') {
+            filteredBlob = originalBlob;
+            const url = URL.createObjectURL(originalBlob);
+            document.getElementById('preview-audio').src = url;
+            updateFileInput(originalBlob);
+            return;
+        }
+
+        const arrayBuffer = await originalBlob.arrayBuffer();
+        const offlineCtx = new OfflineAudioContext(1, 44100 * 300, 44100); // Max 5 min
+        const buffer = await offlineCtx.decodeAudioData(arrayBuffer);
+        const source = offlineCtx.createBufferSource();
+        source.buffer = buffer;
+
+        // Effets
+        if (filter === 'robot') {
+            const oscillator = offlineCtx.createOscillator();
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.value = 50;
+            const oscGain = offlineCtx.createGain();
+            oscGain.gain.value = 0.1;
+            oscillator.connect(oscGain);
+            const delay = offlineCtx.createDelay();
+            delay.delayTime.value = 0.01;
+            source.connect(delay);
+            oscGain.connect(delay.delayTime);
+            delay.connect(offlineCtx.destination);
+            oscillator.start();
+        } else if (filter === 'deep') {
+            source.playbackRate.value = 0.7;
+            source.connect(offlineCtx.destination);
+        } else if (filter === 'high') {
+            source.playbackRate.value = 1.5;
+            source.connect(offlineCtx.destination);
+        }
+
+        source.start(0);
+        const renderedBuffer = await offlineCtx.startRendering();
+        
+        // Conversion buffer vers Blob
+        const wavBlob = bufferToWav(renderedBuffer);
+        filteredBlob = wavBlob;
+        const url = URL.createObjectURL(wavBlob);
+        document.getElementById('preview-audio').src = url;
+        updateFileInput(wavBlob);
+    }
+
+    function updateFileInput(blob) {
+        const file = new File([blob], "vocal.wav", { type: 'audio/wav' });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('audio-input').files = dt.files;
+    }
+
+    // Helper pour convertir un AudioBuffer en WAV (simplifié)
+    function bufferToWav(abuffer) {
+        let numOfChan = abuffer.numberOfChannels,
+            length = abuffer.length * numOfChan * 2 + 44,
+            buffer = new ArrayBuffer(length),
+            view = new DataView(buffer),
+            channels = [], i, sample,
+            offset = 0,
+            pos = 0;
+
+        function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+        function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+        setUint32(0x46464952);                         // "RIFF"
+        setUint32(length - 8);                         // file length - 8
+        setUint32(0x45564157);                         // "WAVE"
+        setUint32(0x20746d66);                         // "fmt " chunk
+        setUint32(16);                                 // length = 16
+        setUint16(1);                                  // PCM (uncompressed)
+        setUint16(numOfChan);
+        setUint32(abuffer.sampleRate);
+        setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+        setUint16(numOfChan * 2);                      // block-align
+        setUint16(16);                                 // 16nd-bit
+        setUint32(0x61746164);                         // "data" - chunk
+        setUint32(length - pos - 4);                   // chunk length
+
+        for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
+        while(pos < length) {
+            for(i = 0; i < numOfChan; i++) {             // interleave channels
+                sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
+                sample = (sample < 0 ? sample * 0x8000 : sample * 0x7FFF) | 0; // scale to 16nd-bit signed int
+                view.setInt16(pos, sample, true);          // write 16nd-bit sample
+                pos += 2;
+            }
+            offset++;
+        }
+        return new Blob([buffer], {type: "audio/wav"});
+    }
+
     document.getElementById('question-form').addEventListener('submit', function(e) {
         if (isRecording) {
             e.preventDefault();
@@ -308,16 +472,12 @@
         }
     });
 
-    // --- TEMPS RÉEL : Questions ---
     async function fetchQuestions() {
-        // Bloquer si on enregistre un vocal ou si un formulaire est ouvert/focus
         const activeElement = document.activeElement;
         const isTyping = activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT');
-        
-        // On vérifie aussi si un formulaire de réponse est affiché (pour ne pas le fermer)
         const isAnyReplyFormOpen = Array.from(document.querySelectorAll('form[id^="reply-form-"]')).some(f => f.style.display === 'flex');
 
-        if (isTyping || isRecording || isAnyReplyFormOpen) return;
+        if (isTyping || isRecording || isAnyReplyFormOpen || document.getElementById('panelist-modal').style.display === 'flex') return;
 
         try {
             const response = await fetch(`/e/${eventCode}/participant/questions-fetch`);
@@ -327,21 +487,9 @@
                 document.getElementById('questions-container').innerHTML = data.html;
             }
             if (document.getElementById('questions-count-badge')) {
-                document.getElementById('questions-count-badge').textContent = `${data.count} questions visibles`;
+                document.getElementById('questions-count-badge').textContent = `${data.count} question(s)`;
             }
-        } catch (e) {
-            console.error("Polling error:", e);
-        }
-    }
-
-    function toggleReplyForm(id) {
-        const form = document.getElementById('reply-form-' + id);
-        if (form.style.display === 'none' || !form.style.display) {
-            form.style.display = 'flex';
-            form.querySelector('input').focus();
-        } else {
-            form.style.display = 'none';
-        }
+        } catch (e) {}
     }
 
     setInterval(sendHeartbeat, 15000);
@@ -353,10 +501,21 @@
 </script>
 
 <style>
-@keyframes pulse {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.2); }
-    100% { opacity: 1; transform: scale(1); }
+.panelist-option:hover {
+    background: #f8fafc !important;
+}
+@keyframes zoomIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+@keyframes slideIn {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes pulse-green {
+    0% { transform: scale(0.9); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+    100% { transform: scale(0.9); opacity: 1; }
 }
 .typing-dot {
     font-weight: 800;

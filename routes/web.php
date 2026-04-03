@@ -179,5 +179,6 @@ Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->
     Route::post('/e/{code}/delete-doc', [PanelistController::class, 'deleteDocument'])->name('delete-doc');
     Route::post('/e/{code}/toggle-share', [PanelistController::class, 'toggleShare'])->name('toggle-share');
     Route::post('/e/{code}/toggle-project', [PanelistController::class, 'toggleProject'])->name('toggle-project');
+    Route::post('/e/{code}/sync-page', [PanelistController::class, 'syncPage'])->name('sync-page');
     Route::post('/e/{code}/ai-suggest', [PanelistController::class, 'aiSuggest'])->name('ai-suggest');
 });

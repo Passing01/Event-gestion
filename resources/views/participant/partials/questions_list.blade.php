@@ -1,96 +1,116 @@
-<div class="space-y-4">
+<div style="display: grid; gap: 1.25rem;">
     @forelse($questions as $q)
-    <div class="card" id="q-{{ $q->id }}" style="padding: 1rem; border-left: 4px solid {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'answered' ? '#6b7280' : ($q->status == 'rejected' ? '#dc2626' : 'var(--border)')) }};">
-        <div style="display: flex; justify-content: space-between; gap:0.5rem; margin-bottom: 0.75rem;">
+    <div class="card" id="q-{{ $q->id }}" style="padding: 1.25rem; border-radius: 1.25rem; border: 1px solid var(--border); border-left: 6px solid {{ $q->status == 'answering' ? 'var(--brand)' : ($q->status == 'answered' ? '#94a3b8' : ($q->status == 'rejected' ? '#ef4444' : '#e2e8f0')) }}; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+        
+        {{-- En-tête de la carte --}}
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
             <div style="flex: 1;">
-                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    @if($q->status == 'answering')
+                        <span style="background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px; display: flex; align-items: center; gap: 0.25rem;">🎤 EN DIRECT</span>
+                    @endif
+
                     @if($q->type == 'contribution')
-                        <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 10px;">💡 APPORT</span>
+                        <span style="background: #f0f9ff; color: #0369a1; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px; border: 1px solid #bae6fd;">💡 APPORT</span>
                     @else
-                        <span class="badge" style="background: #f0fdf4; color: #15803d; font-size: 10px;">❓ QUESTION</span>
+                        <span style="background: #f0fdf4; color: #166534; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px; border: 1px solid #bbf7d0;">❓ QUESTION</span>
                     @endif
 
                     @if($q->panelist)
-                        <span class="badge" style="background: #f3f4f6; color: #374151; font-size: 10px; border: 1px solid var(--border);">@ {{ $q->panelist->pseudo }}</span>
+                        <span style="background: #f8fafc; color: var(--brand); font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px; border: 1px solid var(--brand-soft); display: flex; align-items: center; gap: 0.25rem;">
+                            🎯 CIBLÉ : {{ $q->panelist->pseudo }}
+                        </span>
+                    @endif
+
+                    @if($q->status == 'pending')
+                        <span style="background: #fffbeb; color: #92400e; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px; border: 1px solid #fde68a;">⏳ MODÉRATION</span>
                     @endif
 
                     @if($q->status == 'rejected')
-                        <span class="badge" style="background: #fee2e2; color: #dc2626; font-size: 10px;">FILTRÉ PAR IA 🤖</span>
-                    @elseif($q->status == 'pending')
-                        <span class="badge" style="background: #fef3c7; color: #d97706; font-size: 10px;">EN ATTENTE</span>
-                    @elseif($q->status == 'answering')
-                        <span class="badge" style="background: var(--brand); color: white; font-size: 10px;">EN COURS🎤</span>
+                        <span style="background: #fef2f2; color: #991b1b; font-size: 0.65rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px; border: 1px solid #fecaca;">🤖 FILTRÉ IA</span>
                     @endif
-                    <span style="font-size: 10px; color: var(--muted-foreground);">{{ $q->created_at->diffForHumans() }}</span>
+
+                    <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">{{ $q->created_at->diffForHumans() }}</span>
                 </div>
-                <p style="font-size: 0.95rem; font-weight: 500; line-height: 1.4; margin: 0;">{{ $q->content }}</p>
+
+                <div style="font-size: 0.95rem; font-weight: 600; color: var(--foreground); line-height: 1.5; word-wrap: break-word;">
+                    {!! nl2br(e($q->content)) !!}
+                </div>
+
                 @if($q->audio_path)
-                    <div style="margin-top: 0.5rem;">
-                        <audio controls style="height: 30px; max-width: 100%;">
+                    <div style="margin-top: 1rem; background: #f8fafc; padding: 0.5rem; border-radius: 1rem; border: 1px solid #f1f5f9;">
+                        <audio controls style="height: 32px; width: 100%;">
                             <source src="{{ asset('storage/' . $q->audio_path) }}" type="audio/webm">
                         </audio>
                     </div>
                 @endif
             </div>
-            
+
+            {{-- Vote Button --}}
             <div style="flex-shrink: 0;">
                 <form action="{{ route('participant.vote', $q->id) }}" method="POST">
                     @csrf
-                    <button type="submit" style="background: {{ in_array($q->id, session('voted_questions', [])) ? 'var(--brand)' : '#f3f4f6' }}; color: {{ in_array($q->id, session('voted_questions', [])) ? '#fff' : 'var(--foreground)' }}; border: none; border-radius: 0.5rem; padding: 0.4rem 0.6rem; display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                        <span style="font-size: 1rem;">👍</span>
-                        <span style="font-size: 0.75rem; font-weight: 700;">{{ $q->votes_count }}</span>
+                    @php $voted = in_array($q->id, session('voted_questions', [])); @endphp
+                    <button type="submit" style="background: {{ $voted ? 'var(--brand)' : '#f1f5f9' }}; color: {{ $voted ? '#fff' : '#64748b' }}; border: none; border-radius: 1rem; padding: 0.6rem 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; transition: all 0.2s; min-width: 3.5rem; cursor: pointer; box-shadow: {{ $voted ? '0 4px 10px var(--brand-soft)' : 'none' }};">
+                        <span style="font-size: 1.1rem;">{{ $voted ? '❤️' : '🤍' }}</span>
+                        <span style="font-size: 0.85rem; font-weight: 800;">{{ $q->votes_count }}</span>
                     </button>
                 </form>
             </div>
         </div>
 
-        {{-- Réponses --}}
+        {{-- Section Réponses --}}
         @if($q->replies->count() > 0)
-        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-            <div class="space-y-3">
-                @foreach($q->replies as $reply)
-                <div style="background: var(--muted); padding: 0.75rem; border-radius: 0.75rem; font-size: 0.875rem; {{ $reply->pseudo == 'Assistant Modérateur' ? 'border: 1px solid #fed7aa; background: #fffaf5;' : '' }}">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-weight: 700;">{{ $reply->pseudo }}</span>
+        <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            @foreach($q->replies as $reply)
+                <div style="max-width: 90%; align-self: flex-start; background: #f8fafc; padding: 0.85rem; border-radius: 0 1rem 1rem 1rem; border: 1px solid #f1f5f9; position: relative; {{ $reply->pseudo == 'Assistant Modérateur' ? 'border-color: #fed7aa; background: #fffcf0;' : '' }}">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                        <span style="font-size: 0.75rem; font-weight: 800; color: var(--foreground);">{{ $reply->pseudo }}</span>
                         @if($reply->is_moderator)
                             @if($reply->pseudo == 'Modérateur')
-                                <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 0.625rem;">SUGGESTION MODÉRATEUR</span>
+                                <span style="background: #f1f5f9; color: #475569; font-size: 0.6rem; font-weight: 800; padding: 0.15rem 0.4rem; border-radius: 4px;">MODÉRATEUR</span>
                             @elseif($reply->pseudo != 'Assistant Modérateur')
-                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">OFFICIEL</span>
+                                <span style="background: var(--brand); color: #fff; font-size: 0.6rem; font-weight: 800; padding: 0.15rem 0.4rem; border-radius: 4px;">RÉPONSE OFFICIELLE</span>
                             @endif
                         @endif
                     </div>
-                    <p>{{ $reply->content }}</p>
+                    <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+                        {{ $reply->content }}
+                    </div>
                     @if($reply->audio_path)
                         <div style="margin-top: 0.5rem;">
-                            <audio controls style="height: 25px; max-width: 100%;">
+                            <audio controls style="height: 25px; width: 100%;">
                                 <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
                             </audio>
                         </div>
                     @endif
                 </div>
-                @endforeach
-            </div>
+            @endforeach
         </div>
         @endif
         
-        {{-- Lien pour répondre soi-même --}}
+        {{-- Commenter --}}
         @if($q->status != 'rejected')
-        <div style="margin-top: 1rem;">
-            <button onclick="toggleReplyForm('{{ $q->id }}')" style="font-size: 0.75rem; color: var(--brand); background: none; border: none; cursor: pointer; padding: 0;">Ajouter un commentaire...</button>
-            <form id="reply-form-{{ $q->id }}" action="{{ route('participant.reply', $q->id) }}" method="POST" style="display: none; margin-top: 0.5rem;">
+        <div style="margin-top: 1.25rem;">
+            <button onclick="toggleReplyForm('{{ $q->id }}')" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.75rem; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                💬 Ajouter un commentaire...
+            </button>
+            <form id="reply-form-{{ $q->id }}" action="{{ route('participant.reply', $q->id) }}" method="POST" style="display: none; margin-top: 0.75rem; animation: slideIn 0.2s ease;">
                 @csrf
-                <div style="display: flex; gap: 0.5rem;">
-                    <input type="text" name="content" class="form-input" placeholder="Votre réponse..." style="font-size: 0.75rem; padding: 0.4rem;" required>
-                    <button type="submit" class="btn-brand" style="width: auto; padding: 0 1rem; font-size: 0.75rem;">Envoyer</button>
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <input type="text" name="content" class="form-input" placeholder="Écrivez votre réponse..." style="font-size: 0.85rem; padding: 0.75rem; border-radius: 0.75rem; flex: 1;" required>
+                    <button type="submit" class="btn-brand" style="width: auto; padding: 0 1.25rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 800;">
+                        Envoyer
+                    </button>
                 </div>
             </form>
         </div>
         @endif
     </div>
     @empty
-    <div class="card" style="text-align: center; padding: 4rem 2rem; color: var(--muted-foreground);">
-        <p>Soyez le premier à poser une question !</p>
+    <div style="text-align: center; padding: 5rem 2rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
+        <p style="color: #94a3b8; font-weight: 600; font-size: 1rem;">Aucune question pour le moment.<br>Soyez le premier à prendre la parole !</p>
     </div>
     @endforelse
 </div>

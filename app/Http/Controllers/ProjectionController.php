@@ -52,7 +52,8 @@ class ProjectionController extends Controller
                 'name' => $projectingPanelist->user->name,
                 'path' => $projectingPanelist->presentation_path,
                 'url' => asset('storage/' . $projectingPanelist->presentation_path),
-                'extension' => pathinfo($projectingPanelist->presentation_path, PATHINFO_EXTENSION)
+                'extension' => pathinfo($projectingPanelist->presentation_path, PATHINFO_EXTENSION),
+                'current_page' => $projectingPanelist->current_page
             ] : null
         ]);
     }

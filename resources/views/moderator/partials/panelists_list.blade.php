@@ -19,18 +19,22 @@
                         $isLowTime = $remaining <= 5;
                     @endphp
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
-                        <span class="badge" style="background: {{ $isLowTime ? '#fee2e2' : '#dcfce7' }}; color: {{ $isLowTime ? '#dc2626' : '#16a34a' }}; font-size: 11px; font-weight: 700; border: 1px solid currentColor;">
-                            ⏱️ {{ $remaining }} MIN RESTANTES
-                        </span>
+                        <div style="background: {{ $isLowTime ? '#fee2e2' : 'var(--brand-light)' }}; border: 1px solid {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; padding: 0.4rem 0.75rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                            <span style="font-size: 0.8rem;">⏱️</span>
+                            <div style="text-align: right;">
+                                <p style="font-size: 10px; font-weight: 800; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; margin: 0; line-height: 1; text-transform: uppercase;">Temps</p>
+                                <p style="font-size: 14px; font-weight: 900; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; margin: 0; line-height: 1;">{{ sprintf('%02d:%02d', floor($remaining), round(($remaining - floor($remaining)) * 60)) }}</p>
+                            </div>
+                        </div>
                         <div style="display: flex; gap: 0.25rem;">
-                            <form action="{{ route('dashboard.moderator.panelist.extend', $panelist->id) }}" method="POST">
+                            <form action="{{ route('dashboard.moderator.panelist.extend', $panelist->id) }}" method="POST" style="display: flex; align-items: center; gap: 2px;">
                                 @csrf
-                                <input type="hidden" name="minutes" value="5">
-                                <button type="submit" class="btn-brand" style="padding: 0.2rem 0.5rem; font-size: 10px; background: #f3f4f6; color: #374151;">+5 min</button>
+                                <input type="number" name="minutes" value="5" min="1" step="1" style="width: 35px; border-radius: 4px; border: 1px solid var(--border); font-size: 10px; padding: 0.2rem;">
+                                <button type="submit" class="btn-brand" style="padding: 0.2rem 0.5rem; font-size: 10px; background: var(--brand); color: #fff; border: none; border-radius: 4px;">+</button>
                             </form>
                             <form action="{{ route('dashboard.moderator.panelist.stop', $panelist->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn-brand" style="padding: 0.2rem 0.5rem; font-size: 10px; background: #fee2e2; color: #dc2626;">Couper</button>
+                                <button type="submit" class="btn-brand" style="padding: 0.2rem 0.5rem; font-size: 10px; background: #fee2e2; color: #dc2626; border: 1px solid #dc2626; border-radius: 4px;">Couper</button>
                             </form>
                         </div>
                     </div>

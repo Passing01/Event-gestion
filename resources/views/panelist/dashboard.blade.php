@@ -14,15 +14,19 @@
             <div style="display: flex; gap: 0.75rem; align-items: center;">
                 @if($panelist->presentation_started_at)
                     @php
-                        $elapsed = now()->diffInMinutes($panelist->presentation_started_at);
-                        $remaining = max(0, $panelist->presentation_duration - $elapsed);
-                        $isLowTime = $remaining <= 5;
+                        $startTime = \Carbon\Carbon::parse($panelist->presentation_started_at);
+                        $totalDurationSeconds = $panelist->presentation_duration * 60;
+                        $elapsedSeconds = now()->diffInSeconds($startTime);
+                        $remainingSeconds = max(0, $totalDurationSeconds - $elapsedSeconds);
+                        $isLowTime = $remainingSeconds <= 300; // Moins de 5 minutes
                     @endphp
-                    <div style="background: {{ $isLowTime ? '#fee2e2' : 'var(--brand-light)' }}; border: 2px solid {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; padding: 0.5rem 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.5rem; animation: {{ $isLowTime ? 'pulse 1s infinite' : 'none' }};">
+                    <div id="live-timer-box" data-remaining="{{ $remainingSeconds }}" style="background: {{ $isLowTime ? '#fee2e2' : 'var(--brand-light)' }}; border: 2px solid {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; padding: 0.5rem 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; {{ $isLowTime ? 'animation: pulse 1s infinite;' : '' }}">
                         <span style="font-size: 1.25rem;">⏱️</span>
                         <div style="text-align: right;">
-                            <p style="font-size: 0.625rem; font-weight: 700; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; margin: 0;">TEMPS RESTANT</p>
-                            <p style="font-size: 1.125rem; font-weight: 800; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; line-height: 1;">{{ $remaining }} MIN</p>
+                            <p style="font-size: 0.625rem; font-weight: 700; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; margin: 0; text-transform: uppercase;">Temps restant</p>
+                            <p id="timer-display" style="font-size: 1.25rem; font-weight: 900; color: {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; line-height: 1; font-family: monospace;">
+                                {{ sprintf('%02d:%02d', floor($remainingSeconds / 60), $remainingSeconds % 60) }}
+                            </p>
                         </div>
                     </div>
                 @endif
@@ -38,41 +42,47 @@
     </div>
 
     @if($panelist->presentation_path)
-        <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1.25rem; border-radius: 1rem; margin-bottom: 2rem;">
+        <div style="background: #fff; border: 1px solid var(--brand-soft); padding: 1.25rem; border-radius: 1.5rem; margin-bottom: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="width: 3rem; height: 3rem; background: #e2e8f0; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                        📄
+                    <div style="width: 3.5rem; height: 3.5rem; background: var(--brand-light); border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+                        {{ in_array(strtolower(pathinfo($panelist->presentation_path, PATHINFO_EXTENSION)), ['pdf']) ? '📕' : '📊' }}
                     </div>
                     <div>
-                        <p style="font-weight: 700; font-size: 1rem;">Document chargé</p>
-                        <p style="font-size: 0.8125rem; color: var(--muted-foreground);">Analyse IA et Projection disponibles</p>
+                        <p style="font-weight: 800; font-size: 1.125rem; margin: 0;">{{ $panelist->is_projecting ? 'Projection en cours...' : 'Document prêt' }}</p>
+                        <p style="font-size: 0.8125rem; color: var(--muted-foreground); margin: 0;">{{ $panelist->is_projecting ? 'Vous contrôlez l\'écran géant' : 'Prêt pour l\'analyse IA' }}</p>
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <button class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: #fff; color: var(--foreground); border: 1px solid var(--border);" onclick="document.getElementById('view-doc-modal').style.display='flex'">
-                        🖼️ Aperçu
-                    </button>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                    @if($panelist->is_projecting)
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.4rem; border-radius: 1rem; border: 1px solid #e2e8f0; margin-right: 0.5rem;">
+                            <button onclick="changePage(-1)" style="width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; border: none; background: #fff; cursor: pointer; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">◀</button>
+                            <div style="padding: 0 1rem; text-align: center;">
+                                <div style="font-size: 0.6rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;">PAGE</div>
+                                <div id="current-page-display" style="font-size: 1rem; font-weight: 900; color: var(--brand);">{{ $panelist->current_page }}</div>
+                            </div>
+                            <button onclick="changePage(1)" style="width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; border: none; background: #fff; cursor: pointer; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">▶</button>
+                        </div>
+                    @endif
 
-                    <form action="{{ route('panelist.toggle-share', $event->code) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: {{ $panelist->is_document_shared ? '#dcfce7' : '#fff' }}; color: {{ $panelist->is_document_shared ? '#16a34a' : 'var(--foreground)' }}; border: 1px solid {{ $panelist->is_document_shared ? '#16a34a' : 'var(--border)' }};">
-                            {{ $panelist->is_document_shared ? '🤝 Partagé' : '🔒 Privé' }}
-                        </button>
-                    </form>
+                    <button class="btn-brand" style="width: auto; padding: 0.6rem 1.25rem; font-size: 0.85rem; background: #f8fafc; color: var(--foreground); border: 1px solid #e2e8f0; font-weight: 700;" onclick="document.getElementById('view-doc-modal').style.display='flex'">
+                        👁️ Aperçu
+                    </button>
 
                     <form action="{{ route('panelist.toggle-project', $event->code) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: {{ $panelist->is_projecting ? '#4f46e5' : '#fff' }}; color: {{ $panelist->is_projecting ? '#fff' : 'var(--foreground)' }}; border: 1px solid {{ $panelist->is_projecting ? '#4f46e5' : 'var(--border)' }};">
-                            {{ $panelist->is_projecting ? '⏹️ Arrêter Projection' : '📺 Projeter' }}
+                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.6rem 1.25rem; font-size: 0.85rem; background: {{ $panelist->is_projecting ? '#ef4444' : 'var(--brand)' }}; color: #fff; border: none; font-weight: 700; box-shadow: 0 4px 12px {{ $panelist->is_projecting ? '#fee2e2' : 'var(--brand-soft)' }};">
+                            {{ $panelist->is_projecting ? '⏹️ Arrêter' : '📺 Diffuser' }}
                         </button>
                     </form>
 
                     <form action="{{ route('panelist.delete-doc', $event->code) }}" method="POST" onsubmit="return confirm('Supprimer ce document ?');">
                         @csrf
-                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: #fee2e2; color: #dc2626; border: 1px solid #fee2e2;">
-                            🗑️ Supprimer
+                        <button type="submit" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0.5rem; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.25rem;height:1.25rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
                         </button>
                     </form>
                 </div>
@@ -388,6 +398,58 @@
 
     // Lancer le polling
     setInterval(fetchQuestions, 5000);
+    // --- Gestion Télécommande Projection ---
+    let currentPage = {{ $panelist->current_page ?? 1 }};
+    
+    function changePage(delta) {
+        currentPage = Math.max(1, currentPage + delta);
+        const display = document.getElementById('current-page-display');
+        if (display) display.textContent = currentPage;
+        
+        // Sync with server
+        fetch("{{ route('panelist.sync-page', $event->code) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ page: currentPage })
+        })
+        .catch(err => console.error("Sync error:", err));
+    }
+
+    // --- Gestion Chrono Live ---
+    function initLiveTimer() {
+        const timerBox = document.getElementById('live-timer-box');
+        const display = document.getElementById('timer-display');
+        if (!timerBox || !display) return;
+
+        let remaining = parseInt(timerBox.getAttribute('data-remaining'));
+        
+        const interval = setInterval(() => {
+            if (remaining <= 0) {
+                display.textContent = "00:00";
+                timerBox.style.background = "#fee2e2";
+                timerBox.style.borderColor = "#dc2626";
+                clearInterval(interval);
+                return;
+            }
+            
+            remaining--;
+            const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const secs = String(remaining % 60).padStart(2, '0');
+            display.textContent = `${mins}:${secs}`;
+            
+            if (remaining <= 300) { // Alerte 5 min
+                timerBox.style.background = "#fee2e2";
+                timerBox.style.borderColor = "#dc2626";
+                timerBox.style.animation = "pulse 1s infinite";
+                display.style.color = "#dc2626";
+            }
+        }, 1000);
+    }
+
+    initLiveTimer();
 </script>
 
 <style>
