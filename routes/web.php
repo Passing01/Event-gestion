@@ -144,6 +144,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         Route::get('/',            [InsightsController::class, 'index'])->name('index');
         Route::get('/{id}',        [InsightsController::class, 'show'])->name('show');
         Route::get('/{id}/export', [InsightsController::class, 'export'])->name('export');
+        Route::post('/{id}/toggle-marketplace', [InsightsController::class, 'toggleMarketplace'])->name('toggle-marketplace');
     });
 
     // Abonnement

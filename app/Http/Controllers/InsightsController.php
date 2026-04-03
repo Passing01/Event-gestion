@@ -91,4 +91,18 @@ class InsightsController extends Controller
 
         return view('insights.export', compact('event', 'reportContent'));
     }
+
+    /**
+     * Publier/Dépublier sur le Marketplace.
+     */
+    public function toggleMarketplace($id)
+    {
+        $event = Auth::user()->events()->findOrFail($id);
+        $event->update([
+            'is_on_marketplace' => !$event->is_on_marketplace
+        ]);
+
+        $status = $event->is_on_marketplace ? 'publié sur le Marketplace.' : 'retiré du Marketplace.';
+        return back()->with('success', "L'événement a été " . $status);
+    }
 }

@@ -64,10 +64,15 @@
                 <h2 class="section-title">Marketplace & Replay</h2>
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem;">
                     <div>
-                        <p style="font-weight: 700; margin: 0;">{{ $event->is_on_marketplace ? '🛒 Publié sur le Marketplace' : '📥 Non publié' }}</p>
-                        <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $event->is_on_marketplace ? 'Le replay est accessible au public.' : 'Le replay est privé pour le moment.' }}</p>
+                        <p style="font-weight: 700; margin: 0;">{{ $event->is_on_marketplace ? '🛒 Actuellement en ligne' : '📥 Session archivée' }}</p>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $event->is_on_marketplace ? 'Le replay est public sur le Marketplace.' : 'Le replay n\'est pas encore public.' }}</p>
                     </div>
-                    <a href="{{ route('dashboard.events.edit', $event->id) }}" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: var(--muted); color: var(--foreground);">Modifier</a>
+                    <form action="{{ route('dashboard.insights.toggle-marketplace', $event->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: {{ $event->is_on_marketplace ? 'var(--muted)' : 'var(--brand)' }}; color: {{ $event->is_on_marketplace ? 'var(--foreground)' : '#fff' }}; border: none;">
+                            {{ $event->is_on_marketplace ? 'Dépublier' : 'Publier sur le Marketplace' }}
+                        </button>
+                    </form>
                 </div>
                 @if($event->is_on_marketplace)
                 <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
