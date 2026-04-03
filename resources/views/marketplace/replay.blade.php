@@ -74,7 +74,15 @@
 
 <script>
     const logs = @json($logs);
+    // On crée une map des documents par ID de panéliste pour un switch rapide
+    const panelistDocs = {
+        @foreach($event->panelists as $p)
+            "{{ $p->id }}": "{{ asset('storage/' . $p->presentation_path) }}",
+        @endforeach
+    };
+
     let currentLogIndex = 0;
+    let currentPanelistId = null;
 
     function updateReplay() {
         if (logs.length === 0) return;
@@ -83,10 +91,17 @@
         const counter = document.getElementById('log-counter');
         const timeBox = document.getElementById('log-time');
 
-        // Mise à jour de la slide (PDF anchor)
-        if (iframe && log.slide_number) {
-            const currentSrc = iframe.src;
-            const baseUrl = currentSrc.split('#')[0];
+        // Changement de document si le panéliste change
+        if (log.panelist_id != currentPanelistId) {
+            currentPanelistId = log.panelist_id;
+            const docUrl = panelistDocs[currentPanelistId];
+            if (docUrl && iframe) {
+                // Charger le nouveau document à la page enregistrée
+                iframe.src = `${docUrl}#page=${log.slide_number}`;
+            }
+        } else if (iframe && log.slide_number) {
+            // Même panéliste, juste changement de page
+            const baseUrl = iframe.src.split('#')[0];
             iframe.src = `${baseUrl}#page=${log.slide_number}`;
         }
 

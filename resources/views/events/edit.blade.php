@@ -11,9 +11,23 @@
     </div>
 
     <div class="card" style="max-width: 40rem;">
-        <form method="POST" action="{{ route('dashboard.events.update', $event->id) }}">
+        <form method="POST" action="{{ route('dashboard.events.update', $event->id) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+
+            <div class="form-group">
+                <label class="form-label">Bannière actuelle</label>
+                @if($event->image_path)
+                    <img src="{{ asset('storage/' . $event->image_path) }}" style="width: 100%; height: 8rem; object-fit: cover; border-radius: 0.75rem; margin-bottom: 1rem;">
+                @else
+                    <div style="background: var(--muted); height: 8rem; border-radius: 0.75rem; display: grid; place-items: center; margin-bottom: 1rem; color: var(--muted-foreground);">Aucune image</div>
+                @endif
+                <label class="form-label" for="image">Changer de bannière</label>
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                @error('image')
+                    <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
+                @enderror
+            </div>
 
             <div class="form-group">
                 <label class="form-label" for="name">Nom de l'événement</label>

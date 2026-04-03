@@ -11,6 +11,12 @@
         <p>Résumé du replay interactif généré par l'IA.</p>
     </div>
 
+    @if($event->image_path)
+    <div style="width: 100%; height: 20rem; border-radius: 1.5rem; overflow: hidden; margin-bottom: 2rem;">
+        <img src="{{ asset('storage/' . $event->image_path) }}" alt="{{ $event->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+    @endif
+
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start;">
         
         <div class="space-y-5">

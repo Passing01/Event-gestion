@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class EventController extends Controller
@@ -34,28 +35,31 @@ class EventController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'date' => 'required|date|after_or_equal:today',
-            'scheduled_at' => 'nullable|date',
-            'moderation_enabled' => 'boolean',
-            'anonymous_allowed' => 'boolean',
+            'date' => 'required|date',
+            'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('events', 'public');
+        }
 
         $event = Auth::user()->events()->create([
             'name' => $data['name'],
             'description' => $data['description'],
             'date' => $data['date'],
-            'scheduled_at' => $data['scheduled_at'] ?? $data['date'],
-            'code' => strtoupper(Str::random(6)),
-            'moderation_enabled' => $request->has('moderation_enabled'),
-            'anonymous_allowed' => $request->has('anonymous_allowed'),
+            'scheduled_at' => $data['scheduled_at'],
+            'code' => Str::upper(Str::random(6)),
             'status' => 'active',
+            'image_path' => $imagePath,
         ]);
 
-        return redirect()->route('dashboard.events.index')->with('success', 'Événement créé avec succès !');
+        return redirect()->route('dashboard.events.index')->with('success', 'Événement créé avec succès.');
     }
 
     /**
-     * Détails d'un événement.
+     * Voir les détails d'un événement.
      */
     public function show($id)
     {
@@ -64,7 +68,7 @@ class EventController extends Controller
     }
 
     /**
-     * Formulaire d'édition.
+     * Modifier un événement.
      */
     public function edit($id)
     {
@@ -83,9 +87,18 @@ class EventController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date' => 'required|date',
-            'scheduled_at' => 'nullable|date',
-            'status' => 'required|string|in:active,archived',
+            'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
+            'status' => 'required|in:active,archived',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($event->image_path) {
+                Storage::disk('public')->delete($event->image_path);
+            }
+            $imagePath = $request->file('image')->store('events', 'public');
+            $event->image_path = $imagePath;
+        }
 
         $event->update([
             'name' => $data['name'],

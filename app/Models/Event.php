@@ -26,6 +26,7 @@ class Event extends Model
         'ai_keywords',
         'ai_sentiment',
         'ai_report',
+        'image_path',
     ];
 
     protected $casts = [

@@ -24,13 +24,13 @@ class MarketplaceController extends Controller
     /**
      * Détails d'un événement sur le Marketplace (Avant Replay).
      */
-    public function show($id, \App\Services\GeminiService $gemini)
+    public function show($id)
     {
         $event = Event::with(['questions.replies', 'panelists.user'])->findOrFail($id);
 
-        // On peut réutiliser la synthèse IA
-        $analysis = $gemini->analyzeEvent($event, $event->questions);
-        $summary = $analysis['summary'] ?? "Cet événement est maintenant disponible en replay.";
+        // On utilise la synthèse déjà stockée en base (générée à la clôture)
+        // Cela évite d'interroger l'IA inutilement à chaque visite.
+        $summary = $event->ai_summary ?? $event->description ?? "Cet événement est maintenant disponible en replay interactif.";
 
         return view('marketplace.show', compact('event', 'summary'));
     }

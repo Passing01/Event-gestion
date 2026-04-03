@@ -11,8 +11,17 @@
     </div>
 
     <div class="card" style="max-width: 40rem;">
-        <form method="POST" action="{{ route('dashboard.events.store') }}">
+        <form method="POST" action="{{ route('dashboard.events.store') }}" enctype="multipart/form-data">
             @csrf
+
+            <div class="form-group">
+                <label class="form-label" for="image">Bannière de l'événement (Image)</label>
+                <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Recommandé : 1200x400px (JPG, PNG).</p>
+                @error('image')
+                    <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
+                @enderror
+            </div>
 
             <div class="form-group">
                 <label class="form-label" for="name">Nom de l'événement</label>

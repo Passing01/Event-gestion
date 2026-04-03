@@ -7,10 +7,18 @@
 <main class="auth-page" style="padding: 0.5rem; background: #f1f5f9; min-height: 100vh;">
     <div class="auth-card" style="max-width: 42rem; width: 100%; padding: 1.25rem; border-radius: 1.5rem; margin-bottom: 2rem;">
 
+        {{-- Bannière de l'événement --}}
+        @if($event->image_path)
+        <div style="margin: -1.25rem -1.25rem 1.5rem -1.25rem; height: 10rem; position: relative; overflow: hidden; border-radius: 1.5rem 1.5rem 0 0;">
+            <img src="{{ asset('storage/' . $event->image_path) }}" alt="{{ $event->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4));"></div>
+        </div>
+        @endif
+
         {{-- Header Responsif --}}
-        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem;">
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: 1rem;">
             <div style="flex: 1;">
-                <h1 style="font-size: 1.125rem; font-weight: 800; margin-bottom: 0.125rem; line-height: 1.2;">{{ $event->name }}</h1>
+                <h1 style="font-size: 1.25rem; font-weight: 900; margin-bottom: 0.25rem; line-height: 1.2; color: var(--foreground);">{{ $event->name }}</h1>
                 <p style="font-size: 0.75rem; color: var(--muted-foreground); display: flex; align-items: center; gap: 0.4rem;">
                     <span style="width: 0.5rem; height: 0.5rem; background: #10b981; border-radius: 50%;"></span>
                     En direct • {{ session('participant_pseudo') }}
@@ -20,6 +28,13 @@
                 #{{ $event->code }}
             </div>
         </div>
+
+        {{-- Description de l'événement --}}
+        @if($event->description)
+        <div style="margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: #f8fafc; border-radius: 0.75rem; border-left: 3px solid var(--brand-soft);">
+            <p style="font-size: 0.85rem; color: var(--muted-foreground); line-height: 1.5; margin: 0;">{{ $event->description }}</p>
+        </div>
+        @endif
 
         {{-- Main Levée & Statut --}}
         @php

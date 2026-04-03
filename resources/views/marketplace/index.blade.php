@@ -13,9 +13,15 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 1.5rem;">
         @forelse($events as $event)
         <div class="card" style="display: flex; flex-direction: column; height: 100%;">
-            <div style="background: var(--brand-light); height: 8rem; border-radius: 0.75rem; margin-bottom: 1rem; display: grid; place-items: center; font-size: 3rem;">
+            @if($event->image_path)
+            <div style="height: 10rem; border-radius: 0.75rem; overflow: hidden; margin-bottom: 1rem;">
+                <img src="{{ asset('storage/' . $event->image_path) }}" alt="{{ $event->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            @else
+            <div style="background: var(--brand-light); height: 10rem; border-radius: 0.75rem; margin-bottom: 1rem; display: grid; place-items: center; font-size: 3rem;">
                 🎤
             </div>
+            @endif
             <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--foreground);">{{ $event->name }}</h2>
             <p style="font-size: 0.875rem; color: var(--muted-foreground); flex-grow: 1; margin-bottom: 1.5rem;">
                 {{ Str::limit($event->description, 100) }}
