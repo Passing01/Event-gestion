@@ -50,12 +50,9 @@
                 <a href="{{ route('projection.index', $event->code) }}" target="_blank" class="btn-brand" style="background: var(--muted); color: var(--foreground);">
                     Ouvrir la Projection ↗
                 </a>
-                <form action="{{ route('dashboard.events.close', $event->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir clôturer cet événement ? Cela générera le rapport final et figera les données.');">
-                    @csrf
-                    <button type="submit" class="btn-brand" style="background: #ef4444; color: #fff; border: none;">
-                        🔒 Clôturer l'événement
-                    </button>
-                </form>
+                <button type="button" onclick="openCloseModal()" class="btn-brand" style="background: #ef4444; color: #fff; border: none;">
+                    🔒 Clôturer l'événement
+                </button>
             </div>
         </div>
     </div>
@@ -189,6 +186,30 @@
     </div>
 </div>
 
+{{-- Modal Confirmation Clôture --}}
+<div id="close-event-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:1.5rem; backdrop-filter: blur(4px);">
+    <div class="card" style="width:100%; max-width:32rem; padding: 2rem; border-radius: 1.5rem; text-align: center; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+        <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
+        <h2 style="font-size: 1.5rem; font-weight: 900; color: var(--foreground); margin-bottom: 1rem;">Clôturer définitivement ?</h2>
+        <p style="color: var(--muted-foreground); margin-bottom: 2rem; line-height: 1.6;">
+            Cette action va <strong>figer l'événement</strong>. Notre Intelligence Artificielle va générer le rapport final complet, la synthèse et l'analyse de sentiment. <br><br>
+            <span style="font-size: 0.8rem; background: var(--brand-light); color: var(--brand); padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700;">Note : Les accès au public seront coupés.</span>
+        </p>
+        
+        <form action="{{ route('dashboard.events.close', $event->id) }}" method="POST">
+            @csrf
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 1rem;">
+                <button type="button" onclick="document.getElementById('close-event-modal').style.display='none'" class="btn-brand" style="background: var(--muted); color: var(--foreground); border: none;">
+                    Annuler
+                </button>
+                <button type="submit" class="btn-brand" style="background: #ef4444; border: none; font-weight: 800;">
+                    Oui, clôturer & analyser
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:1rem;">
     <div class="card" style="width:100%; max-width:28rem;">
         <div class="section-header">
@@ -247,6 +268,10 @@
 
     function openSettingsModal() {
         document.getElementById('settings-modal').style.display = 'flex';
+    }
+
+    function openCloseModal() {
+        document.getElementById('close-event-modal').style.display = 'flex';
     }
 
     const eventCode = '{{ $event->code }}';
