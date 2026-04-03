@@ -42,23 +42,20 @@
             $rank = $myHand ? $event->raisedHands()->where('status', 'pending')->where('created_at', '<', $myHand->created_at)->count() + 1 : null;
         @endphp
 
-        <div style="background: #fff; padding: 1.25rem; border-radius: 1.5rem; border: 2px solid {{ $myHand && $myHand->status == 'called' ? 'var(--brand)' : 'var(--border)' }}; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+        <div id="mic-container" style="background: #fff; padding: 1.25rem; border-radius: 1.5rem; border: 2px solid {{ $myHand && $myHand->status == 'called' ? '#ef4444' : 'var(--border)' }}; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
             @if($myHand && $myHand->status == 'called')
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--brand); animation: progress-infinite 2s linear infinite;"></div>
-                <div style="font-size: 3rem; margin-bottom: 1rem; animation: pulse-mic 1.5s infinite;">🎙️</div>
-                <h3 style="font-weight: 900; font-size: 1.25rem; color: var(--brand);">C'est à vous, parlez !</h3>
-                <p style="font-size: 0.85rem; color: var(--muted-foreground); margin-bottom: 1.5rem;">Votre téléphone fait office de micro officiel.</p>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #ef4444; animation: progress-infinite 2s linear infinite;"></div>
+                <div id="live-mic-visual" style="font-size: 3rem; margin-bottom: 1rem; animation: pulse-mic 1.5s infinite;">🎙️</div>
+                <h3 id="live-mic-title" style="font-weight: 900; font-size: 1.25rem; color: #ef4444;">MICRO OUVERT - DIRECT</h3>
+                <p style="font-size: 0.85rem; color: var(--muted-foreground); margin-bottom: 1.5rem;">La salle vous écoute. Parlez tranquillement.</p>
                 
                 <div style="display: flex; gap: 1rem; width: 100%;">
-                    <button type="button" onclick="toggleVoiceRecording()" class="btn-brand" style="flex: 2; padding: 1rem; border-radius: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 10px 20px var(--brand-soft);">
-                        <span style="font-size: 1.25rem;">🎤</span> Déclencher le Micro
+                    <button type="button" class="btn-brand" style="background: #fee2e2; color: #dc2626; flex: 1; padding: 1rem; border-radius: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; border: none;" onclick="stopLiveMicManually()">
+                        <span style="font-size: 1.1rem;">⏹️</span> Finir l'intervention
                     </button>
-                    <form action="{{ route('participant.lower-hand', $event->code) }}" method="POST" style="flex: 1;">
-                        @csrf
-                        <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; padding: 1rem; border-radius: 1rem; font-weight: 700; width: 100%;">Finir</button>
-                    </form>
                 </div>
             @else
+                {{-- UI Attente ou Bouton Lever Main (IDEM PRECEDENT) --}}
                 <div style="display: flex; align-items: center; gap: 1rem; width: 100%; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div style="width: 3rem; height: 3rem; background: {{ $myHand ? 'var(--brand)' : '#f8fafc' }}; color: {{ $myHand ? '#fff' : 'var(--brand)' }}; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; transition: all 0.3s; border: 1px solid {{ $myHand ? 'var(--brand)' : 'var(--border)' }};">
@@ -67,10 +64,10 @@
                         <div style="text-align: left;">
                             @if($myHand)
                                 <p style="font-size: 0.95rem; font-weight: 800; margin: 0; color: var(--foreground);">Main levée</p>
-                                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Rang #{{ $rank }} • Attendez votre tour.</p>
+                                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Rang #{{ $rank }} • Attente modérateur.</p>
                             @else
-                                <p style="font-size: 0.95rem; font-weight: 800; margin: 0; color: var(--foreground);">Besoin de parler ?</p>
-                                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Signalez-vous oralement.</p>
+                                <p style="font-size: 0.95rem; font-weight: 800; margin: 0; color: var(--foreground);">Demander la parole</p>
+                                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Signalez-vous pour intervenir en direct.</p>
                             @endif
                         </div>
                     </div>
@@ -78,12 +75,12 @@
                     @if($myHand)
                         <form action="{{ route('participant.lower-hand', $event->code) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 700;">Baisser</button>
+                            <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 700;">Annuler</button>
                         </form>
                     @else
                         <form action="{{ route('participant.raise-hand', $event->code) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn-brand" style="width: auto; padding: 0.6rem 1.5rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 700; box-shadow: 0 4px 12px var(--brand-soft);">Lever la main</button>
+                            <button type="submit" class="btn-brand" style="width: auto; padding: 0.6rem 1.5rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 700; box-shadow: 0 4px 12px var(--brand-soft); border:none;">Prendre Place</button>
                         </form>
                     @endif
                 </div>
@@ -253,6 +250,7 @@
     </div>
 </div>
 
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script>
     // --- Gestion Modal Panéliste ---
     function openPanelistModal() {
@@ -272,6 +270,56 @@
     // --- Heartbeat & Typing ---
     const eventCode = '{{ $event->code }}';
     const csrfToken = '{{ csrf_token() }}';
+    const participantPseudo = '{{ session("participant_pseudo") }}';
+
+    // --- PeerJS : Micro Live ---
+    let myPeer;
+    let currentCall;
+    let lastHandStatus = '{{ $myHand ? $myHand->status : "none" }}';
+
+    function initPeer() {
+        myPeer = new Peer();
+        myPeer.on('open', (id) => console.log('Connecté au réseau audio, ID:', id));
+    }
+
+    async function startLiveMic() {
+        console.log("Démarrage du Micro Live...");
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            currentCall = myPeer.call(`${eventCode}-PROJECTOR`, stream, {
+                metadata: { name: participantPseudo }
+            });
+            console.log("Appel en cours vers le projecteur...");
+        } catch (err) {
+            console.error("Erreur micro:", err);
+            alert("Microphone requis pour intervenir en direct.");
+        }
+    }
+
+    function stopLiveMic() {
+        if (currentCall) {
+            currentCall.close();
+            currentCall = null;
+            console.log("Micro Live arrêté.");
+        }
+    }
+
+    function stopLiveMicManually() {
+        stopLiveMic();
+        // Optionnel : Envoyer une requête pour baisser la main
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/e/${eventCode}/lower-hand`;
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = csrfToken;
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    initPeer();
 
     async function sendHeartbeat() {
         try {
@@ -322,18 +370,6 @@
     }
 
     // --- NOUVEAU SYSTÈME VOCAL (STYLE WHATSAPP) ---
-    let mediaRecorder;
-    let audioChunks = [];
-    let audioContext;
-    let analyser;
-    let dataArray;
-    let animationId;
-    let voiceTimerInterval;
-    let voiceSeconds = 0;
-    let originalBlob = null;
-    let filteredBlob = null;
-    let isRecording = false;
-
     function toggleVoiceRecording() {
         if (!isRecording) {
             startVoiceRecording();
@@ -557,18 +593,6 @@
         return new Blob([buffer], {type: "audio/wav"});
     }
 
-    document.getElementById('question-form').addEventListener('submit', function(e) {
-        if (isRecording) {
-            e.preventDefault();
-            const form = this;
-            window.onRecordingStopped = () => {
-                form.submit();
-            };
-            mediaRecorder.stop();
-            stopRecordingUI();
-        }
-    });
-
     async function fetchQuestions() {
         const activeElement = document.activeElement;
         const isTyping = activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT');
@@ -586,6 +610,23 @@
             if (document.getElementById('questions-count-badge')) {
                 document.getElementById('questions-count-badge').textContent = `${data.count} question(s)`;
             }
+
+            // --- GESTION MICRO LIVE AUTOMATIQUE ---
+            if (data.my_hand_status !== lastHandStatus) {
+                if (data.my_hand_status === 'called') {
+                    // Si on vient d'être appelé, on lance le micro en direct
+                    startLiveMic();
+                    // On recharge aussi la page ou on met à jour le bloc UI via JS pour afficher le bloc "Appelé"
+                    // Pour simplifier ici, je vais juste faire un rechargement partiel (reloading the whole card)
+                    location.reload(); 
+                } else if (lastHandStatus === 'called' && data.my_hand_status !== 'called') {
+                    // Si on n'est plus appelé, on arrête le micro
+                    stopLiveMic();
+                    location.reload();
+                }
+                lastHandStatus = data.my_hand_status;
+            }
+
         } catch (e) {}
     }
 

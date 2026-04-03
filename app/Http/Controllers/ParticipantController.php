@@ -111,9 +111,12 @@ class ParticipantController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $myHandStatus = $event->raisedHands()->where('pseudo', $pseudo)->value('status');
+
         return response()->json([
             'html' => view('participant.partials.questions_list', compact('questions'))->render(),
-            'count' => $questions->count()
+            'count' => $questions->count(),
+            'my_hand_status' => $myHandStatus
         ]);
     }
 

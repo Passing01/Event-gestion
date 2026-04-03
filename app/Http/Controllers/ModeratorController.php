@@ -90,11 +90,13 @@ class ModeratorController extends Controller
         });
 
         $panelists = $event->panelists()->with('user')->get();
+        $hands = $event->raisedHands()->where('status', '!=', 'dismissed')->orderBy('created_at', 'asc')->get();
 
         return response()->json([
             'main_html' => view('moderator.partials.questions_list', compact('questions'))->render(),
             'filtered_html' => view('moderator.partials.filtered_list', compact('filteredByAI'))->render(),
             'panelists_html' => view('moderator.partials.panelists_list', compact('panelists'))->render(),
+            'hands_html' => view('moderator.partials.hands_list', compact('hands'))->render(),
             'counts' => [
                 'active' => $questions->count(),
                 'filtered' => $filteredByAI->count(),
@@ -176,9 +178,19 @@ class ModeratorController extends Controller
      */
     public function updateHandStatus(Request $request, $id)
     {
-        $hand = \App\Models\RaisedHand::findOrFail($id);
+        $hand = \App\Models\RaisedHand::find($id);
         
-        if ($hand->event->user_id !== Auth::id()) {
+        if (!$hand) {
+            return back()->with('info', "Cette intervention n'existe plus ou a déjà été traitée.");
+        }
+
+        $event = $hand->event;
+        
+        // Vérifier que l'utilisateur est soit le propriétaire, soit un panéliste
+        $isOwner = $event->user_id === Auth::id();
+        $isPanelist = $event->panelists()->where('user_id', Auth::id())->exists();
+
+        if (!$isOwner && !$isPanelist) {
             abort(403);
         }
 

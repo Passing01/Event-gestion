@@ -234,13 +234,43 @@
             0%, 100% { height: 4px; }
             50% { height: 20px; }
         }
+
+        /* Indicateur Micro Live */
+        .live-mic-status {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(220, 38, 38, 0.2);
+            padding: 0.75rem 1.25rem;
+            border-radius: 999px;
+            border: 1px solid #dc2626;
+            color: #fff;
+            animation: pulse-red 2s infinite;
+            z-index: 500;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
     </style>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body data-brand="{{ $event->user->brand_color ?? 'purple' }}">
 
     <div class="event-header">
         <div class="event-logo-box">LIVE</div>
         <span class="event-title">{{ $event->name }}</span>
+    </div>
+
+    {{-- Indicateur de micro en direct --}}
+    <div id="live-mic-alert" class="live-mic-status">
+        <span style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">Direct Live</span>
+        <span id="live-mic-author" style="font-weight: 700;"></span>
+        <span style="font-size: 1.25rem;">🎙️</span>
     </div>
 
     {{-- Bandeau Permanent des Intervenants (Reste visible même en projection) --}}
@@ -297,6 +327,25 @@
         let lastProjectingPage = null;
         let wasProjecting = false;
         let lastPlayedAudioId = null;
+
+        // --- PeerJS : Récepteur Micro Live ---
+        const peer = new Peer('{{ $event->code }}-PROJECTOR');
+        peer.on('call', (call) => {
+            console.log("Appel entrant (Micro Live)...");
+            call.answer(); // Répondre sans envoyer de flux local
+            call.on('stream', (remoteStream) => {
+                const audio = new Audio();
+                audio.srcObject = remoteStream;
+                audio.play();
+                document.getElementById('live-mic-alert').style.display = 'flex';
+                document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
+                document.getElementById('voice-indicator').style.display = 'flex';
+            });
+            call.on('close', () => {
+                document.getElementById('live-mic-alert').style.display = 'none';
+                document.getElementById('voice-indicator').style.display = 'none';
+            });
+        });
 
         async function fetchAnswering() {
             try {
