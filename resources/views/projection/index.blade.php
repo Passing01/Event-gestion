@@ -261,6 +261,13 @@
 </head>
 <body data-brand="{{ $event->user->brand_color ?? 'purple' }}">
 
+    <div id="audio-init-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+        <div style="background: var(--brand); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 2rem; box-shadow: 0 0 50px var(--brand-soft); animation: pulse 2s infinite;">🔊</div>
+        <h1 style="color: #fff; margin-bottom: 1rem; font-weight: 800; font-size: 2.5rem;">Prêt pour l'événement ?</h1>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 3rem; font-size: 1.25rem;">Cliquez sur le bouton ci-dessous pour autoriser le son et les micros en direct.</p>
+        <button onclick="enableAudioOnProjector()" class="btn-brand" style="padding: 1.5rem 4rem; font-size: 1.5rem; border-radius: 999px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.3); cursor: pointer; font-weight: 900;">DÉMARRER LA SESSION</button>
+    </div>
+
     <div class="event-header">
         <div class="event-logo-box">LIVE</div>
         <span class="event-title">{{ $event->name }}</span>
@@ -284,7 +291,14 @@
                 @if($projectingPanelist)
                     {{-- Initial State if already projecting --}}
                 @elseif($answering)
-                    <div class="question-content">"{{ $answering->content }}"</div>
+                    <div class="question-content">
+                        @if($answering->content)
+                            "{{ $answering->content }}"
+                        @else
+                            <span style="font-size: 5rem;">🎙️</span><br>
+                            <span style="font-size: 1.5rem; opacity: 0.7;">Message Vocal</span>
+                        @endif
+                    </div>
                     <div class="question-author">{{ $answering->pseudo }}</div>
                 @else
                     <div class="empty-state" style="font-size: 2rem; color: var(--muted-foreground); font-style: italic;">En attente de la prochaine question...</div>
@@ -321,30 +335,51 @@
     </div>
 
     <script>
-        let currentQuestionId = {{ $answering ? $answering->id : 'null' }};
-        let currentStatus = '{{ $answering ? $answering->status : "" }}';
+        const eventCode = '{{ $event->code }}';
+        let currentQuestionId = null;
+        let currentStatus = null;
+        let wasProjecting = false;
         let lastProjectingPath = null;
         let lastProjectingPage = null;
-        let wasProjecting = false;
         let lastPlayedAudioId = null;
+        let audioEnabled = false;
+        let audioContext = null;
 
-        // --- PeerJS : Récepteur Micro Live ---
-        const peer = new Peer('{{ $event->code }}-PROJECTOR');
+        function enableAudioOnProjector() {
+            audioEnabled = true;
+            document.getElementById('audio-init-overlay').style.display = 'none';
+            console.log("Audio activé sur le projecteur.");
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // --- PeerJS : Réception Micro Live ---
+        const peer = new Peer(`${eventCode}-PROJECTOR`);
+
+        peer.on('open', (id) => console.log('Projecteur prêt pour le son, ID:', id));
+
         peer.on('call', (call) => {
-            console.log("Appel entrant (Micro Live)...");
-            call.answer(); // Répondre sans envoyer de flux local
+            console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
+            
+            call.answer(); 
+            
             call.on('stream', (remoteStream) => {
-                const audio = new Audio();
-                audio.srcObject = remoteStream;
-                audio.play();
+                console.log("Flux audio reçu !");
                 document.getElementById('live-mic-alert').style.display = 'flex';
                 document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
                 document.getElementById('voice-indicator').style.display = 'flex';
+
+                const audio = document.createElement('audio');
+                audio.srcObject = remoteStream;
+                audio.onloadedmetadata = () => {
+                    audio.play().catch(e => console.error("Erreur de lecture audio:", e));
+                };
             });
             call.on('close', () => {
+                console.log("Appel terminé.");
                 document.getElementById('live-mic-alert').style.display = 'none';
                 document.getElementById('voice-indicator').style.display = 'none';
             });
+            call.on('error', (err) => console.error("Erreur PeerJS Appel:", err));
         });
 
         async function fetchAnswering() {
@@ -411,10 +446,15 @@
                     currentStatus = data.status;
                     
                     if (data.id) {
-                        let contentHtml = data.content ? `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>` : '';
+                        let contentHtml = '';
+                        if (data.content) {
+                            contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>`;
+                        } else if (data.audio_path) {
+                            contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;"><span style="font-size: 5rem;">🎙️</span><br><span style="font-size: 1.5rem; opacity: 0.7;">Message Vocal</span></div>`;
+                        }
+
                         let audioHtml = data.audio_path ? `
                             <div style="margin-top: 1rem; opacity: 0; transform: translateY(10px); transition: all 0.5s;" class="audio-container">
-                                <div style="font-size: 1.5rem; color: var(--brand); margin-bottom: 1rem;">🎤 Message Vocal</div>
                                 <audio controls style="height: 50px; width: 400px;">
                                     <source src="/storage/${data.audio_path}" type="audio/webm">
                                 </audio>

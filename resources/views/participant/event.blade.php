@@ -49,9 +49,24 @@
                 <h3 id="live-mic-title" style="font-weight: 900; font-size: 1.25rem; color: #ef4444;">MICRO OUVERT - DIRECT</h3>
                 <p style="font-size: 0.85rem; color: var(--muted-foreground); margin-bottom: 1.5rem;">La salle vous écoute. Parlez tranquillement.</p>
                 
-                <div style="display: flex; gap: 1rem; width: 100%;">
-                    <button type="button" class="btn-brand" style="background: #fee2e2; color: #dc2626; flex: 1; padding: 1rem; border-radius: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; border: none;" onclick="stopLiveMicManually()">
-                        <span style="font-size: 1.1rem;">⏹️</span> Finir l'intervention
+                <div id="mic-controls" style="display: flex; flex-direction: column; gap: 1rem; width: 100%;">
+                    <button type="button" id="live-mic-btn" class="btn-brand" style="flex: 2; padding: 1.25rem; border-radius: 1.25rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 10px 20px var(--brand-soft); border:none;" onclick="startLiveMicFromButton()">
+                        <span style="font-size: 1.5rem;">🎤</span> Activer mon micro
+                    </button>
+                    
+                    <button type="button" class="btn-brand" style="background: #f1f5f9; color: #475569; padding: 0.75rem; border-radius: 1rem; font-weight: 700; border: none; font-size: 0.8rem;" onclick="stopLiveMicManually()">
+                        ❌ Terminer l'intervention
+                    </button>
+                </div>
+
+                {{-- État "En Ligne" --}}
+                <div id="mic-active-status" style="display: none; width: 100%;">
+                    <div style="background: #ecfdf5; border: 1px solid #10b981; color: #059669; padding: 1rem; border-radius: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span style="width: 0.75rem; height: 0.75rem; background: #10b981; border-radius: 50%; animation: pulse-green 1s infinite;"></span>
+                        MICRO EN DIRECT
+                    </div>
+                    <button type="button" class="btn-brand" style="background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 1rem; font-weight: 800; width: 100%; border: none;" onclick="stopLiveMicManually()">
+                        Couper mon micro
                     </button>
                 </div>
             @else
@@ -282,6 +297,17 @@
         myPeer.on('open', (id) => console.log('Connecté au réseau audio, ID:', id));
     }
 
+    async function startLiveMicFromButton() {
+        const btn = document.getElementById('live-mic-btn');
+        btn.disabled = true;
+        btn.innerHTML = "⌛ Connexion...";
+        
+        await startLiveMic();
+        
+        document.getElementById('mic-controls').style.display = 'none';
+        document.getElementById('mic-active-status').style.display = 'block';
+    }
+
     async function startLiveMic() {
         console.log("Démarrage du Micro Live...");
         try {
@@ -293,6 +319,7 @@
         } catch (err) {
             console.error("Erreur micro:", err);
             alert("Microphone requis pour intervenir en direct.");
+            location.reload();
         }
     }
 
@@ -306,7 +333,7 @@
 
     function stopLiveMicManually() {
         stopLiveMic();
-        // Optionnel : Envoyer une requête pour baisser la main
+        // Envoyer une requête pour baisser la main
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/e/${eventCode}/lower-hand`;
@@ -611,16 +638,12 @@
                 document.getElementById('questions-count-badge').textContent = `${data.count} question(s)`;
             }
 
-            // --- GESTION MICRO LIVE AUTOMATIQUE ---
+            // --- GESTION MICRO LIVE ---
             if (data.my_hand_status !== lastHandStatus) {
                 if (data.my_hand_status === 'called') {
-                    // Si on vient d'être appelé, on lance le micro en direct
-                    startLiveMic();
-                    // On recharge aussi la page ou on met à jour le bloc UI via JS pour afficher le bloc "Appelé"
-                    // Pour simplifier ici, je vais juste faire un rechargement partiel (reloading the whole card)
+                    // On ne lance plus le micro auto, on refresh juste pour voir le bouton "Activer mon micro"
                     location.reload(); 
                 } else if (lastHandStatus === 'called' && data.my_hand_status !== 'called') {
-                    // Si on n'est plus appelé, on arrête le micro
                     stopLiveMic();
                     location.reload();
                 }
