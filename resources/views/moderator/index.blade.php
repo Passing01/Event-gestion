@@ -261,6 +261,9 @@
             document.getElementById('questions-container-filtered').innerHTML = data.filtered_html;
             document.getElementById('panelists-container').innerHTML = data.panelists_html;
             
+            // Relancer les timers après mise à jour HTML
+            initModeratorTimers();
+
             // Mise à jour des badges d'onglets
             document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;
             document.getElementById('tab-btn-filtered').textContent = `🤖 Filtrées par l'IA (${data.counts.filtered})`;
@@ -277,9 +280,45 @@
         }
     }
 
+    // --- Gestion Chronos Modérateur ---
+    function initModeratorTimers() {
+        document.querySelectorAll('.moderator-timer-box').forEach(box => {
+            const display = box.querySelector('.timer-display');
+            if (box.dataset.intervalId) clearInterval(box.dataset.intervalId);
+
+            let remaining = parseInt(box.dataset.remaining);
+            
+            const interval = setInterval(() => {
+                if (remaining <= 0) {
+                    display.textContent = "00:00";
+                    box.style.background = "#fee2e2";
+                    box.style.borderColor = "#dc2626";
+                    clearInterval(interval);
+                    return;
+                }
+                
+                remaining--;
+                box.dataset.remaining = remaining; // Update for next tick or refresh
+                
+                const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const secs = String(remaining % 60).padStart(2, '0');
+                display.textContent = `${mins}:${secs}`;
+                
+                if (remaining <= 300) { // Alerte 5 min
+                    box.style.background = "#fee2e2";
+                    box.style.borderColor = "#dc2626";
+                    display.style.color = "#dc2626";
+                }
+            }, 1000);
+            
+            box.dataset.intervalId = interval;
+        });
+    }
+
     setInterval(fetchParticipants, 5000);
-    setInterval(fetchQuestions, 5000); // Rafraîchir toutes les 5 secondes
+    setInterval(fetchQuestions, 5000); 
     fetchParticipants();
+    fetchQuestions(); // Appelle aussi initModeratorTimers
 </script>
 
 <style>
