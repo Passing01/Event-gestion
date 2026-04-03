@@ -169,6 +169,17 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::post('/panelist/{id}/stop',   [ModeratorController::class, 'stopPresentation'])->name('moderator.panelist.stop');
 });
 
+use App\Http\Controllers\MarketplaceController;
+
+// ──────────────────────────────────────────────
+//  Routes Marketplace (Public)
+// ──────────────────────────────────────────────
+Route::prefix('marketplace')->name('marketplace.')->group(function () {
+    Route::get('/',            [MarketplaceController::class, 'index'])->name('index');
+    Route::get('/{id}',        [MarketplaceController::class, 'show'])->name('show');
+    Route::get('/{id}/replay', [MarketplaceController::class, 'replay'])->name('replay');
+});
+
 // ──────────────────────────────────────────────
 //  Routes Panéliste
 // ──────────────────────────────────────────────

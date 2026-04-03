@@ -38,6 +38,11 @@ class Event extends Model
         return $this->hasMany(Panelist::class);
     }
 
+    public function projectionLogs(): HasMany
+    {
+        return $this->hasMany(ProjectionLog::class);
+    }
+
     public function questions(): HasMany
     {
         return $this->hasMany(Question::class);

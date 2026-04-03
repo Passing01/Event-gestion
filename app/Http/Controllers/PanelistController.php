@@ -315,7 +315,7 @@ class PanelistController extends Controller
     }
 
     /**
-     * Sync current page for projection.
+     * Sync current page for projection and log for replay.
      */
     public function syncPage(Request $request, $code)
     {
@@ -325,6 +325,16 @@ class PanelistController extends Controller
             ->firstOrFail();
 
         $page = $request->input('page', 1);
+        
+        // Log the page change for replay
+        if ($panelist->is_projecting) {
+            \App\Models\ProjectionLog::create([
+                'event_id' => $event->id,
+                'panelist_id' => $panelist->id,
+                'slide_number' => $page,
+            ]);
+        }
+
         $panelist->update(['current_page' => max(1, $page)]);
 
         return response()->json(['status' => 'ok', 'current_page' => $panelist->current_page]);

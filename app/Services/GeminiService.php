@@ -109,4 +109,55 @@ class GeminiService
 
         return $result;
     }
+
+    /**
+     * Analyse complète d'un événement pour le tableau de bord d'insights.
+     */
+    public function analyzeEvent($event, $questions)
+    {
+        $questionsText = $questions->map(function($q) {
+            return "- Q: {$q->content}\n  R: " . ($q->replies->first()->content ?? "Pas de réponse");
+        })->implode("\n");
+
+        $prompt = "Analyse l'événement '{$event->name}' (Thème : {$event->description}) basé sur les questions suivantes :\n\n{$questionsText}\n\n" .
+                 "Génère une analyse concise en JSON avec les champs suivants :\n" .
+                 "- summary: Une synthèse de 3-4 phrases de l'événement et des échanges.\n" .
+                 "- topKeywords: Un tableau des 5 mots-clés les plus importants.\n" .
+                 "- sentimentLabel: 'Positif', 'Neutre' ou 'Critique' suivi d'un pourcentage (ex: 'Positif (85%)').\n" .
+                 "RÉPONDEZ UNIQUEMENT EN JSON STRICT.";
+
+        $response = $this->generateResponse($prompt);
+        
+        if (!$response) return null;
+
+        preg_match('/\{.*\}/s', $response, $matches);
+        $cleanJson = $matches[0] ?? $response;
+        
+        return json_decode($cleanJson, true);
+    }
+
+    /**
+     * Génère un rapport d'événement complet et professionnel.
+     */
+    public function generateEventReport($event, $questions)
+    {
+        $questionsText = $questions->map(function($q) {
+            return "- Question : {$q->content}\n  Réponses fournies : " . $q->replies->pluck('content')->implode(' ; ');
+        })->implode("\n\n");
+
+        $prompt = "Rédige un rapport de synthèse professionnel et humain pour l'événement suivant :\n" .
+                 "Nom de l'événement : {$event->name}\n" .
+                 "Description/Thème : {$event->description}\n" .
+                 "Date : " . $event->date->format('d/m/Y') . "\n\n" .
+                 "Contenu des échanges (Questions et Réponses) :\n" .
+                 "{$questionsText}\n\n" .
+                 "Le rapport doit inclure :\n" .
+                 "1. Une introduction (contexte).\n" .
+                 "2. Une analyse des thématiques principales abordées.\n" .
+                 "3. Une synthèse qualitative de la participation de l'audience.\n" .
+                 "4. Des recommandations ou points à retenir pour de futurs événements.\n\n" .
+                 "Rédige cela comme un consultant expert, avec un ton professionnel, structuré et engageant. Utilise du Markdown pour la mise en forme.";
+
+        return $this->generateResponse($prompt);
+    }
 }

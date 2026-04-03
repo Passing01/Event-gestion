@@ -21,7 +21,7 @@ class InsightsController extends Controller
     /**
      * Afficher l'analyse IA d'un événement spécifique.
      */
-    public function show($id)
+    public function show($id, \App\Services\GeminiService $gemini)
     {
         $event = Auth::user()->events()->with(['questions.replies', 'participants'])->findOrFail($id);
         $questions = $event->questions;
@@ -38,49 +38,41 @@ class InsightsController extends Controller
             ]);
         }
 
-        // --- Extraction de mots-clés (Logique simple) ---
-        $allText = $questions->pluck('content')->implode(' ');
-        $words = str_word_count(strtolower($allText), 1);
-        $stopWords = ['le', 'la', 'les', 'de', 'des', 'un', 'une', 'et', 'est', 'pour', 'que', 'qui', 'dans', 'sur', 'avec', 'pas', 'plus', 'comment', 'pourquoi', 'quel', 'quelle'];
-        $filteredWords = array_filter($words, fn($w) => strlen($w) > 3 && !in_array($w, $stopWords));
-        $wordCounts = array_count_values($filteredWords);
-        arsort($wordCounts);
-        $topKeywords = array_slice(array_keys($wordCounts), 0, 5);
-        $topKeywords = array_map('ucfirst', $topKeywords);
+        // --- Appel à Gemini pour l'analyse ---
+        $analysis = $gemini->analyzeEvent($event, $questions);
 
-        // --- Simulation de Sentiment ---
-        $positiveWords = ['bien', 'bon', 'super', 'merci', 'bravo', 'top', 'génial', 'intéressant', 'utile'];
-        $negativeWords = ['problème', 'mauvais', 'difficile', 'nul', 'lent', 'erreur', 'bug', 'déçu'];
-        
-        $posCount = 0;
-        $negCount = 0;
-        foreach ($words as $w) {
-            if (in_array($w, $positiveWords)) $posCount++;
-            if (in_array($w, $negativeWords)) $negCount++;
+        if (!$analysis) {
+            // Fallback en cas d'erreur de l'IA
+            $summary = "L'événement '{$event->name}' a généré {$questionsCount} questions. L'IA n'a pas pu générer une synthèse détaillée pour le moment.";
+            $topKeywords = ['Événement', 'Questions', 'Réponses'];
+            $sentimentLabel = 'Neutre (50%)';
+        } else {
+            $summary = $analysis['summary'] ?? "Synthèse indisponible.";
+            $topKeywords = $analysis['topKeywords'] ?? [];
+            $sentimentLabel = $analysis['sentimentLabel'] ?? 'Neutre (50%)';
         }
-
-        $sentimentScore = 50 + ($posCount * 10) - ($negCount * 10);
-        $sentimentScore = max(0, min(100, $sentimentScore));
-        $sentimentLabel = $sentimentScore > 60 ? "Positif ({$sentimentScore}%)" : ($sentimentScore < 40 ? "Critique ({$sentimentScore}%)" : "Neutre ({$sentimentScore}%)");
-
-        // --- Génération de Synthèse ---
-        $mainTopic = count($topKeywords) > 0 ? $topKeywords[0] : "divers sujets";
-        $summary = "L'événement '{$event->name}' a réuni {$participantsCount} participants et généré {$questionsCount} questions. ";
-        $summary .= "L'analyse sémantique montre que l'audience s'est principalement intéressée à : " . implode(', ', $topKeywords) . ". ";
-        $summary .= "Le sujet dominant semble être '{$mainTopic}'. Globalement, les échanges ont été jugés comme étant d'un ton " . strtolower(explode(' ', $sentimentLabel)[0]) . ".";
 
         return view('insights.show', compact('event', 'summary', 'topKeywords', 'sentimentLabel', 'participantsCount'));
     }
 
     /**
-     * Exporter le rapport (Simulation).
+     * Exporter le rapport AI.
      */
-    public function export($id)
+    public function export($id, \App\Services\GeminiService $gemini)
     {
-        $event = Auth::user()->events()->findOrFail($id);
+        $event = Auth::user()->events()->with(['questions.replies'])->findOrFail($id);
+        $questions = $event->questions;
+
+        if ($questions->count() === 0) {
+            return back()->with('error', "Pas assez de données pour générer un rapport.");
+        }
+
+        $reportContent = $gemini->generateEventReport($event, $questions);
         
-        // Ici on pourrait générer un PDF avec dompdf
-        // Pour l'instant, on redirige vers une vue d'impression
-        return view('insights.export', compact('event'));
+        if (!$reportContent) {
+            return back()->with('error', "L'IA n'a pas pu générer le rapport. Veuillez réessayer.");
+        }
+
+        return view('insights.export', compact('event', 'reportContent'));
     }
 }

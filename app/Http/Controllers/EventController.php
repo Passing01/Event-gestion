@@ -95,6 +95,7 @@ class EventController extends Controller
             'status' => $data['status'],
             'moderation_enabled' => $request->has('moderation_enabled'),
             'anonymous_allowed' => $request->has('anonymous_allowed'),
+            'is_on_marketplace' => $request->has('is_on_marketplace'),
         ]);
 
         return redirect()->route('dashboard.events.index')->with('success', 'Événement mis à jour.');

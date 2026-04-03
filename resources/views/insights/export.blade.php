@@ -29,16 +29,25 @@
     </div>
 
     <header>
-        <h1>Rapport Q&A : {{ $event->name }}</h1>
+        <h1>Compte-rendu d'Événement : {{ $event->name }}</h1>
         <div class="meta">
             Date de l'événement : {{ $event->date->format('d/m/Y') }} | 
-            Généré le : {{ now()->format('d/m/Y H:i') }} | 
-            Total Questions : {{ $event->questions->count() }}
+            Généré par l'IA le : {{ now()->format('d/m/Y H:i') }}
         </div>
     </header>
 
-    <div class="section">
-        <h2 class="section-title">Questions & Réponses</h2>
+    @if(isset($reportContent))
+    <section class="section">
+        <h2 class="section-title">Synthèse Stratégique de l'IA</h2>
+        <div style="background: #fdfbff; border: 1px solid #ddd6fe; padding: 2rem; border-radius: 1rem; color: #4b5563;">
+            {{-- On utilise Str::markdown pour transformer le markdown en HTML --}}
+            {!! Str::markdown($reportContent) !!}
+        </div>
+    </section>
+    @endif
+
+    <div class="section" style="page-break-before: always;">
+        <h2 class="section-title">Détails des Questions & Réponses</h2>
         @foreach($event->questions as $q)
         <div class="question-card">
             <div class="question-meta">Par {{ $q->pseudo }} • {{ $q->votes_count }} votes</div>
