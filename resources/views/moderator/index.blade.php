@@ -134,7 +134,7 @@
             <div style="font-size: 5rem; opacity: 0.1; position: absolute; right: -1rem; bottom: -1.5rem; transform: rotate(-15deg);">📊</div>
         </div>
 
-        <div id="panelists-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+        <div id="panelists-container" style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: flex-start; align-items: flex-start;">
             @include('moderator.partials.panelists_list', ['panelists' => $panelists])
         </div>
     </div>

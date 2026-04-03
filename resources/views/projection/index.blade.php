@@ -387,6 +387,7 @@
                 }
 
                 const qaList = document.getElementById('qa-list');
+                if (data.all_questions) {
                     const colors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
                     qaList.innerHTML = data.all_questions.map((q, idx) => {
                         const color = colors[idx % colors.length];
