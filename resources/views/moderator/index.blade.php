@@ -248,7 +248,9 @@
 
     // --- TEMPS RÉEL : Questions Polling ---
     async function fetchQuestions() {
-        if (isEditing) return; // Ne pas rafraîchir si on édite
+        // Détecter si on est en train d'éditer ou si un vocal est en cours d'écoute
+        const isAudioPlaying = Array.from(document.querySelectorAll('audio')).some(audio => !audio.paused && !audio.ended);
+        if (isEditing || isAudioPlaying) return; 
 
         try {
             const response = await fetch(`/dashboard/${eventId}/moderator/questions-fetch`);

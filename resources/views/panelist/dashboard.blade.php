@@ -365,6 +365,9 @@
     }
 
     async function fetchQuestions() {
+        // Détecter si un vocal est en cours d'écoute
+        const isAudioPlaying = Array.from(document.querySelectorAll('audio')).some(audio => !audio.paused && !audio.ended);
+        
         // Détecter si un modal est ouvert
         const isModalOpen = document.getElementById('upload-modal').style.display === 'flex' || 
                            document.getElementById('view-doc-modal').style.display === 'flex';
@@ -373,7 +376,7 @@
         const activeElement = document.activeElement;
         const isTyping = activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT');
 
-        if (isInteracting || isModalOpen || isTyping || isRecording) return;
+        if (isInteracting || isModalOpen || isTyping || isRecording || isAudioPlaying) return;
 
         try {
             const response = await fetch(`/dashboard/${eventId}/panelist/questions-fetch`);
