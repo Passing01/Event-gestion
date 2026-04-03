@@ -80,24 +80,71 @@
 
         {{-- Réponses --}}
         <div style="margin-top: 1rem; padding-left: 1.5rem; border-left: 2px solid var(--muted);">
-            <div class="space-y-2">
+            <div class="space-y-3" id="replies-{{ $q->id }}">
                 @foreach($q->replies as $reply)
-                <div style="background: var(--muted); padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-weight: 600;">{{ $reply->pseudo }}</span>
-                        @if($reply->is_moderator)
-                            @if($reply->pseudo == 'Modérateur')
-                                <span class="badge" style="background: #f1f5f9; color: #475569; font-size: 0.625rem;">MA SUGGESTION</span>
-                            @else
-                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 0.625rem;">RÉPONSE OFFICIELLE</span>
+                <div style="background: var(--muted); padding: 0.75rem 1rem; border-radius: 1rem; font-size: 0.875rem; border: 1px solid rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-weight: 800; color: var(--foreground);">{{ $reply->pseudo }}</span>
+                            @if($reply->is_moderator)
+                                <span class="badge" style="background: var(--brand-light); color: var(--brand); font-size: 10px; font-weight: 900; border: 1px solid var(--brand-soft);">💡 SUGGESTION MODO</span>
                             @endif
-                        @endif
-                        <span style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $reply->created_at->diffForHumans() }}</span>
+                        </div>
+                        <span style="font-size: 0.7rem; color: var(--muted-foreground); font-weight: 600;">{{ $reply->created_at->diffForHumans() }}</span>
                     </div>
-                    <p>{{ $reply->content }}</p>
+
+                    @if($reply->audio_path)
+                        <div style="margin: 0.5rem 0;">
+                            <audio controls style="height: 35px; width: 100%;">
+                                <source src="{{ asset('storage/' . $reply->audio_path) }}" type="audio/webm">
+                            </audio>
+                        </div>
+                    @endif
+                    
+                    @if($reply->content)
+                        <p style="margin: 0; line-height: 1.5; color: var(--foreground); opacity: 0.9;">{{ $reply->content }}</p>
+                    @endif
                 </div>
                 @endforeach
             </div>
+
+            {{-- Formulaire de réponse pour le Modérateur --}}
+            @if($q->status != 'rejected')
+            <div style="margin-top: 1.5rem; background: #fff; border: 1px solid var(--border); padding: 1rem; border-radius: 1.25rem; box-shadow: 0 5px 15px rgba(0,0,0,0.02);">
+                <form action="{{ route('dashboard.moderator.reply', $q->id) }}" method="POST" id="reply-form-{{ $q->id }}" enctype="multipart/form-data">
+                    @csrf
+                    <div style="display: flex; gap: 0.75rem; align-items: flex-end;">
+                        <div style="flex: 1; position: relative;">
+                            <textarea name="content" placeholder="Suggérer une réponse ou une précision..." style="width: 100%; border: 1px solid var(--border); border-radius: 1rem; padding: 0.75rem 1rem; font-size: 0.875rem; outline: none; transition: border-color 0.2s; min-height: 60px; resize: none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                            
+                            {{-- Visualisation Audio (Masqué par défaut) --}}
+                            <div id="vocal-preview-{{ $q->id }}" style="display:none; position: absolute; inset: 0; background: #fff; border-radius: 1rem; align-items: center; gap: 0.75rem; padding: 0 1rem; z-index: 10;">
+                                <div class="voice-indicator" style="display: flex; gap: 3px; align-items: center;">
+                                    <div style="width: 3px; height: 12px; background: var(--brand); border-radius: 2px; animation: voice-pulse 1s infinite alternate;"></div>
+                                    <div style="width: 3px; height: 18px; background: var(--brand); border-radius: 2px; animation: voice-pulse 1s infinite alternate 0.2s;"></div>
+                                    <div style="width: 3px; height: 10px; background: var(--brand); border-radius: 2px; animation: voice-pulse 1s infinite alternate 0.4s;"></div>
+                                </div>
+                                <span id="vocal-timer-{{ $q->id }}" style="font-family: monospace; font-weight: 800; font-size: 0.85rem; color: var(--brand);">00:00</span>
+                                <button type="button" onclick="cancelVocal('{{ $q->id }}')" style="margin-left: auto; background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Annuler</button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                            <button type="button" id="btn-vocal-{{ $q->id }}" onclick="toggleVocalRecording('{{ $q->id }}')" style="background: #f1f5f9; color: #475569; width: 3rem; height: 3rem; border: none; border-radius: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" class="vocal-trigger">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1.5rem; height: 1.5rem;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                                </svg>
+                            </button>
+                            <button type="submit" class="btn-brand" style="width: 3rem; height: 3rem; padding: 0; border-radius: 1rem; display: flex; align-items: center; justify-content: center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 1.5rem; height: 1.5rem;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            @endif
         </div>
     </div>
     @empty

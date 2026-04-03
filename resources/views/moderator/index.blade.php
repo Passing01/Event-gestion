@@ -203,7 +203,12 @@
 
 @push('scripts')
 <script>
-    let isEditing = false; // Flag pour savoir si on est en train d'éditer
+    let isEditing = false; 
+    let isRecording = false; 
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordTimer;
+    let seconds = 0;
     const eventId = '{{ $event->id }}';
 
     // --- Gestion des onglets ---
@@ -259,9 +264,10 @@
 
     // --- TEMPS RÉEL : Questions Polling ---
     async function fetchQuestions() {
-        // Détecter si on est en train d'éditer ou si un vocal est en cours d'écoute
         const isAudioPlaying = Array.from(document.querySelectorAll('audio')).some(audio => !audio.paused && !audio.ended);
-        if (isEditing || isAudioPlaying) return; 
+        const focusedTextarea = document.querySelector('textarea:focus');
+        
+        if (isEditing || isRecording || isAudioPlaying || focusedTextarea) return; 
 
         try {
             const response = await fetch(`/dashboard/${eventId}/moderator/questions-fetch`);
@@ -276,8 +282,8 @@
             initModeratorTimers();
 
             // Mise à jour des badges d'onglets
-            document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;
-            document.getElementById('tab-btn-filtered').textContent = `🤖 Filtrées par l'IA (${data.counts.filtered})`;
+            document.getElementById('tab-btn-active').innerHTML = `🎯 Flux Actif <span class="badge" style="margin-left: 5px; background: var(--brand); color:#fff; border-radius: 50%; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">${data.counts.active}</span>`;
+            document.getElementById('tab-btn-filtered').innerHTML = `🤖 Filtré par IA <span class="badge" style="margin-left: 5px; background: #6b7280; color:#fff; border-radius: 50%; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;">${data.counts.filtered}</span>`;
             
             // Mise à jour de la sidebar
             document.getElementById('stat-total').textContent = data.counts.total;
@@ -291,6 +297,88 @@
         }
     }
 
+    // --- Logique Audio Premium (Style WhatsApp) ---
+    async function toggleVocalRecording(qId) {
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                isRecording = true;
+                
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    if (!isRecording) return; // Annulé
+
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioFile = new File([audioBlob], "recording.webm", { type: 'audio/webm' });
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(audioFile);
+                    
+                    const form = document.getElementById('reply-form-' + qId);
+                    let fileInput = form.querySelector('input[type="file"]');
+                    if (!fileInput) {
+                        fileInput = document.createElement('input');
+                        fileInput.type = 'file';
+                        fileInput.name = 'audio';
+                        fileInput.style.display = 'none';
+                        form.appendChild(fileInput);
+                    }
+                    fileInput.files = dataTransfer.files;
+                    form.submit();
+                };
+
+                mediaRecorder.start();
+                startVocalUI(qId);
+            } catch (err) {
+                alert("Microphone inaccessible.");
+            }
+        } else {
+            stopVocalRecording();
+        }
+    }
+
+    function startVocalUI(qId) {
+        const preview = document.getElementById('vocal-preview-' + qId);
+        const timerSpan = document.getElementById('vocal-timer-' + qId);
+        const btn = document.getElementById('btn-vocal-' + qId);
+        
+        preview.style.display = 'flex';
+        btn.style.background = 'var(--brand)';
+        btn.style.color = '#fff';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1.5rem; height: 1.5rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>';
+        
+        seconds = 0;
+        recordTimer = setInterval(() => {
+            seconds++;
+            const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const secs = String(seconds % 60).padStart(2, '0');
+            timerSpan.textContent = `${mins}:${secs}`;
+        }, 1000);
+    }
+
+    function stopVocalRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            const tracks = mediaRecorder.stream.getTracks();
+            tracks.forEach(t => t.stop());
+            clearInterval(recordTimer);
+        }
+    }
+
+    function cancelVocal(qId) {
+        isRecording = false; 
+        stopVocalRecording();
+        const preview = document.getElementById('vocal-preview-' + qId);
+        const btn = document.getElementById('btn-vocal-' + qId);
+        
+        preview.style.display = 'none';
+        btn.style.background = '#f1f5f9';
+        btn.style.color = '#475569';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1.5rem; height: 1.5rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>';
+    }
+
     // --- Gestion Chronos Modérateur ---
     function initModeratorTimers() {
         document.querySelectorAll('.moderator-timer-box').forEach(box => {
@@ -298,30 +386,18 @@
             if (box.dataset.intervalId) clearInterval(box.dataset.intervalId);
 
             let remaining = parseInt(box.dataset.remaining);
-            
             const interval = setInterval(() => {
                 if (remaining <= 0) {
                     display.textContent = "00:00";
-                    box.style.background = "#fee2e2";
-                    box.style.borderColor = "#dc2626";
                     clearInterval(interval);
                     return;
                 }
-                
                 remaining--;
-                box.dataset.remaining = remaining; // Update for next tick or refresh
-                
+                box.dataset.remaining = remaining;
                 const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
                 const secs = String(remaining % 60).padStart(2, '0');
                 display.textContent = `${mins}:${secs}`;
-                
-                if (remaining <= 300) { // Alerte 5 min
-                    box.style.background = "#fee2e2";
-                    box.style.borderColor = "#dc2626";
-                    display.style.color = "#dc2626";
-                }
             }, 1000);
-            
             box.dataset.intervalId = interval;
         });
     }
@@ -329,24 +405,30 @@
     setInterval(fetchParticipants, 5000);
     setInterval(fetchQuestions, 5000); 
     fetchParticipants();
-    fetchQuestions(); // Appelle aussi initModeratorTimers
+    fetchQuestions();
 </script>
 
 <style>
 .active-tab {
     border-bottom: 2px solid var(--brand) !important;
     color: var(--foreground) !important;
+    font-weight: 950 !important;
 }
-.typing-dot {
-    font-weight: 800;
-    color: var(--brand);
-    animation: blink 1s infinite;
+.tab-btn {
+    transition: all 0.2s;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    border-bottom: 2px solid transparent;
+    padding: 0.75rem 1.25rem !important;
 }
-@keyframes blink {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
+.tab-btn:hover {
+    background: rgba(0,0,0,0.02);
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+@keyframes voice-pulse {
+    from { transform: scaleY(1); opacity: 0.5; }
+    to { transform: scaleY(2); opacity: 1; }
 }
 </style>
 @endpush
-
 @endsection
