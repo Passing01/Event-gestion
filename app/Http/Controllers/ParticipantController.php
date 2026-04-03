@@ -176,16 +176,33 @@ class ParticipantController extends Controller
         }
 
         // Si tout est OK, on crée la question normalement
+        $status = $event->moderation_enabled ? 'pending' : 'approved';
+        $type = $data['type'] ?? 'question';
+
+        // Si c'est une intervention d'un participant "Appelé" (Micro Virtuel)
+        if ($request->has('is_intervention') && $request->is_intervention == '1') {
+            $status = 'approved';
+            $type = 'contribution';
+            
+            // On baisse la main automatiquement après l'intervention
+            $event->raisedHands()->where('pseudo', session('participant_pseudo'))->delete();
+        }
+
         $event->questions()->create([
             'pseudo' => session('participant_pseudo'),
-            'type' => $data['type'] ?? 'question',
+            'type' => $type,
             'panelist_id' => $data['panelist_id'],
             'content' => $data['content'],
             'audio_path' => $audioPath,
-            'status' => $event->moderation_enabled ? 'pending' : 'approved',
+            'status' => $status,
         ]);
 
-        return back()->with('success', 'Votre question a été envoyée !' . ($event->moderation_enabled ? ' Elle sera visible après modération.' : ''));
+        $successMsg = 'Votre message a été envoyé !';
+        if ($status === 'pending') {
+            $successMsg .= ' Il sera visible après modération.';
+        }
+
+        return back()->with('success', $successMsg);
     }
 
     /**

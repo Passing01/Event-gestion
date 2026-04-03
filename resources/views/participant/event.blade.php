@@ -42,34 +42,65 @@
             $rank = $myHand ? $event->raisedHands()->where('status', 'pending')->where('created_at', '<', $myHand->created_at)->count() + 1 : null;
         @endphp
 
-        <div style="background: #fff; padding: 1rem; border-radius: 1rem; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <div style="width: 2.75rem; height: 2.75rem; background: {{ $myHand ? 'var(--brand)' : '#f8fafc' }}; color: {{ $myHand ? '#fff' : 'var(--brand)' }}; border-radius: 50%; display: grid; place-items: center; font-size: 1.25rem; transition: all 0.3s; border: 1px solid {{ $myHand ? 'var(--brand)' : 'var(--border)' }};">
-                    ✋
+        <div style="background: #fff; padding: 1.25rem; border-radius: 1.5rem; border: 2px solid {{ $myHand && $myHand->status == 'called' ? 'var(--brand)' : 'var(--border)' }}; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+            @if($myHand && $myHand->status == 'called')
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--brand); animation: progress-infinite 2s linear infinite;"></div>
+                <div style="font-size: 3rem; margin-bottom: 1rem; animation: pulse-mic 1.5s infinite;">🎙️</div>
+                <h3 style="font-weight: 900; font-size: 1.25rem; color: var(--brand);">C'est à vous, parlez !</h3>
+                <p style="font-size: 0.85rem; color: var(--muted-foreground); margin-bottom: 1.5rem;">Votre téléphone fait office de micro officiel.</p>
+                
+                <div style="display: flex; gap: 1rem; width: 100%;">
+                    <button type="button" onclick="toggleVoiceRecording()" class="btn-brand" style="flex: 2; padding: 1rem; border-radius: 1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.75rem; box-shadow: 0 10px 20px var(--brand-soft);">
+                        <span style="font-size: 1.25rem;">🎤</span> Déclencher le Micro
+                    </button>
+                    <form action="{{ route('participant.lower-hand', $event->code) }}" method="POST" style="flex: 1;">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; padding: 1rem; border-radius: 1rem; font-weight: 700; width: 100%;">Finir</button>
+                    </form>
                 </div>
-                <div>
+            @else
+                <div style="display: flex; align-items: center; gap: 1rem; width: 100%; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 3rem; height: 3rem; background: {{ $myHand ? 'var(--brand)' : '#f8fafc' }}; color: {{ $myHand ? '#fff' : 'var(--brand)' }}; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; transition: all 0.3s; border: 1px solid {{ $myHand ? 'var(--brand)' : 'var(--border)' }};">
+                            ✋
+                        </div>
+                        <div style="text-align: left;">
+                            @if($myHand)
+                                <p style="font-size: 0.95rem; font-weight: 800; margin: 0; color: var(--foreground);">Main levée</p>
+                                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Rang #{{ $rank }} • Attendez votre tour.</p>
+                            @else
+                                <p style="font-size: 0.95rem; font-weight: 800; margin: 0; color: var(--foreground);">Besoin de parler ?</p>
+                                <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Signalez-vous oralement.</p>
+                            @endif
+                        </div>
+                    </div>
+                    
                     @if($myHand)
-                        <p style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--foreground);">{{ $myHand->status == 'called' ? 'C\'est à vous !' : 'Main levée' }}</p>
-                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">{{ $myHand->status == 'called' ? 'Parlez, on vous écoute.' : 'Rang #' . $rank . ' dans la file' }}</p>
+                        <form action="{{ route('participant.lower-hand', $event->code) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; width: auto; padding: 0.6rem 1rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 700;">Baisser</button>
+                        </form>
                     @else
-                        <p style="font-size: 0.9rem; font-weight: 700; margin: 0; color: var(--foreground);">Besoin de parler ?</p>
-                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Signalez-vous oralement.</p>
+                        <form action="{{ route('participant.raise-hand', $event->code) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn-brand" style="width: auto; padding: 0.6rem 1.5rem; font-size: 0.8rem; border-radius: 0.75rem; font-weight: 700; box-shadow: 0 4px 12px var(--brand-soft);">Lever la main</button>
+                        </form>
                     @endif
                 </div>
-            </div>
-            
-            @if($myHand)
-                <form action="{{ route('participant.lower-hand', $event->code) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-brand" style="background: #fee2e2; color: #dc2626; border: none; width: auto; padding: 0.5rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem;">Baisser</button>
-                </form>
-            @else
-                <form action="{{ route('participant.raise-hand', $event->code) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-brand" style="width: auto; padding: 0.5rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem;">Lever</button>
-                </form>
             @endif
         </div>
+
+        <style>
+        @keyframes pulse-mic {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes progress-infinite {
+            0% { left: -100%; width: 100%; }
+            100% { left: 100%; width: 100%; }
+        }
+        </style>
 
         @if(session('success'))
             <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;border-radius:0.75rem;padding:0.75rem;margin-bottom:1rem;font-size:0.875rem; animation: slideIn 0.3s ease;">
@@ -94,6 +125,7 @@
                     <div>
                         <label style="font-size: 0.65rem; font-weight: 800; color: var(--muted-foreground); display: block; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em;">Adresser à</label>
                         <input type="hidden" name="panelist_id" id="panelist_id" value="">
+                        <input type="hidden" name="is_intervention" value="{{ ($myHand && $myHand->status == 'called') ? '1' : '0' }}">
                         <button type="button" onclick="openPanelistModal()" id="panelist-selector-btn" class="form-input" style="width:100%; font-size: 0.85rem; padding: 0.6rem; text-align: left; background: #f8fafc; border: 1px solid var(--border); border-radius: 0.75rem; height: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             🎯 Tout le panel
                         </button>

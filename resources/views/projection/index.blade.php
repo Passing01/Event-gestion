@@ -296,6 +296,7 @@
         let lastProjectingPath = null;
         let lastProjectingPage = null;
         let wasProjecting = false;
+        let lastPlayedAudioId = null;
 
         async function fetchAnswering() {
             try {
@@ -306,6 +307,13 @@
                 const wrap = document.getElementById('projection-wrap');
                 const badge = document.getElementById('presentation-badge');
                 const nameSpan = document.getElementById('presenter-name');
+
+                // Auto-play Vocal si c'est une intervention "Direct"
+                if (data.type === 'contribution' && data.audio_path && lastPlayedAudioId !== data.id) {
+                    lastPlayedAudioId = data.id;
+                    const audio = new Audio(`/storage/${data.audio_path}`);
+                    audio.play().catch(e => console.log("Lecture auto bloquée par le navigateur."));
+                }
 
                 // 1. GESTION DE LA PROJECTION (PANÉLISTE)
                 if (data.projecting_panelist) {
