@@ -276,4 +276,30 @@ class ModeratorController extends Controller
 
         return back()->with('success', 'Présentation terminée.');
     }
+
+    /**
+     * Sauvegarder un enregistrement audio capturé pendant une intervention live.
+     */
+    public function saveLiveAudio(Request $request, $code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        
+        $request->validate([
+            'audio' => 'required|file|mimes:webm,mp3,wav,ogg|max:10240',
+            'pseudo' => 'required|string',
+        ]);
+
+        $path = $request->file('audio')->store('live/audio', 'public');
+
+        // On crée une "Question" de type contribution pour qu'elle apparaisse dans le replay et le rapport
+        $event->questions()->create([
+            'pseudo' => $request->pseudo,
+            'content' => null,
+            'audio_path' => $path,
+            'status' => 'answered', // Déjà traitée puisqu'elle est passée en direct
+            'type' => 'contribution'
+        ]);
+
+        return response()->json(['status' => 'ok', 'path' => $path]);
+    }
 }

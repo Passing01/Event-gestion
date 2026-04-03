@@ -321,11 +321,28 @@
     async function startLiveMic() {
         console.log("Démarrage du Micro Live...");
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Configuration audio HD avec annulation d'écho et suppression de bruit
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 44100
+                } 
+            });
+            
+            // Appel 1 : Au Projecteur (pour le son dans la salle)
             currentCall = myPeer.call(`${eventCode}-PROJECTOR`, localStream, {
                 metadata: { name: participantPseudo }
             });
             console.log("Appel en cours vers le projecteur...");
+
+            // Appel 2 : Au Modérateur (pour l'enregistrement)
+            myPeer.call(`${eventCode}-MODERATOR`, localStream, {
+                metadata: { name: participantPseudo }
+            });
+            console.log("Appel en cours vers le modérateur (enregistrement)...");
+
         } catch (err) {
             console.error("Erreur micro:", err);
             alert("Microphone requis pour intervenir en direct.");

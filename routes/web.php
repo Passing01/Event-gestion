@@ -90,6 +90,7 @@ Route::post('/e/{code}/heartbeat', [ParticipantController::class, 'heartbeat'])-
 Route::post('/e/{code}/typing', [ParticipantController::class, 'updateTyping'])->name('participant.typing');
 Route::get('/e/{code}/active-participants', [ParticipantController::class, 'getActiveParticipants'])->name('participant.active-participants');
 Route::get('/e/{code}/participant/questions-fetch', [ParticipantController::class, 'fetchQuestionsPartial'])->name('participant.fetch-questions');
+Route::post('/e/{code}/save-live-audio', [ModeratorController::class, 'saveLiveAudio'])->name('moderator.save-live-audio');
 
 // ──────────────────────────────────────────────
 //  Routes de Projection (Public/Régie)

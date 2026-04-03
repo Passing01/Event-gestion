@@ -252,14 +252,71 @@ function showLoadingState() {
 </div>
 
 @push('scripts')
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script>
     let isEditing = false; 
-    let isRecording = false; 
-    let mediaRecorder;
-    let audioChunks = [];
-    let recordTimer;
-    let seconds = 0;
+    let isRecordingLive = false; 
+    let liveRecorder;
+    let liveChunks = [];
     const eventId = '{{ $event->id }}';
+    const eventCode = '{{ $event->code }}';
+
+    // --- PeerJS : Enregistreur Micro Live ---
+    const moderatorPeer = new Peer(`${eventCode}-MODERATOR`);
+    moderatorPeer.on('open', (id) => console.log('Console Modérateur prête pour l\'enregistrement, ID:', id));
+
+    moderatorPeer.on('call', (call) => {
+        console.log("Appel entrant reçu pour enregistrement de:", call.metadata?.name || 'Participant');
+        
+        call.answer(); // On répond pour avoir le flux
+        
+        call.on('stream', (remoteStream) => {
+            console.log("Démarrage de l'enregistrement du flux...");
+            // On ne joue PAS le son sur le modérateur pour éviter l'écho
+            // Mais on l'enregistre
+            liveChunks = [];
+            liveRecorder = new MediaRecorder(remoteStream);
+            
+            liveRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) liveChunks.push(e.data);
+            };
+
+            liveRecorder.onstop = async () => {
+                console.log("Enregistrement live terminé. Préparation de l'envoi...");
+                const audioBlob = new Blob(liveChunks, { type: 'audio/webm' });
+                
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'live_contribution.webm');
+                formData.append('pseudo', call.metadata?.name || 'Participant');
+                formData.append('_token', '{{ csrf_token() }}');
+
+                try {
+                    await fetch(`/e/${eventCode}/save-live-audio`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    console.log("Intervention live sauvegardée avec succès !");
+                } catch (err) {
+                    console.error("Erreur sauvegarde live audio:", err);
+                }
+            };
+
+            liveRecorder.start();
+            isRecordingLive = true;
+        });
+
+        call.on('close', () => {
+            if (liveRecorder && liveRecorder.state !== 'inactive') {
+                liveRecorder.stop();
+            }
+            isRecordingLive = false;
+        });
+
+        call.on('error', (err) => {
+            console.error("Erreur appel PeerJS:", err);
+            if (liveRecorder && liveRecorder.state !== 'inactive') liveRecorder.stop();
+        });
+    });
 
     // --- Gestion des onglets ---
     function switchTab(tab) {
