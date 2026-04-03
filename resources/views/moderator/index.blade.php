@@ -195,26 +195,67 @@
 {{-- Modal Confirmation Clôture --}}
 <div id="close-event-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; padding:1.5rem; backdrop-filter: blur(4px);">
     <div class="card" style="width:100%; max-width:32rem; padding: 2rem; border-radius: 1.5rem; text-align: center; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
-        <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
-        <h2 style="font-size: 1.5rem; font-weight: 900; color: var(--foreground); margin-bottom: 1rem;">Clôturer définitivement ?</h2>
-        <p style="color: var(--muted-foreground); margin-bottom: 2rem; line-height: 1.6;">
-            Cette action va <strong>figer l'événement</strong>. Notre Intelligence Artificielle va générer le rapport final complet, la synthèse et l'analyse de sentiment. <br><br>
-            <span style="font-size: 0.8rem; background: var(--brand-light); color: var(--brand); padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700;">Note : Les accès au public seront coupés.</span>
-        </p>
         
-        <form action="{{ route('dashboard.events.close', $event->id) }}" method="POST">
-            @csrf
-            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 1rem;">
-                <button type="button" onclick="document.getElementById('close-event-modal').style.display='none'" class="btn-brand" style="background: var(--muted); color: var(--foreground); border: none;">
-                    Annuler
-                </button>
-                <button type="submit" class="btn-brand" style="background: #ef4444; border: none; font-weight: 800;">
-                    Oui, clôturer & analyser
-                </button>
+        {{-- Contenu Confirmation --}}
+        <div id="close-step-confirm">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
+            <h2 style="font-size: 1.5rem; font-weight: 900; color: var(--foreground); margin-bottom: 1rem;">Clôturer définitivement ?</h2>
+            <p style="color: var(--muted-foreground); margin-bottom: 2rem; line-height: 1.6;">
+                Cette action va <strong>figer l'événement</strong>. Notre IA va générer le rapport final complet, la synthèse et l'analyse de sentiment. <br><br>
+                <span style="font-size: 0.8rem; background: var(--brand-light); color: var(--brand); padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700;">Note : Les accès au public seront coupés.</span>
+            </p>
+            
+            <form action="{{ route('dashboard.events.close', $event->id) }}" method="POST" onsubmit="showLoadingState()">
+                @csrf
+                <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 1rem;">
+                    <button type="button" onclick="document.getElementById('close-event-modal').style.display='none'" class="btn-brand" style="background: var(--muted); color: var(--foreground); border: none;">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn-brand" style="background: #ef4444; border: none; font-weight: 800;">
+                        Oui, clôturer & analyser
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- Contenu Chargement IA --}}
+        <div id="close-step-loading" style="display: none; padding: 3rem 0;">
+            <div class="ai-loader" style="margin: 0 auto 2rem;">
+                <div style="font-size: 4rem; animation: float 3s ease-in-out infinite;">🤖</div>
             </div>
-        </form>
+            <h2 style="font-size: 1.5rem; font-weight: 900; color: var(--brand); margin-bottom: 0.5rem;">Analyse IA en cours...</h2>
+            <p style="color: var(--muted-foreground);">Notre moteur génère votre rapport professionnel et synchronise le Marketplace. Veuillez patienter quelques secondes.</p>
+            
+            <div style="margin-top: 2rem; height: 10px; background: var(--muted); border-radius: 5px; overflow: hidden; position: relative;">
+                <div class="progress-bar-ia" style="height: 100%; background: var(--brand); border-radius: 5px; width: 0%; transition: width 0.3s;"></div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+.progress-bar-ia {
+    animation: charging 10s linear forwards;
+}
+@keyframes charging {
+    0% { width: 0%; }
+    20% { width: 15%; }
+    50% { width: 45%; }
+    80% { width: 85%; }
+    100% { width: 95%; }
+}
+</style>
+
+<script>
+function showLoadingState() {
+    document.getElementById('close-step-confirm').style.display = 'none';
+    document.getElementById('close-step-loading').style.display = 'block';
+}
+</script>
 
 <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:1rem;">
     <div class="card" style="width:100%; max-width:28rem;">
