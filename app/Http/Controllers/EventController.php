@@ -102,6 +102,38 @@ class EventController extends Controller
     }
 
     /**
+     * Clôturer l'événement et générer les rapports finaux.
+     */
+    public function close($id, \App\Services\GeminiService $gemini)
+    {
+        $event = Auth::user()->events()->with(['questions.replies'])->findOrFail($id);
+
+        if ($event->closed_at) {
+            return back()->with('info', "Cet événement est déjà clôturé.");
+        }
+
+        $questions = $event->questions;
+
+        // 1. Générer l'analyse finale (Summary, Keywords, Sentiment)
+        $analysis = $gemini->analyzeEvent($event, $questions);
+        
+        // 2. Générer le rapport final
+        $reportContent = $gemini->generateEventReport($event, $questions);
+
+        // 3. Sauvegarder tout
+        $event->update([
+            'closed_at' => now(),
+            'status' => 'archived',
+            'ai_summary' => $analysis['summary'] ?? "Synthèse indisponible.",
+            'ai_keywords' => $analysis['topKeywords'] ?? [],
+            'ai_sentiment' => $analysis['sentimentLabel'] ?? 'Neutre (50%)',
+            'ai_report' => $reportContent ?? "Rapport indisponible."
+        ]);
+
+        return redirect()->route('dashboard.insights.show', $event->id)->with('success', 'Événement clôturé avec succès. Les rapports finaux ont été générés.');
+    }
+
+    /**
      * Supprimer un événement.
      */
     public function destroy($id)

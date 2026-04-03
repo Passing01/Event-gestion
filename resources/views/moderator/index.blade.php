@@ -50,6 +50,12 @@
                 <a href="{{ route('projection.index', $event->code) }}" target="_blank" class="btn-brand" style="background: var(--muted); color: var(--foreground);">
                     Ouvrir la Projection ↗
                 </a>
+                <form action="{{ route('dashboard.events.close', $event->id) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir clôturer cet événement ? Cela générera le rapport final et figera les données.');">
+                    @csrf
+                    <button type="submit" class="btn-brand" style="background: #ef4444; color: #fff; border: none;">
+                        🔒 Clôturer l'événement
+                    </button>
+                </form>
             </div>
         </div>
     </div>

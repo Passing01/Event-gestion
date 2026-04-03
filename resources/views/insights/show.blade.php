@@ -58,6 +58,25 @@
                 </div>
             </section>
 
+            {{-- Marketplace Status --}}
+            @if($event->closed_at)
+            <section class="card" style="border-top: 4px solid #10b981;">
+                <h2 class="section-title">Marketplace & Replay</h2>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem;">
+                    <div>
+                        <p style="font-weight: 700; margin: 0;">{{ $event->is_on_marketplace ? '🛒 Publié sur le Marketplace' : '📥 Non publié' }}</p>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $event->is_on_marketplace ? 'Le replay est accessible au public.' : 'Le replay est privé pour le moment.' }}</p>
+                    </div>
+                    <a href="{{ route('dashboard.events.edit', $event->id) }}" class="btn-brand" style="width: auto; padding: 0.5rem 1rem; font-size: 0.75rem; background: var(--muted); color: var(--foreground);">Modifier</a>
+                </div>
+                @if($event->is_on_marketplace)
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <a href="{{ route('marketplace.show', $event->id) }}" target="_blank" style="color: var(--brand); font-size: 0.875rem; font-weight: 600; text-decoration: none;">Voir l'annonce Marketplace ↗</a>
+                </div>
+                @endif
+            </section>
+            @endif
+
             {{-- Stats Rapides --}}
             <section class="card">
                 <h2 class="section-title">Données Brutes</h2>

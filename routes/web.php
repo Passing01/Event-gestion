@@ -123,6 +123,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         Route::put('/{id}',            [EventController::class, 'update'])->name('update');
         Route::delete('/{id}',         [EventController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-status', [EventController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{id}/close', [EventController::class, 'close'])->name('close');
         
         // Panelists
         Route::post('/{id}/panelists', [PanelistController::class, 'store'])->name('panelists.store');

@@ -24,6 +24,16 @@ class InsightsController extends Controller
     public function show($id, \App\Services\GeminiService $gemini)
     {
         $event = Auth::user()->events()->with(['questions.replies', 'participants'])->findOrFail($id);
+        
+        // Si l'événement est clôturé et a déjà des données IA stockées, on les utilise
+        if ($event->closed_at && $event->ai_summary) {
+            $summary = $event->ai_summary;
+            $topKeywords = is_array($event->ai_keywords) ? $event->ai_keywords : json_decode($event->ai_keywords, true);
+            $sentimentLabel = $event->ai_sentiment;
+            $participantsCount = $event->participants()->count();
+            return view('insights.show', compact('event', 'summary', 'topKeywords', 'sentimentLabel', 'participantsCount'));
+        }
+
         $questions = $event->questions;
         $questionsCount = $questions->count();
         $participantsCount = $event->participants()->count();
@@ -61,6 +71,12 @@ class InsightsController extends Controller
     public function export($id, \App\Services\GeminiService $gemini)
     {
         $event = Auth::user()->events()->with(['questions.replies'])->findOrFail($id);
+
+        if ($event->closed_at && $event->ai_report) {
+            $reportContent = $event->ai_report;
+            return view('insights.export', compact('event', 'reportContent'));
+        }
+
         $questions = $event->questions;
 
         if ($questions->count() === 0) {
