@@ -11,15 +11,65 @@
                 <h1>Mes Événements</h1>
                 <p>Gérez vos sessions Q&A passées et à venir.</p>
             </div>
-            <a href="{{ route('dashboard.events.create') }}" class="btn-brand">+ Créer un événement</a>
+            <button onclick="openCreateModal()" class="btn-brand">+ Créer un événement</button>
         </div>
     </div>
 
+    {{-- Modal de Succès --}}
     @if(session('success'))
-        <div style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;border-radius:0.5rem;padding:0.75rem;margin-bottom:1rem;font-size:0.875rem;">
-            {{ session('success') }}
+    <div id="success-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:2000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px); animation: fadeIn 0.3s ease;">
+        <div class="card" style="width:100%; max-width:24rem; text-align:center; padding:2.5rem; border-radius:1.5rem; border:none; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="font-size:4rem; margin-bottom:1rem; animation: tada 1s ease;">🎉</div>
+            <h2 style="font-size:1.5rem; font-weight:900; color:var(--foreground); margin-bottom:0.5rem;">Félicitations !</h2>
+            <p style="color:var(--muted-foreground); margin-bottom:1.5rem;">{{ session('success') }}</p>
+            <button onclick="document.getElementById('success-modal').remove()" class="btn-brand" style="width:100%;">Génial !</button>
         </div>
+    </div>
     @endif
+
+    {{-- Modal de Création d'Événement --}}
+    <div id="create-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; padding:1.5rem; backdrop-filter: blur(8px); overflow-y: auto;">
+        <div class="card" style="width:100%; max-width:32rem; padding: 2rem; border-radius: 1.5rem; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative;">
+            <button onclick="closeCreateModal()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: var(--muted); border: none; width: 2rem; height: 2rem; border-radius: 50%; font-size: 1.25rem; cursor: pointer; color: var(--muted-foreground);">&times;</button>
+            
+            <h2 style="font-size: 1.5rem; font-weight: 900; color: var(--foreground); margin-bottom: 0.5rem;">Nouvel événement</h2>
+            <p style="color: var(--muted-foreground); margin-bottom: 2rem; font-size: 0.875rem;">Configurez votre session interactive en quelques secondes.</p>
+            
+            <form method="POST" action="{{ route('dashboard.events.store') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="form-group">
+                    <label class="form-label" for="image">Image de couverture / Bannière</label>
+                    <input type="file" id="image" name="image" class="form-input" style="padding: 0.5rem; font-size: 0.75rem;" accept="image/*">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Nom de l'événement</label>
+                    <input type="text" id="name" name="name" class="form-input" required placeholder="Ex: Masterclass IA 2026">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Description (Optionnel)</label>
+                    <textarea id="description" name="description" class="form-input" rows="3" placeholder="De quoi s'agit-il ?"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="date">Date</label>
+                        <input type="date" id="date" name="date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="scheduled_at">Heure (Début)</label>
+                        <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-input">
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button type="button" onclick="closeCreateModal()" class="btn-brand" style="background: var(--muted); color: var(--foreground); flex: 1; border: none;">Annuler</button>
+                    <button type="submit" class="btn-brand" style="flex: 2; border: none;">Lancer l'événement</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="card">
         <div style="overflow-x: auto;">
@@ -88,3 +138,28 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    function openCreateModal() {
+        document.getElementById('create-modal').style.display = 'flex';
+    }
+    function closeCreateModal() {
+        document.getElementById('create-modal').style.display = 'none';
+    }
+</script>
+@endpush
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+@keyframes tada {
+    0% { transform: scale(1); }
+    10%, 20% { transform: scale(0.9) rotate(-3deg); }
+    30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
+    40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+</style>
