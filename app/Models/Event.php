@@ -19,13 +19,23 @@ class Event extends Model
         'moderation_enabled',
         'anonymous_allowed',
         'status',
+        'is_on_marketplace',
+        'marketplace_price',
+        'closed_at',
+        'ai_summary',
+        'ai_keywords',
+        'ai_sentiment',
+        'ai_report',
     ];
 
     protected $casts = [
         'date' => 'date',
         'scheduled_at' => 'datetime',
+        'closed_at' => 'datetime',
         'moderation_enabled' => 'boolean',
         'anonymous_allowed' => 'boolean',
+        'is_on_marketplace' => 'boolean',
+        'ai_keywords' => 'json',
     ];
 
     public function user(): BelongsTo

@@ -50,9 +50,15 @@
                 <a href="{{ route('projection.index', $event->code) }}" target="_blank" class="btn-brand" style="background: var(--muted); color: var(--foreground);">
                     Ouvrir la Projection ↗
                 </a>
+                @if(!$event->closed_at)
                 <button type="button" onclick="openCloseModal()" class="btn-brand" style="background: #ef4444; color: #fff; border: none;">
                     🔒 Clôturer l'événement
                 </button>
+                @else
+                <div class="badge" style="background: var(--muted); color: var(--muted-foreground); padding: 0.5rem 1rem;">
+                    📁 Événement Archivé
+                </div>
+                @endif
             </div>
         </div>
     </div>
