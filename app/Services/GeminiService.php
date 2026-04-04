@@ -23,7 +23,7 @@ class GeminiService
         }
 
         try {
-            $response = Http::timeout(60)->post($this->baseUrl . '?key=' . $this->apiKey, [
+            $response = Http::timeout(180)->post($this->baseUrl . '?key=' . $this->apiKey, [
                 'contents' => [
                     [
                         'parts' => [
