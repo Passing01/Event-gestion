@@ -258,6 +258,11 @@ function showLoadingState() {
     let isRecordingLive = false; 
     let liveRecorder;
     let liveChunks = [];
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordTimer;
+    let seconds = 0;
     const eventId = '{{ $event->id }}';
     const eventCode = '{{ $event->code }}';
 
@@ -319,7 +324,7 @@ function showLoadingState() {
     });
 
     // --- Gestion des onglets ---
-    function switchTab(tab) {
+    window.switchTab = function(tab) {
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.style.color = 'var(--muted-foreground)';
@@ -332,10 +337,10 @@ function showLoadingState() {
         btn.style.color = 'var(--foreground)';
         btn.style.borderBottom = '2px solid var(--brand)';
         btn.classList.add('active-tab');
-    }
+    };
 
     // --- Fonctions existantes ---
-    function openEditModal(id, content) {
+    window.openEditModal = function(id, content) {
         isEditing = true;
         const modal = document.getElementById('edit-modal');
         const form = document.getElementById('edit-form');
@@ -344,17 +349,16 @@ function showLoadingState() {
         form.action = `/dashboard/question/${id}/edit`;
         textarea.value = content;
         modal.style.display = 'flex';
-    }
+    };
 
-    function openSettingsModal() {
+    window.openSettingsModal = function() {
         document.getElementById('settings-modal').style.display = 'flex';
-    }
+    };
 
-    function openCloseModal() {
+    window.openCloseModal = function() {
         document.getElementById('close-event-modal').style.display = 'flex';
-    }
+    };
 
-    const eventCode = '{{ $event->code }}';
     async function fetchParticipants() {
         try {
             const response = await fetch(`/e/${eventCode}/active-participants`);
@@ -410,7 +414,7 @@ function showLoadingState() {
     }
 
     // --- Logique Audio Premium (Style WhatsApp) ---
-    async function toggleVocalRecording(qId) {
+    window.toggleVocalRecording = async function(qId) {
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -449,7 +453,7 @@ function showLoadingState() {
         } else {
             stopVocalRecording();
         }
-    }
+    };
 
     function startVocalUI(qId) {
         const preview = document.getElementById('vocal-preview-' + qId);
@@ -479,7 +483,7 @@ function showLoadingState() {
         }
     }
 
-    function cancelVocal(qId) {
+    window.cancelVocal = function(qId) {
         isRecording = false; 
         stopVocalRecording();
         const preview = document.getElementById('vocal-preview-' + qId);
@@ -489,7 +493,7 @@ function showLoadingState() {
         btn.style.background = '#f1f5f9';
         btn.style.color = '#475569';
         btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1.5rem; height: 1.5rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>';
-    }
+    };
 
     // --- Gestion Chronos Modérateur ---
     function initModeratorTimers() {
