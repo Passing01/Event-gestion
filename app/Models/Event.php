@@ -27,6 +27,8 @@ class Event extends Model
         'ai_sentiment',
         'ai_report',
         'image_path',
+        'collect_presence',
+        'end_date',
     ];
 
     protected $casts = [
@@ -37,6 +39,8 @@ class Event extends Model
         'anonymous_allowed' => 'boolean',
         'is_on_marketplace' => 'boolean',
         'ai_keywords' => 'json',
+        'collect_presence' => 'boolean',
+        'end_date' => 'date',
     ];
 
     public function user(): BelongsTo

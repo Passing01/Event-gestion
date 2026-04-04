@@ -13,7 +13,11 @@ class ParticipantController extends Controller
     public function joinForm(Request $request)
     {
         $code = $request->query('code');
-        return view('participant.join', compact('code'));
+        $event = null;
+        if ($code) {
+            $event = Event::where('code', $code)->first();
+        }
+        return view('participant.join', compact('code', 'event'));
     }
 
     /**
@@ -24,6 +28,10 @@ class ParticipantController extends Controller
         $data = $request->validate([
             'code' => 'required|string|exists:events,code',
             'pseudo' => 'required|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'sector' => 'nullable|string|max:100',
+            'company' => 'nullable|string|max:100',
         ]);
 
         $event = Event::where('code', $data['code'])->firstOrFail();
@@ -43,7 +51,37 @@ class ParticipantController extends Controller
             'current_event_code' => $event->code,
         ]);
 
+        // Créer ou mettre à jour le participant dans la table des présences
+        \App\Models\EventParticipant::updateOrCreate(
+            [
+                'event_id' => $event->id, 
+                'pseudo' => $data['pseudo'],
+                'joined_date' => now()->format('Y-m-d')
+            ],
+            [
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'sector' => $data['sector'] ?? null,
+                'company' => $data['company'] ?? null,
+                'last_seen_at' => now(),
+            ]
+        );
+
         return redirect()->route('participant.event', $event->code);
+    }
+
+    /**
+     * Récupérer les informations de base d'un événement via son code.
+     */
+    public function getEventInfo($code)
+    {
+        $event = Event::where('code', $code)->first();
+        if (!$event) return response()->json(['error' => 'Not found'], 404);
+
+        return response()->json([
+            'name' => $event->name,
+            'collect_presence' => $event->collect_presence,
+        ]);
     }
 
     /**
@@ -302,7 +340,11 @@ class ParticipantController extends Controller
         if (!$pseudo) return response()->json(['status' => 'error']);
 
         \App\Models\EventParticipant::updateOrCreate(
-            ['event_id' => $event->id, 'pseudo' => $pseudo],
+            [
+                'event_id' => $event->id, 
+                'pseudo' => $pseudo,
+                'joined_date' => now()->format('Y-m-d')
+            ],
             ['last_seen_at' => now()]
         );
 

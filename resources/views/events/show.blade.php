@@ -32,7 +32,13 @@
         </div>
         <div class="card">
             <h3 style="font-size: 0.75rem; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase;">Date</h3>
-            <p style="font-size: 1.25rem; font-weight: 600; margin-top: 0.5rem;">{{ $event->date->format('d/m/Y') }}</p>
+            <p style="font-size: 1.25rem; font-weight: 600; margin-top: 0.5rem;">
+                {{ $event->date->format('d/m/Y') }}
+                @if($event->end_date)
+                    <span style="font-size: 0.875rem; color: var(--muted-foreground); font-weight: 400;">au</span>
+                    {{ $event->end_date->format('d/m/Y') }}
+                @endif
+            </p>
         </div>
         <div class="card">
             <h3 style="font-size: 0.75rem; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase;">Statut</h3>
@@ -124,6 +130,50 @@
             </div>
         </div>
     </div>
+
+    @if($event->collect_presence)
+    <div class="card" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">Liste de présence</h2>
+            <a href="{{ route('dashboard.events.export-presence', $event->id) }}" class="btn-brand" style="width: auto; display: flex; align-items: center; gap: 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 1.125rem; height: 1.125rem;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Télécharger (PDF)
+            </a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                        <th style="padding: 0.75rem; color: var(--muted-foreground); font-weight: 600;">Pseudo / Nom</th>
+                        <th style="padding: 0.75rem; color: var(--muted-foreground); font-weight: 600;">Email</th>
+                        <th style="padding: 0.75rem; color: var(--muted-foreground); font-weight: 600;">Téléphone</th>
+                        <th style="padding: 0.75rem; color: var(--muted-foreground); font-weight: 600;">Secteur</th>
+                        <th style="padding: 0.75rem; color: var(--muted-foreground); font-weight: 600;">Entreprise</th>
+                        <th style="padding: 0.75rem; color: var(--muted-foreground); font-weight: 600;">Dernière activité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($event->participants as $participant)
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 0.75rem; font-weight: 500;">{{ $participant->pseudo }}</td>
+                            <td style="padding: 0.75rem;">{{ $participant->email ?? '-' }}</td>
+                            <td style="padding: 0.75rem;">{{ $participant->phone ?? '-' }}</td>
+                            <td style="padding: 0.75rem;">{{ $participant->sector ?? '-' }}</td>
+                            <td style="padding: 0.75rem;">{{ $participant->company ?? '-' }}</td>
+                            <td style="padding: 0.75rem; color: var(--muted-foreground);">{{ $participant->last_seen_at->format('H:i') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="padding: 2rem; text-align: center; color: var(--muted-foreground);">Aucun participant n'est encore inscrit.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 </div>
 
 <!-- Modal Édition Panéliste -->

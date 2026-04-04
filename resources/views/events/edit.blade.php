@@ -48,13 +48,21 @@
                 @enderror
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label class="form-label" for="date">Date de l'événement</label>
+                    <label class="form-label" for="date">Date de début</label>
                     <input type="date" id="date" name="date" class="form-input"
                            value="{{ old('date', $event->date->format('Y-m-d')) }}"
                            required>
                     @error('date')
+                        <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="end_date">Date de fin <span style="font-size: 0.7rem; color: var(--muted-foreground);">(optionnel)</span></label>
+                    <input type="date" id="end_date" name="end_date" class="form-input"
+                           value="{{ old('end_date', $event->end_date ? $event->end_date->format('Y-m-d') : '') }}">
+                    @error('end_date')
                         <span style="font-size:0.75rem;color:var(--destructive);">{{ $message }}</span>
                     @enderror
                 </div>
@@ -118,6 +126,19 @@
                                    onchange="this.nextElementSibling.style.background = this.checked ? 'var(--brand)' : 'var(--muted)'; this.parentElement.querySelector('.toggle-thumb').style.transform = this.checked ? 'translateX(1.125rem)' : 'translateX(0)'">
                             <span class="toggle-track" style="background: {{ $event->is_on_marketplace ? 'var(--brand)' : 'var(--muted)' }};"></span>
                             <span class="toggle-thumb" style="transform: {{ $event->is_on_marketplace ? 'translateX(1.125rem)' : 'translateX(0)' }};"></span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h3 style="font-size: 0.875rem; font-weight: 600;">Récupérer la liste de présence</h3>
+                            <p style="font-size: 0.75rem; color: var(--muted-foreground);">Demander l'email, téléphone, secteur et entreprise.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="collect_presence" value="1" class="toggle-input" {{ $event->collect_presence ? 'checked' : '' }}
+                                   onchange="this.nextElementSibling.style.background = this.checked ? 'var(--brand)' : 'var(--muted)'; this.parentElement.querySelector('.toggle-thumb').style.transform = this.checked ? 'translateX(1.125rem)' : 'translateX(0)'">
+                            <span class="toggle-track" style="background: {{ $event->collect_presence ? 'var(--brand)' : 'var(--muted)' }};"></span>
+                            <span class="toggle-thumb" style="transform: {{ $event->collect_presence ? 'translateX(1.125rem)' : 'translateX(0)' }};"></span>
                         </label>
                     </div>
                 </div>

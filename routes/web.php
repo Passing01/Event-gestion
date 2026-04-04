@@ -79,6 +79,7 @@ use App\Http\Controllers\ParticipantController;
 //  Routes Participant (Public)
 // ──────────────────────────────────────────────
 Route::get('/join', [ParticipantController::class, 'joinForm'])->name('participant.join');
+Route::get('/participant/event-info/{code}', [ParticipantController::class, 'getEventInfo']);
 Route::post('/join', [ParticipantController::class, 'join'])->name('participant.join.post');
 Route::get('/e/{code}', [ParticipantController::class, 'eventInterface'])->name('participant.event');
 Route::post('/e/{code}/ask', [ParticipantController::class, 'storeQuestion'])->name('participant.ask');
@@ -126,6 +127,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         Route::delete('/{id}',         [EventController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-status', [EventController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/{id}/close', [EventController::class, 'close'])->name('close');
+        Route::get('/{id}/export-presence', [EventController::class, 'exportPresence'])->name('export-presence');
         
         // Panelists
         Route::post('/{id}/panelists', [PanelistController::class, 'store'])->name('panelists.store');

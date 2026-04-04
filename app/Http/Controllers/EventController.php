@@ -36,8 +36,10 @@ class EventController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:date',
             'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'collect_presence' => 'nullable|boolean',
         ]);
 
         $imagePath = null;
@@ -49,10 +51,12 @@ class EventController extends Controller
             'name' => $data['name'],
             'description' => $data['description'],
             'date' => $data['date'],
+            'end_date' => $data['end_date'] ?? null,
             'scheduled_at' => $data['scheduled_at'],
             'code' => Str::upper(Str::random(6)),
             'status' => 'active',
             'image_path' => $imagePath,
+            'collect_presence' => $request->has('collect_presence'),
         ]);
 
         return redirect()->route('dashboard.events.index')->with('success', 'Événement créé avec succès.');
@@ -63,7 +67,7 @@ class EventController extends Controller
      */
     public function show($id)
     {
-        $event = Auth::user()->events()->with(['questions', 'panelists.user'])->withCount('questions')->findOrFail($id);
+        $event = Auth::user()->events()->with(['questions', 'panelists.user', 'participants'])->withCount('questions')->findOrFail($id);
         return view('events.show', compact('event'));
     }
 
@@ -87,6 +91,7 @@ class EventController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:date',
             'scheduled_at' => 'nullable|date_format:Y-m-d\TH:i',
             'status' => 'required|in:active,archived',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -104,11 +109,13 @@ class EventController extends Controller
             'name' => $data['name'],
             'description' => $data['description'],
             'date' => $data['date'],
+            'end_date' => $data['end_date'] ?? null,
             'scheduled_at' => $data['scheduled_at'],
             'status' => $data['status'],
             'moderation_enabled' => $request->has('moderation_enabled'),
             'anonymous_allowed' => $request->has('anonymous_allowed'),
             'is_on_marketplace' => $request->has('is_on_marketplace'),
+            'collect_presence' => $request->has('collect_presence'),
         ]);
 
         return redirect()->route('dashboard.events.index')->with('success', 'Événement mis à jour.');
@@ -168,5 +175,19 @@ class EventController extends Controller
 
         $msg = ($event->status === 'active') ? 'Événement activé.' : 'Événement désactivé.';
         return back()->with('success', $msg);
+    }
+    /**
+     * Exporter la liste de présence en PDF.
+     */
+    public function exportPresence($id)
+    {
+        $event = Auth::user()->events()
+            ->with(['participants', 'user', 'panelists.user'])
+            ->findOrFail($id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('events.presence_pdf', compact('event'));
+
+        $filename = "presence_" . Str::slug($event->name) . "_" . date('Y-m-d') . ".pdf";
+        return $pdf->download($filename);
     }
 }
