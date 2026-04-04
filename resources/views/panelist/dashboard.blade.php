@@ -198,14 +198,16 @@
 
 @push('scripts')
 <script>
-    function suggestAI(questionId, aiBtn) {
+    window.suggestAI = function(questionId, aiBtn) {
         const textarea = document.getElementById('ai-response-' + questionId);
         const submitBtn = document.getElementById('submit-btn-' + questionId);
         
+        isInteracting = true; // Empêcher le rafraîchissement polling
         const originalAiText = aiBtn.innerText;
         aiBtn.disabled = true;
         aiBtn.innerText = "⌛...";
         textarea.placeholder = "L'IA réfléchit...";
+        textarea.focus();
         
         fetch("{{ route('panelist.ai-suggest', $event->code) }}", {
             method: 'POST',
@@ -221,6 +223,8 @@
                 // Nettoyer les éventuels # ou * restants au cas où
                 let cleanText = data.suggestion.replace(/[#*]/g, '').trim();
                 textarea.value = cleanText;
+                textarea.style.height = "auto";
+                textarea.style.height = (textarea.scrollHeight) + "px";
             } else {
                 alert("L'IA n'a pas pu générer de suggestion.");
             }
@@ -233,8 +237,9 @@
         .finally(() => {
             aiBtn.disabled = false;
             aiBtn.innerText = originalAiText;
+            isInteracting = false;
         });
-    }
+    };
 
     let mediaRecorder;
     let audioChunks = [];
@@ -243,7 +248,7 @@
     let voiceSeconds = 0;
     let currentRecordingId = null;
 
-    async function toggleVoiceRecording(questionId) {
+    window.toggleVoiceRecording = async function(questionId) {
         const btn = document.getElementById('voice-btn-' + questionId);
         const icon = document.getElementById('voice-icon-' + questionId);
         const text = document.getElementById('voice-text-' + questionId);
@@ -349,7 +354,7 @@
     let isInteracting = false;
     const eventId = '{{ $event->id }}';
 
-    function switchTab(tab) {
+    window.switchTab = function(tab) {
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.style.color = 'var(--muted-foreground)';
@@ -362,7 +367,7 @@
         btn.style.color = 'var(--foreground)';
         btn.style.borderBottom = '2px solid var(--brand)';
         btn.classList.add('active-tab');
-    }
+    };
 
     async function fetchQuestions() {
         // Détecter si un vocal est en cours d'écoute
