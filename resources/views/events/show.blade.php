@@ -19,7 +19,7 @@
                         {{ $event->status == 'active' ? 'Désactiver' : 'Activer' }}
                     </button>
                 </form>
-                <button onclick='openEditEventModal({!! json_encode($event) !!})' class="btn-brand" style="background: var(--muted); color: var(--foreground); border: none; cursor: pointer;">Modifier</button>
+                <button class="btn-brand open-edit-event-modal-btn" data-event='@json($event)' style="background: var(--muted); color: var(--foreground); border: none; cursor: pointer;">Modifier</button>
                 <a href="{{ route('dashboard.moderator.index', $event->id) }}" class="btn-brand">Ouvrir la Console</a>
             </div>
         </div>
@@ -344,6 +344,15 @@
 
         document.getElementById('edit-event-modal').style.display = 'flex';
     }
+
+    // Gestionnaire global pour ouvrir le modal d'édition sans erreur de syntaxe JSON
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.open-edit-event-modal-btn');
+        if (btn) {
+            const eventData = JSON.parse(btn.getAttribute('data-event'));
+            openEditEventModal(eventData);
+        }
+    });
 
     function closeEditEventModal() {
         document.getElementById('edit-event-modal').style.display = 'none';
