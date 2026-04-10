@@ -135,7 +135,17 @@
             @include('moderator.partials.filtered_list', ['filteredByAI' => $filteredByAI])
         </div>
     </div>
+
+    {{-- Fenêtre flottante pour voir le partage d'écran --}}
+    <div id="mod-screenshare-wrap" style="display:none; position:fixed; bottom:20px; right:20px; width:400px; background:#000; border-radius:1rem; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); z-index:100; border:2px solid var(--brand);">
+        <div style="background:var(--brand); color:#fff; padding:0.5rem 1rem; font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700;">📺 APERÇU PRÉSENTATION</span>
+            <button onclick="document.getElementById('mod-screenshare-wrap').style.display='none'" style="background:none; border:none; color:#fff; cursor:pointer;">&times;</button>
+        </div>
+        <video id="mod-screenshare-video" autoplay playsinline style="width:100%; height:auto; display:block; background:#000;"></video>
+    </div>
 </div>
+
 
 {{-- Modal Paramètres --}}
 <div id="settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:1rem;">
@@ -271,13 +281,29 @@ function showLoadingState() {
     moderatorPeer.on('open', (id) => console.log('Console Modérateur prête pour l\'enregistrement, ID:', id));
 
     moderatorPeer.on('call', (call) => {
-        console.log("Appel entrant reçu pour enregistrement de:", call.metadata?.name || 'Participant');
+        console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
         
-        call.answer(); // On répond pour avoir le flux
+        call.answer(); 
         
         call.on('stream', (remoteStream) => {
-            console.log("Démarrage de l'enregistrement du flux...");
+            // Si c'est de la VIDÉO (partage d'écran)
+            if (remoteStream.getVideoTracks().length > 0) {
+                console.log("Flux VIDÉO (partage d'écran) reçu sur la console modérateur.");
+                const wrap = document.getElementById('mod-screenshare-wrap');
+                const video = document.getElementById('mod-screenshare-video');
+                wrap.style.display = 'block';
+                video.srcObject = remoteStream;
+
+                remoteStream.getVideoTracks()[0].onended = () => {
+                    wrap.style.display = 'none';
+                };
+                return; // On ne fait pas l'enregistrement audio si c'est de la vidéo (évite les doublons)
+            }
+
+            // Si c'est de l'AUDIO uniquement (Intervention en direct)
+            console.log("Démarrage de l'enregistrement du flux audio...");
             // On ne joue PAS le son sur le modérateur pour éviter l'écho
+
             // Mais on l'enregistre
             liveChunks = [];
             liveRecorder = new MediaRecorder(remoteStream);

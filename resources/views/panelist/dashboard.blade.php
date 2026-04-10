@@ -253,12 +253,21 @@
                 btn.style.background = '#ef4444';
                 btn.innerHTML = '⏹ Arrêter le partage';
 
-                // Appel au projecteur
+                // Appel au projecteur ET au modérateur
                 currentCall = peer.call(`${eventCode}-PROJECTOR`, screenStream, {
                     metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
                 });
 
+                // On tente aussi d'appeler le modérateur pour qu'il puisse suivre
+                const modCall = peer.call(`${eventCode}-MODERATOR`, screenStream, {
+                    metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
+                });
+
+                // On stocke les deux appels pour pouvoir les couper
+                window.activeCalls = [currentCall, modCall];
+
                 screenStream.getVideoTracks()[0].onended = () => {
+
                     stopScreenShare();
                 };
 
@@ -276,10 +285,12 @@
             screenStream.getTracks().forEach(track => track.stop());
             screenStream = null;
         }
-        if (currentCall) {
-            currentCall.close();
+        if (window.activeCalls) {
+            window.activeCalls.forEach(call => call.close());
+            window.activeCalls = null;
         }
         const btn = document.getElementById('screenshare-btn');
+
         btn.style.background = '#0ea5e9';
         btn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.25rem;height:1.25rem;margin-right:0.5rem;">
