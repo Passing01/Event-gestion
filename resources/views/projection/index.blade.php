@@ -345,6 +345,7 @@
         let lastPlayedAudioId = null;
         let audioEnabled = false;
         let audioContext = null;
+        let isScreenSharingActive = false;
 
         function enableAudioOnProjector() {
             audioEnabled = true;
@@ -376,14 +377,17 @@
                     const video = document.getElementById('screenshare-video');
                     video.srcObject = remoteStream;
 
+                    isScreenSharingActive = true;
                     document.getElementById('projection-wrap').classList.add('full-mode');
                     document.getElementById('presentation-badge').style.display = 'flex';
                     document.getElementById('presenter-name').textContent = "PARTAGE D'ÉCRAN : " + (call.metadata?.name || 'Panéliste');
                     
                     remoteStream.getVideoTracks()[0].onended = () => {
                         console.log("Fin du partage d'écran.");
+                        isScreenSharingActive = false;
                         fetchAnswering(); // Forcer le rafraîchissement
                     };
+
                 } else {
                     // --- AUDIO UNIQUEMENT ---
                     console.log("Flux AUDIO reçu !");
@@ -400,10 +404,12 @@
             });
             call.on('close', () => {
                 console.log("Appel terminé.");
+                isScreenSharingActive = false;
                 document.getElementById('live-mic-alert').style.display = 'none';
                 document.getElementById('voice-indicator').style.display = 'none';
                 fetchAnswering();
             });
+
             call.on('error', (err) => console.error("Erreur PeerJS Appel:", err));
         });
 
@@ -413,10 +419,13 @@
                 const response = await fetch('{{ route("projection.api", $event->code) }}');
                 const data = await response.json();
                 
+                // Si un partage d'écran est en cours, on ne met pas à jour le CONTENU principal
+                // mais on continue de mettre à jour la sidebar et le footer.
                 const container = document.getElementById('projection-content');
                 const wrap = document.getElementById('projection-wrap');
                 const badge = document.getElementById('presentation-badge');
                 const nameSpan = document.getElementById('presenter-name');
+
 
                 // Auto-play Vocal si c'est une intervention "Direct"
                 if (data.type === 'contribution' && data.audio_path && lastPlayedAudioId !== data.id) {
@@ -426,7 +435,9 @@
                 }
 
                 // 1. GESTION DE LA PROJECTION (PANÉLISTE)
-                if (data.projecting_panelist) {
+                if (!isScreenSharingActive) {
+                    if (data.projecting_panelist) {
+
                     wasProjecting = true;
                     wrap.classList.add('full-mode');
                     badge.style.display = 'flex';
@@ -469,61 +480,67 @@
 
                     }
                     
+                    // ...
                     updateHandsFooter(data.raised_hands);
-                    return; 
-                } else {
-                    wrap.classList.remove('full-mode');
-                    badge.style.display = 'none';
-                    if (window.PptxProjection) {
-                        window.PptxProjection.reset();
-                    }
-                    lastProjectingPath = null;
-                    lastProjectingPage = null;
+                    // On ne retourne pas car on veut mettre à jour la sidebar
                 }
-
-                // 2. GESTION DES QUESTIONS (SI PAS DE PROJECTION)
-                if (data.id !== currentQuestionId || data.status !== currentStatus || wasProjecting) {
-                    wasProjecting = false; 
-                    currentQuestionId = data.id;
-                    currentStatus = data.status;
-                    
-                    if (data.id) {
-                        let contentHtml = '';
-                        if (data.content) {
-                            contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>`;
-                        } else if (data.audio_path) {
-                            contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;"><span style="font-size: 5rem;">🎙️</span><br><span style="font-size: 1.5rem; opacity: 0.7;">Message Vocal</span></div>`;
+                
+                if (!isScreenSharingActive) {
+                    if (!data.projecting_panelist) {
+                        wrap.classList.remove('full-mode');
+                        badge.style.display = 'none';
+                        if (window.PptxProjection) {
+                            window.PptxProjection.reset();
                         }
+                        lastProjectingPath = null;
+                        lastProjectingPage = null;
+                    }
 
-                        let audioHtml = data.audio_path ? `
-                            <div style="margin-top: 1rem; opacity: 0; transform: translateY(10px); transition: all 0.5s;" class="audio-container">
-                                <audio controls style="height: 50px; width: 400px;">
-                                    <source src="/storage/${data.audio_path}" type="audio/webm">
-                                </audio>
-                            </div>
-                        ` : '';
+                    // 2. GESTION DES QUESTIONS (SI PAS DE PROJECTION)
+                    if (!data.projecting_panelist && (data.id !== currentQuestionId || data.status !== currentStatus || wasProjecting)) {
+                        wasProjecting = false; 
+                        currentQuestionId = data.id;
+                        currentStatus = data.status;
                         
-                        container.innerHTML = `
-                            ${contentHtml}
-                            ${audioHtml}
-                            <div class="question-author" style="opacity: 0; transform: translateY(10px); transition: all 0.5s;">${data.pseudo}</div>
-                        `;
-                        setTimeout(() => {
-                            if (container.querySelector('.question-content')) {
-                                container.querySelector('.question-content').style.opacity = '1';
-                                container.querySelector('.question-content').style.transform = 'translateY(0)';
+                        if (data.id) {
+                            let contentHtml = '';
+                            if (data.content) {
+                                contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>`;
+                            } else if (data.audio_path) {
+                                contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;"><span style="font-size: 5rem;">🎙️</span><br><span style="font-size: 1.5rem; opacity: 0.7;">Message Vocal</span></div>`;
                             }
-                            if (container.querySelector('.audio-container')) {
-                                container.querySelector('.audio-container').style.opacity = '1';
-                                container.querySelector('.audio-container').style.transform = 'translateY(0)';
-                            }
-                            container.querySelector('.question-author').style.opacity = '1';
-                            container.querySelector('.question-author').style.transform = 'translateY(0)';
-                        }, 50);
-                    } else {
-                        container.innerHTML = `<div class="empty-state" style="font-size: 2rem; color: var(--muted-foreground); font-style: italic;">En attente de la prochaine question...</div>`;
+
+                            let audioHtml = data.audio_path ? `
+                                <div style="margin-top: 1rem; opacity: 0; transform: translateY(10px); transition: all 0.5s;" class="audio-container">
+                                    <audio controls style="height: 50px; width: 400px;">
+                                        <source src="/storage/${data.audio_path}" type="audio/webm">
+                                    </audio>
+                                </div>
+                            ` : '';
+                            
+                            container.innerHTML = `
+                                ${contentHtml}
+                                ${audioHtml}
+                                <div class="question-author" style="opacity: 0; transform: translateY(10px); transition: all 0.5s;">${data.pseudo}</div>
+                            `;
+                            setTimeout(() => {
+                                if (container.querySelector('.question-content')) {
+                                    container.querySelector('.question-content').style.opacity = '1';
+                                    container.querySelector('.question-content').style.transform = 'translateY(0)';
+                                }
+                                if (container.querySelector('.audio-container')) {
+                                    container.querySelector('.audio-container').style.opacity = '1';
+                                    container.querySelector('.audio-container').style.transform = 'translateY(0)';
+                                }
+                                container.querySelector('.question-author').style.opacity = '1';
+                                container.querySelector('.question-author').style.transform = 'translateY(0)';
+                            }, 50);
+                        } else {
+                            container.innerHTML = `<div class="empty-state" style="font-size: 2rem; color: var(--muted-foreground); font-style: italic;">En attente de la prochaine question...</div>`;
+                        }
                     }
                 }
+
 
                 const qaList = document.getElementById('qa-list');
                 if (data.all_questions) {
