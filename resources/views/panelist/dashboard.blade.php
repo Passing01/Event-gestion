@@ -253,20 +253,28 @@
                 btn.style.background = '#ef4444';
                 btn.innerHTML = '⏹ Arrêter le partage';
 
-                // Appel au projecteur ET au modérateur
-                currentCall = peer.call(`${eventCode}-PROJECTOR`, screenStream, {
-                    metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
+                // On récupère la liste de tous les projecteurs actifs
+                const resp = await fetch(`/e/${eventCode}/projectors`);
+                const projectors = await resp.json();
+                
+                window.activeCalls = [];
+
+                // On appelle chaque projecteur
+                projectors.forEach(proj => {
+                    const call = peer.call(proj.id, screenStream, {
+                        metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
+                    });
+                    window.activeCalls.push(call);
                 });
 
-                // On tente aussi d'appeler le modérateur pour qu'il puisse suivre
+                // On appelle aussi le modérateur (ID fixe car un seul modérateur par event)
                 const modCall = peer.call(`${eventCode}-MODERATOR`, screenStream, {
                     metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
                 });
-
-                // On stocke les deux appels pour pouvoir les couper
-                window.activeCalls = [currentCall, modCall];
+                window.activeCalls.push(modCall);
 
                 screenStream.getVideoTracks()[0].onended = () => {
+
 
                     stopScreenShare();
                 };

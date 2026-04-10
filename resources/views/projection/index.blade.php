@@ -354,12 +354,13 @@
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        // Initialisation PeerJS avec STUN servers de secours et gestion d'erreurs
+        // Initialisation PeerJS avec ID UNIQUE et Heartbeat
         let peer = null;
-        const peerId = `${eventCode}-PROJECTOR`;
+        const myUniqueId = `${eventCode}-PROJ-${Math.random().toString(36).substr(2, 6)}`;
         
         try {
-            peer = new Peer(peerId, {
+            peer = new Peer(myUniqueId, {
+
                 debug: 2,
                 config: {
                     'iceServers': [
@@ -374,13 +375,30 @@
             
             peer.on('open', (id) => {
                 console.log('Projecteur en ligne, ID:', id);
-                // Petit indicateur de connexion pour débugger
+                
+                // Signalement au serveur
+                registerProjector(id);
+                setInterval(() => registerProjector(id), 15000);
+
                 const debugInfo = document.createElement('div');
                 debugInfo.id = "peer-status";
                 debugInfo.style = "position:fixed;bottom:10px;left:10px;font-size:10px;opacity:0.3;color:#fff;z-index:9999;";
                 debugInfo.textContent = "Signal: OK (" + id + ")";
                 document.body.appendChild(debugInfo);
             });
+
+            async function registerProjector(id) {
+                try {
+                    await fetch(`/e/${eventCode}/projector/register`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ peer_id: id })
+                    });
+                } catch (e) { console.error("Heartbeat error:", e); }
+            }
 
             peer.on('error', (err) => {
                 console.error("Erreur PeerJS:", err.type, err);

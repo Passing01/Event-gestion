@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class EventController extends Controller
 {
@@ -190,4 +191,56 @@ class EventController extends Controller
         $filename = "presence_" . Str::slug($event->name) . "_" . date('Y-m-d') . ".pdf";
         return $pdf->download($filename);
     }
+
+    public function getActiveParticipants($code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        $participants = $event->participants()
+            ->where('last_activity', '>=', now()->subMinutes(5))
+            ->get(['pseudo', 'is_typing', 'is_speaking']);
+        return response()->json($participants);
+    }
+
+    public function registerProjector(Request $request, $code)
+    {
+        $peerId = $request->input('peer_id');
+        if (!$peerId) return response()->json(['error' => 'No ID'], 400);
+
+        $cacheKey = "event_{$code}_projectors";
+        $projectors = Cache::get($cacheKey, []);
+        
+        $now = time();
+        $projectors = array_filter($projectors, function($p) use ($now) {
+            return ($now - $p['last_seen']) < 30;
+        });
+
+        $found = false;
+        foreach ($projectors as &$p) {
+            if ($p['id'] === $peerId) {
+                $p['last_seen'] = $now;
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            $projectors[] = ['id' => $peerId, 'last_seen' => $now];
+        }
+
+        Cache::put($cacheKey, $projectors, 60);
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function getProjectors($code)
+    {
+        $cacheKey = "event_{$code}_projectors";
+        $projectors = Cache::get($cacheKey, []);
+        
+        $now = time();
+        $projectors = array_filter($projectors, function($p) use ($now) {
+            return ($now - $p['last_seen']) < 30;
+        });
+
+        return response()->json(array_values($projectors));
+    }
 }
+
