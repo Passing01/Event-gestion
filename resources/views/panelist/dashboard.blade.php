@@ -2,6 +2,8 @@
 
 @section('title', 'Console Panéliste - ' . $event->name)
 
+@vite('resources/js/panelist-preview.js')
+
 @section('content')
 
 <div class="space-y-5">
@@ -156,7 +158,21 @@
             @if(in_array(strtolower($extension), ['pdf']))
                 <iframe src="{{ $fileUrl }}" style="width: 100%; height: 100%; border: none; border-radius: 0.5rem;"></iframe>
             @elseif(in_array(strtolower($extension), ['ppt', 'pptx']))
-                <iframe src="https://view.officeapps.live.com/op/embed.aspx?src={{ urlencode($fileUrl) }}" style="width: 100%; height: 100%; border: none; border-radius: 0.5rem;"></iframe>
+                <div id="pptx-preview-wrap" style="width: 100%; height: 100%; background: #f8fafc; display: grid; place-items: center;">
+                    <canvas id="pptx-preview-canvas" style="max-width: 100%; max-height: 100%; border-radius: 0.5rem;"></canvas>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', async () => {
+                        if (window.PptxPreview) {
+                            try {
+                                await window.PptxPreview.load('{{ $fileUrl }}');
+                                await window.PptxPreview.renderSlide({{ $panelist->current_page ?? 1 }});
+                            } catch (e) {
+                                console.error('PPTX preview init error:', e);
+                            }
+                        }
+                    });
+                </script>
             @elseif(in_array(strtolower($extension), ['txt']))
                 <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; height: 100%; overflow-y: auto; padding: 0.5rem;">
                     {{ $panelist->notes }}

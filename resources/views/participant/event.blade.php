@@ -299,6 +299,19 @@
     let currentCall;
     let lastHandStatus = '{{ $myHand ? $myHand->status : "none" }}';
 
+    // --- Vocal : Enregistrement (Style WhatsApp) ---
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let originalBlob;
+    let filteredBlob;
+    let audioContext;
+    let analyser;
+    let dataArray;
+    let voiceSeconds = 0;
+    let voiceTimerInterval;
+    let animationId;
+
     function initPeer() {
         myPeer = new Peer();
         myPeer.on('open', (id) => console.log('Connecté au réseau audio, ID:', id));
@@ -459,6 +472,14 @@
 
     // --- NOUVEAU SYSTÈME VOCAL (STYLE WHATSAPP) ---
     function toggleVoiceRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Votre navigateur ne permet pas l'accès au microphone.");
+            return;
+        }
+        if (typeof MediaRecorder === 'undefined') {
+            alert("L'enregistrement vocal n'est pas supporté sur ce navigateur.");
+            return;
+        }
         if (!isRecording) {
             startVoiceRecording();
             isRecording = true;

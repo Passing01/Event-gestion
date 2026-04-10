@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('dashboard.css') }}">
+    @vite('resources/js/projection.js')
     <style>
         body {
             background: #000;
@@ -418,8 +419,11 @@
                         if (ext === 'pdf') {
                             docHtml = `<iframe src="${data.projecting_panelist.url}#page=${newPage}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
                         } else if (['ppt', 'pptx'].includes(ext)) {
-                            // Note: Google/Office viewers might not support page syncing easily via URL here
-                            docHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.projecting_panelist.url)}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
+                            docHtml = `
+                                <div id="pptx-projection-wrap" style="width: 100%; height: 100vh; background: #000; display: grid; place-items: center;">
+                                    <canvas id="pptx-projection-canvas" style="max-width: 100%; max-height: 100vh;"></canvas>
+                                </div>
+                            `;
                         } else {
                             docHtml = `
                                 <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
@@ -428,6 +432,15 @@
                             `;
                         }
                         container.innerHTML = docHtml;
+
+                        if (['ppt', 'pptx'].includes(ext) && window.PptxProjection) {
+                            try {
+                                await window.PptxProjection.load(data.projecting_panelist.url);
+                                await window.PptxProjection.renderSlide(newPage);
+                            } catch (e) {
+                                console.error('PPTX projection init error:', e);
+                            }
+                        }
                     }
                     
                     updateHandsFooter(data.raised_hands);
@@ -435,6 +448,9 @@
                 } else {
                     wrap.classList.remove('full-mode');
                     badge.style.display = 'none';
+                    if (window.PptxProjection) {
+                        window.PptxProjection.reset();
+                    }
                     lastProjectingPath = null;
                     lastProjectingPage = null;
                 }
