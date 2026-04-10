@@ -460,11 +460,9 @@
                 call.on('error', (err) => {
                     console.error("Erreur PeerJS Appel:", err);
                     isScreenSharingActive = false;
-                    fetchAnswering();
                 });
             });
-pel:", err));
-            });
+
         } catch (e) {
             console.error("PeerJS non disponible :", e);
         }
