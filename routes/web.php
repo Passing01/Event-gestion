@@ -201,3 +201,10 @@ Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->
     Route::post('/e/{code}/sync-page', [PanelistController::class, 'syncPage'])->name('sync-page');
     Route::post('/e/{code}/ai-suggest', [PanelistController::class, 'aiSuggest'])->name('ai-suggest');
 });
+
+// ──────────────────────────────────────────────
+//  Routes WebRTC et Projecteurs
+// ──────────────────────────────────────────────
+Route::get('/e/{code}/projectors', [EventController::class, 'getProjectors']);
+Route::post('/e/{code}/projector/register', [EventController::class, 'registerProjector']);
+
