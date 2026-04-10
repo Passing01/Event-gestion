@@ -410,10 +410,13 @@
                 const debugInfo = document.getElementById('peer-status');
                 if (debugInfo) debugInfo.textContent = "Signal: ERREUR (" + err.type + ")";
                 
+                if (err.type === 'unavailable-id') {
+                    alert("ERREUR CRITIQUE : Cette fenêtre de projection ne peut pas recevoir le partage d'écran car une autre fenêtre de projection est déjà ouverte ailleurs. Veuillez fermer les autres onglets du projecteur.");
                 }
             });
             
             peer.on('call', (call) => {
+
                 console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
 
                 
