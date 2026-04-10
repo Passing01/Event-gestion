@@ -350,9 +350,14 @@
         function enableAudioOnProjector() {
             audioEnabled = true;
             document.getElementById('audio-init-overlay').style.display = 'none';
-            console.log("Audio activé sur le projecteur.");
+            console.log("Session démarrée.");
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Lancer le polling
+            fetchAnswering();
+            setInterval(fetchAnswering, 3000);
         }
+
 
         // Initialisation PeerJS avec ID UNIQUE et Heartbeat
         let peer = null;
