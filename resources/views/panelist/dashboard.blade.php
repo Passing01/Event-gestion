@@ -142,43 +142,30 @@
 </div>
 
 <!-- Modal View Document -->
-<div id="view-doc-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
-    <div class="card" style="max-width: 50rem; width: 90%; max-height: 80vh; overflow-y: auto;">
+<div id="view-doc-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px);">
+    <div class="card" style="max-width: 95vw; width: 85rem; max-height: 95vh; overflow-y: auto; padding: 1.5rem;">
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
             <h2 class="section-title" style="margin-bottom: 0;">Document chargé</h2>
             <button onclick="document.getElementById('view-doc-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
         
-        <div style="background: var(--muted); padding: 1rem; border-radius: 0.75rem; height: 60vh;">
+        <div style="background: #000; padding: 0; border-radius: 0.75rem; height: 75vh; overflow: hidden;">
             @php
                 $extension = pathinfo($panelist->presentation_path, PATHINFO_EXTENSION);
                 $fileUrl = asset('storage/' . $panelist->presentation_path);
             @endphp
 
             @if(in_array(strtolower($extension), ['pdf']))
-                <iframe src="{{ $fileUrl }}" style="width: 100%; height: 100%; border: none; border-radius: 0.5rem;"></iframe>
+                <iframe src="{{ $fileUrl }}" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
             @elseif(in_array(strtolower($extension), ['ppt', 'pptx']))
-                <div id="pptx-preview-wrap" style="width: 100%; height: 100%; background: #f8fafc; display: grid; place-items: center;">
-                    <canvas id="pptx-preview-canvas" style="max-width: 100%; max-height: 100%; border-radius: 0.5rem;"></canvas>
-                </div>
-                <script>
-                    document.addEventListener('DOMContentLoaded', async () => {
-                        if (window.PptxPreview) {
-                            try {
-                                await window.PptxPreview.load('{{ $fileUrl }}');
-                                await window.PptxPreview.renderSlide({{ $panelist->current_page ?? 1 }});
-                            } catch (e) {
-                                console.error('PPTX preview init error:', e);
-                            }
-                        }
-                    });
-                </script>
+                <iframe src="https://view.officeapps.live.com/op/embed.aspx?src={{ urlencode($fileUrl) }}&wdStartOn=1" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
             @elseif(in_array(strtolower($extension), ['txt']))
-                <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; height: 100%; overflow-y: auto; padding: 0.5rem;">
+                <div style="font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; height: 100%; overflow-y: auto; padding: 1rem; color: #fff; background: #1e293b;">
                     {{ $panelist->notes }}
                 </div>
             @else
-                <div style="display: grid; place-items: center; height: 100%; text-align: center;">
+                <div style="display: grid; place-items: center; height: 100%; text-align: center; color: #fff;">
                     <div>
                         <p style="margin-bottom: 1rem;">Aperçu non disponible pour ce type de fichier ({{ $extension }}).</p>
                         <a href="{{ $fileUrl }}" target="_blank" class="btn-brand" style="width: auto; padding: 0.5rem 1.5rem;">Ouvrir le fichier</a>

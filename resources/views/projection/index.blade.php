@@ -419,11 +419,8 @@
                         if (ext === 'pdf') {
                             docHtml = `<iframe src="${data.projecting_panelist.url}#page=${newPage}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
                         } else if (['ppt', 'pptx'].includes(ext)) {
-                            docHtml = `
-                                <div id="pptx-projection-wrap" style="width: 100%; height: 100vh; background: #000; display: grid; place-items: center;">
-                                    <canvas id="pptx-projection-canvas" style="max-width: 100%; max-height: 100vh;"></canvas>
-                                </div>
-                            `;
+                            // On tente avec le viewer Office pour un rendu premium et complet
+                            docHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.projecting_panelist.url)}" style="width:100%; height:100vh; border:none;"></iframe>`;
                         } else {
                             docHtml = `
                                 <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
@@ -433,14 +430,6 @@
                         }
                         container.innerHTML = docHtml;
 
-                        if (['ppt', 'pptx'].includes(ext) && window.PptxProjection) {
-                            try {
-                                await window.PptxProjection.load(data.projecting_panelist.url);
-                                await window.PptxProjection.renderSlide(newPage);
-                            } catch (e) {
-                                console.error('PPTX projection init error:', e);
-                            }
-                        }
                     }
                     
                     updateHandsFooter(data.raised_hands);
