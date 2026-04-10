@@ -39,6 +39,14 @@
                     </svg>
                     Uploader PowerPoint/Notes
                 </button>
+
+                <button id="screenshare-btn" class="btn-brand" style="background: #0ea5e9; color: #fff;" onclick="toggleScreenShare()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.25rem;height:1.25rem;margin-right:0.5rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+                    </svg>
+                    Partager l'écran
+                </button>
+
             </div>
         </div>
     </div>
@@ -200,8 +208,64 @@
 </div>
 
 @push('scripts')
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script>
+    const eventCode = '{{ $event->code }}';
+    const peer = new Peer(`PANELIST-${Math.random().toString(36).substr(2, 9)}`);
+    let screenStream = null;
+    let currentCall = null;
+
+    window.toggleScreenShare = async function() {
+        const btn = document.getElementById('screenshare-btn');
+        
+        if (!screenStream) {
+            try {
+                screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+                    video: { cursor: "always" },
+                    audio: false 
+                });
+
+                btn.style.background = '#ef4444';
+                btn.innerHTML = '⏹ Arrêter le partage';
+
+                // Appel au projecteur
+                currentCall = peer.call(`${eventCode}-PROJECTOR`, screenStream, {
+                    metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
+                });
+
+                screenStream.getVideoTracks()[0].onended = () => {
+                    stopScreenShare();
+                };
+
+            } catch (err) {
+                console.error("Screen share error:", err);
+                alert("Impossible de partager l'écran. Vérifiez les permissions.");
+            }
+        } else {
+            stopScreenShare();
+        }
+    }
+
+    function stopScreenShare() {
+        if (screenStream) {
+            screenStream.getTracks().forEach(track => track.stop());
+            screenStream = null;
+        }
+        if (currentCall) {
+            currentCall.close();
+        }
+        const btn = document.getElementById('screenshare-btn');
+        btn.style.background = '#0ea5e9';
+        btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:1.25rem;height:1.25rem;margin-right:0.5rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+            </svg>
+            Partager l'écran
+        `;
+    }
+
     window.suggestAI = function(questionId, aiBtn) {
+
         const textarea = document.getElementById('ai-response-' + questionId);
         const submitBtn = document.getElementById('submit-btn-' + questionId);
         

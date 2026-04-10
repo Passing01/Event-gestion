@@ -364,24 +364,49 @@
             call.answer(); 
             
             call.on('stream', (remoteStream) => {
-                console.log("Flux audio reçu !");
-                document.getElementById('live-mic-alert').style.display = 'flex';
-                document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
-                document.getElementById('voice-indicator').style.display = 'flex';
+                if (remoteStream.getVideoTracks().length > 0) {
+                    // --- PARTAGE D'ÉCRAN ---
+                    console.log("Flux VIDÉO (partage d'écran) reçu !");
+                    const container = document.getElementById('projection-content');
+                    container.innerHTML = `
+                        <div style="width: 100%; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center;">
+                            <video id="screenshare-video" autoplay playsinline style="max-width: 100%; max-height: 100vh; object-fit: contain;"></video>
+                        </div>
+                    `;
+                    const video = document.getElementById('screenshare-video');
+                    video.srcObject = remoteStream;
 
-                const audio = document.createElement('audio');
-                audio.srcObject = remoteStream;
-                audio.onloadedmetadata = () => {
-                    audio.play().catch(e => console.error("Erreur de lecture audio:", e));
-                };
+                    document.getElementById('projection-wrap').classList.add('full-mode');
+                    document.getElementById('presentation-badge').style.display = 'flex';
+                    document.getElementById('presenter-name').textContent = "PARTAGE D'ÉCRAN : " + (call.metadata?.name || 'Panéliste');
+                    
+                    remoteStream.getVideoTracks()[0].onended = () => {
+                        console.log("Fin du partage d'écran.");
+                        fetchAnswering(); // Forcer le rafraîchissement
+                    };
+                } else {
+                    // --- AUDIO UNIQUEMENT ---
+                    console.log("Flux AUDIO reçu !");
+                    document.getElementById('live-mic-alert').style.display = 'flex';
+                    document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
+                    document.getElementById('voice-indicator').style.display = 'flex';
+
+                    const audio = document.createElement('audio');
+                    audio.srcObject = remoteStream;
+                    audio.onloadedmetadata = () => {
+                        audio.play().catch(e => console.error("Erreur de lecture audio:", e));
+                    };
+                }
             });
             call.on('close', () => {
                 console.log("Appel terminé.");
                 document.getElementById('live-mic-alert').style.display = 'none';
                 document.getElementById('voice-indicator').style.display = 'none';
+                fetchAnswering();
             });
             call.on('error', (err) => console.error("Erreur PeerJS Appel:", err));
         });
+
 
         async function fetchAnswering() {
             try {
@@ -419,8 +444,11 @@
                         if (ext === 'pdf') {
                             docHtml = `<iframe src="${data.projecting_panelist.url}#page=${newPage}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
                         } else if (['ppt', 'pptx'].includes(ext)) {
-                            // On tente avec le viewer Office pour un rendu premium et complet
-                            docHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.projecting_panelist.url)}" style="width:100%; height:100vh; border:none;"></iframe>`;
+                            docHtml = `
+                                <div id="pptx-projection-wrap" style="width: 100%; height: 100vh; background: #000; display: grid; place-items: center; overflow: hidden;">
+                                    <canvas id="pptx-projection-canvas" style="max-width: 100%; max-height: 100vh; object-fit: contain;"></canvas>
+                                </div>
+                            `;
                         } else {
                             docHtml = `
                                 <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
@@ -429,6 +457,15 @@
                             `;
                         }
                         container.innerHTML = docHtml;
+
+                        if (['ppt', 'pptx'].includes(ext) && window.PptxProjection) {
+                            try {
+                                await window.PptxProjection.load(data.projecting_panelist.url);
+                                await window.PptxProjection.renderSlide(newPage);
+                            } catch (e) {
+                                console.error('PPTX projection init error:', e);
+                            }
+                        }
 
                     }
                     

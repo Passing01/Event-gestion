@@ -57,6 +57,11 @@ async function renderSlide(page) {
     currentSlide = Math.max(1, Number(page || 1));
 
     try {
+        const container = canvas.parentElement;
+        if (container) {
+            canvas.width = container.clientWidth * window.devicePixelRatio;
+            canvas.height = container.clientHeight * window.devicePixelRatio;
+        }
         await v.renderSlide(currentSlide - 1, canvas);
     } catch (e) {
         console.error('PPTX renderSlide error:', e);
