@@ -211,9 +211,34 @@
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script>
     const eventCode = '{{ $event->code }}';
-    const peer = new Peer(`PANELIST-${Math.random().toString(36).substr(2, 9)}`);
+    const peer = new Peer(`PANELIST-${Math.random().toString(36).substr(2, 9)}`, {
+        debug: 2,
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ]
+        }
+    });
+
+    peer.on('open', (id) => {
+        console.log('Connexion établie avec le serveur de signal, ID:', id);
+        const status = document.createElement('div');
+        status.style = "position:fixed;bottom:10px;right:10px;font-size:10px;opacity:0.5;z-index:9999;";
+        status.innerHTML = `<span style="color:#10b981;">●</span> Connecté au projecteur`;
+        document.body.appendChild(status);
+    });
+
+    peer.on('error', (err) => {
+        console.error('Peer error:', err);
+    });
+
     let screenStream = null;
     let currentCall = null;
+
 
     window.toggleScreenShare = async function() {
         const btn = document.getElementById('screenshare-btn');

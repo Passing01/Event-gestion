@@ -354,13 +354,46 @@
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        // Initialisation PeerJS avec gestion d'erreurs
+        // Initialisation PeerJS avec STUN servers de secours et gestion d'erreurs
         let peer = null;
+        const peerId = `${eventCode}-PROJECTOR`;
+        
         try {
-            peer = new Peer(`${eventCode}-PROJECTOR`);
-            peer.on('open', (id) => console.log('Projecteur prêt, ID:', id));
+            peer = new Peer(peerId, {
+                debug: 2,
+                config: {
+                    'iceServers': [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ]
+                }
+            });
+            
+            peer.on('open', (id) => {
+                console.log('Projecteur en ligne, ID:', id);
+                // Petit indicateur de connexion pour débugger
+                const debugInfo = document.createElement('div');
+                debugInfo.id = "peer-status";
+                debugInfo.style = "position:fixed;bottom:10px;left:10px;font-size:10px;opacity:0.3;color:#fff;z-index:9999;";
+                debugInfo.textContent = "Signal: OK (" + id + ")";
+                document.body.appendChild(debugInfo);
+            });
+
+            peer.on('error', (err) => {
+                console.error("Erreur PeerJS:", err.type, err);
+                const debugInfo = document.getElementById('peer-status');
+                if (debugInfo) debugInfo.textContent = "Signal: ERREUR (" + err.type + ")";
+                
+                if (err.type === 'unavailable-id') {
+                    alert("ERREUR CRITIQUE : Cette fenêtre de projection ne peut pas recevoir le partage d'écran car une autre fenêtre de projection est déjà ouverte ailleurs. Veuillez fermer les autres onglets du projecteur.");
+                }
+            });
             
             peer.on('call', (call) => {
+
                 console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
                 call.answer(); 
                 
