@@ -354,64 +354,60 @@
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        // --- PeerJS : Réception Micro Live ---
-        const peer = new Peer(`${eventCode}-PROJECTOR`);
-
-        peer.on('open', (id) => console.log('Projecteur prêt pour le son, ID:', id));
-
-        peer.on('call', (call) => {
-            console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
+        // Initialisation PeerJS avec gestion d'erreurs
+        let peer = null;
+        try {
+            peer = new Peer(`${eventCode}-PROJECTOR`);
+            peer.on('open', (id) => console.log('Projecteur prêt, ID:', id));
             
-            call.answer(); 
-            
-            call.on('stream', (remoteStream) => {
-                if (remoteStream.getVideoTracks().length > 0) {
-                    // --- PARTAGE D'ÉCRAN ---
-                    console.log("Flux VIDÉO (partage d'écran) reçu !");
-                    const container = document.getElementById('projection-content');
-                    container.innerHTML = `
-                        <div style="width: 100%; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center;">
-                            <video id="screenshare-video" autoplay playsinline style="max-width: 100%; max-height: 100vh; object-fit: contain;"></video>
-                        </div>
-                    `;
-                    const video = document.getElementById('screenshare-video');
-                    video.srcObject = remoteStream;
+            peer.on('call', (call) => {
+                console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
+                call.answer(); 
+                
+                call.on('stream', (remoteStream) => {
+                    if (remoteStream.getVideoTracks().length > 0) {
+                        isScreenSharingActive = true;
+                        const container = document.getElementById('projection-content');
+                        container.innerHTML = `
+                            <div style="width: 100%; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center;">
+                                <video id="screenshare-video" autoplay playsinline style="max-width: 100%; max-height: 100vh; object-fit: contain;"></video>
+                            </div>
+                        `;
+                        const video = document.getElementById('screenshare-video');
+                        video.srcObject = remoteStream;
 
-                    isScreenSharingActive = true;
-                    document.getElementById('projection-wrap').classList.add('full-mode');
-                    document.getElementById('presentation-badge').style.display = 'flex';
-                    document.getElementById('presenter-name').textContent = "PARTAGE D'ÉCRAN : " + (call.metadata?.name || 'Panéliste');
-                    
-                    remoteStream.getVideoTracks()[0].onended = () => {
-                        console.log("Fin du partage d'écran.");
-                        isScreenSharingActive = false;
-                        fetchAnswering(); // Forcer le rafraîchissement
-                    };
+                        document.getElementById('projection-wrap').classList.add('full-mode');
+                        document.getElementById('presentation-badge').style.display = 'flex';
+                        document.getElementById('presenter-name').textContent = "PARTAGE D'ÉCRAN : " + (call.metadata?.name || 'Panéliste');
+                        
+                        remoteStream.getVideoTracks()[0].onended = () => {
+                            isScreenSharingActive = false;
+                            fetchAnswering();
+                        };
+                    } else {
+                        document.getElementById('live-mic-alert').style.display = 'flex';
+                        document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
+                        document.getElementById('voice-indicator').style.display = 'flex';
 
-                } else {
-                    // --- AUDIO UNIQUEMENT ---
-                    console.log("Flux AUDIO reçu !");
-                    document.getElementById('live-mic-alert').style.display = 'flex';
-                    document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
-                    document.getElementById('voice-indicator').style.display = 'flex';
-
-                    const audio = document.createElement('audio');
-                    audio.srcObject = remoteStream;
-                    audio.onloadedmetadata = () => {
-                        audio.play().catch(e => console.error("Erreur de lecture audio:", e));
-                    };
-                }
+                        const audio = document.createElement('audio');
+                        audio.srcObject = remoteStream;
+                        audio.onloadedmetadata = () => {
+                            audio.play().catch(e => console.error("Erreur audio:", e));
+                        };
+                    }
+                });
+                call.on('close', () => {
+                    isScreenSharingActive = false;
+                    document.getElementById('live-mic-alert').style.display = 'none';
+                    document.getElementById('voice-indicator').style.display = 'none';
+                    fetchAnswering();
+                });
+                call.on('error', (err) => console.error("Erreur PeerJS Appel:", err));
             });
-            call.on('close', () => {
-                console.log("Appel terminé.");
-                isScreenSharingActive = false;
-                document.getElementById('live-mic-alert').style.display = 'none';
-                document.getElementById('voice-indicator').style.display = 'none';
-                fetchAnswering();
-            });
+        } catch (e) {
+            console.error("PeerJS non disponible :", e);
+        }
 
-            call.on('error', (err) => console.error("Erreur PeerJS Appel:", err));
-        });
 
 
         async function fetchAnswering() {
@@ -434,112 +430,90 @@
                     audio.play().catch(e => console.log("Lecture auto bloquée par le navigateur."));
                 }
 
-                // 1. GESTION DE LA PROJECTION (PANÉLISTE)
+                // 1. GESTION DE LA PROJECTION (PANÉLISTE) OU QUESTIONS
                 if (!isScreenSharingActive) {
                     if (data.projecting_panelist) {
+                        wasProjecting = true;
+                        wrap.classList.add('full-mode');
+                        badge.style.display = 'flex';
+                        nameSpan.textContent = "EN DIRECT : " + data.projecting_panelist.name;
 
-                    wasProjecting = true;
-                    wrap.classList.add('full-mode');
-                    badge.style.display = 'flex';
-                    nameSpan.textContent = "EN DIRECT : " + data.projecting_panelist.name;
+                        const newPath = data.projecting_panelist.path;
+                        const newPage = data.projecting_panelist.current_page || 1;
 
-                    const newPath = data.projecting_panelist.path;
-                    const newPage = data.projecting_panelist.current_page || 1;
+                        if (newPath !== lastProjectingPath || newPage !== lastProjectingPage) {
+                            lastProjectingPath = newPath;
+                            lastProjectingPage = newPage;
+                            
+                            let docHtml = '';
+                            const ext = data.projecting_panelist.extension.toLowerCase();
+                            if (ext === 'pdf') {
+                                docHtml = `<iframe src="${data.projecting_panelist.url}#page=${newPage}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
+                            } else if (['ppt', 'pptx'].includes(ext)) {
+                                docHtml = `
+                                    <div id="pptx-projection-wrap" style="width: 100%; height: 100vh; background: #000; display: grid; place-items: center; overflow: hidden;">
+                                        <canvas id="pptx-projection-canvas" style="max-width: 100%; max-height: 100vh; object-fit: contain;"></canvas>
+                                    </div>
+                                `;
+                            } else {
+                                docHtml = `
+                                    <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
+                                        <div style="font-size: 2rem; color: #fff;">Document : ${data.projecting_panelist.path}</div>
+                                    </div>
+                                `;
+                            }
+                            container.innerHTML = docHtml;
 
-                    if (newPath !== lastProjectingPath || newPage !== lastProjectingPage) {
-                        lastProjectingPath = newPath;
-                        lastProjectingPage = newPage;
-                        
-                        let docHtml = '';
-                        const ext = data.projecting_panelist.extension.toLowerCase();
-                        if (ext === 'pdf') {
-                            docHtml = `<iframe src="${data.projecting_panelist.url}#page=${newPage}" style="width:100%; height:100vh; border:none; background: #fff;"></iframe>`;
-                        } else if (['ppt', 'pptx'].includes(ext)) {
-                            docHtml = `
-                                <div id="pptx-projection-wrap" style="width: 100%; height: 100vh; background: #000; display: grid; place-items: center; overflow: hidden;">
-                                    <canvas id="pptx-projection-canvas" style="max-width: 100%; max-height: 100vh; object-fit: contain;"></canvas>
-                                </div>
-                            `;
-                        } else {
-                            docHtml = `
-                                <div style="width: 100%; height: 100vh; display: grid; place-items: center; background: #1a1a1a;">
-                                    <div style="font-size: 2rem; color: #fff;">Document : ${data.projecting_panelist.path}</div>
-                                </div>
-                            `;
-                        }
-                        container.innerHTML = docHtml;
-
-                        if (['ppt', 'pptx'].includes(ext) && window.PptxProjection) {
-                            try {
-                                await window.PptxProjection.load(data.projecting_panelist.url);
-                                await window.PptxProjection.renderSlide(newPage);
-                            } catch (e) {
-                                console.error('PPTX projection init error:', e);
+                            if (['ppt', 'pptx'].includes(ext) && window.PptxProjection) {
+                                try {
+                                    await window.PptxProjection.load(data.projecting_panelist.url);
+                                    await window.PptxProjection.renderSlide(newPage);
+                                } catch (e) {
+                                    console.error('PPTX error:', e);
+                                }
                             }
                         }
-
-                    }
-                    
-                    // ...
-                    updateHandsFooter(data.raised_hands);
-                    // On ne retourne pas car on veut mettre à jour la sidebar
-                }
-                
-                if (!isScreenSharingActive) {
-                    if (!data.projecting_panelist) {
+                    } else {
                         wrap.classList.remove('full-mode');
                         badge.style.display = 'none';
-                        if (window.PptxProjection) {
-                            window.PptxProjection.reset();
-                        }
+                        if (window.PptxProjection) window.PptxProjection.reset();
                         lastProjectingPath = null;
                         lastProjectingPage = null;
-                    }
 
-                    // 2. GESTION DES QUESTIONS (SI PAS DE PROJECTION)
-                    if (!data.projecting_panelist && (data.id !== currentQuestionId || data.status !== currentStatus || wasProjecting)) {
-                        wasProjecting = false; 
-                        currentQuestionId = data.id;
-                        currentStatus = data.status;
-                        
-                        if (data.id) {
-                            let contentHtml = '';
-                            if (data.content) {
-                                contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>`;
-                            } else if (data.audio_path) {
-                                contentHtml = `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;"><span style="font-size: 5rem;">🎙️</span><br><span style="font-size: 1.5rem; opacity: 0.7;">Message Vocal</span></div>`;
-                            }
-
-                            let audioHtml = data.audio_path ? `
-                                <div style="margin-top: 1rem; opacity: 0; transform: translateY(10px); transition: all 0.5s;" class="audio-container">
-                                    <audio controls style="height: 50px; width: 400px;">
-                                        <source src="/storage/${data.audio_path}" type="audio/webm">
-                                    </audio>
-                                </div>
-                            ` : '';
+                        // Gestion des questions si pas de PPT
+                        if (data.id !== currentQuestionId || data.status !== currentStatus || wasProjecting) {
+                            wasProjecting = false; 
+                            currentQuestionId = data.id;
+                            currentStatus = data.status;
                             
-                            container.innerHTML = `
-                                ${contentHtml}
-                                ${audioHtml}
-                                <div class="question-author" style="opacity: 0; transform: translateY(10px); transition: all 0.5s;">${data.pseudo}</div>
-                            `;
-                            setTimeout(() => {
-                                if (container.querySelector('.question-content')) {
-                                    container.querySelector('.question-content').style.opacity = '1';
-                                    container.querySelector('.question-content').style.transform = 'translateY(0)';
-                                }
-                                if (container.querySelector('.audio-container')) {
-                                    container.querySelector('.audio-container').style.opacity = '1';
-                                    container.querySelector('.audio-container').style.transform = 'translateY(0)';
-                                }
-                                container.querySelector('.question-author').style.opacity = '1';
-                                container.querySelector('.question-author').style.transform = 'translateY(0)';
-                            }, 50);
-                        } else {
-                            container.innerHTML = `<div class="empty-state" style="font-size: 2rem; color: var(--muted-foreground); font-style: italic;">En attente de la prochaine question...</div>`;
+                            if (data.id) {
+                                let contentHtml = data.content ? `<div class="question-content" style="opacity: 0; transform: translateY(20px); transition: all 0.5s;">"${data.content}"</div>` : '';
+                                let audioHtml = data.audio_path ? `
+                                    <div style="margin-top: 1rem; opacity: 0; transform: translateY(10px); transition: all 0.5s;" class="audio-container">
+                                        <audio controls style="height: 50px; width: 400px;">
+                                            <source src="/storage/${data.audio_path}" type="audio/webm">
+                                        </audio>
+                                    </div>
+                                ` : '';
+                                
+                                container.innerHTML = `
+                                    ${contentHtml}
+                                    ${audioHtml}
+                                    <div class="question-author" style="opacity: 0; transform: translateY(10px); transition: all 0.5s;">${data.pseudo}</div>
+                                `;
+                                setTimeout(() => {
+                                    container.querySelectorAll('.question-content, .audio-container, .question-author').forEach(el => {
+                                        el.style.opacity = '1';
+                                        el.style.transform = 'translateY(0)';
+                                    });
+                                }, 50);
+                            } else {
+                                container.innerHTML = `<div class="empty-state" style="font-size: 2rem; color: var(--muted-foreground); font-style: italic;">En attente de la prochaine question...</div>`;
+                            }
                         }
                     }
                 }
+
 
 
                 const qaList = document.getElementById('qa-list');
