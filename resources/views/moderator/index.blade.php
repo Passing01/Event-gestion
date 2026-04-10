@@ -137,13 +137,28 @@
     </div>
 
     {{-- Fenêtre flottante pour voir le partage d'écran --}}
-    <div id="mod-screenshare-wrap" style="display:none; position:fixed; bottom:20px; right:20px; width:400px; background:#000; border-radius:1rem; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); z-index:100; border:2px solid var(--brand);">
-        <div style="background:var(--brand); color:#fff; padding:0.5rem 1rem; font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:700;">📺 APERÇU PRÉSENTATION</span>
-            <button onclick="document.getElementById('mod-screenshare-wrap').style.display='none'" style="background:none; border:none; color:#fff; cursor:pointer;">&times;</button>
+    <div id="mod-screenshare-wrap" style="display:none; position:fixed; bottom:20px; right:20px; width:600px; background:#000; border-radius:1rem; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); z-index:100; border:2px solid var(--brand); transition: width 0.3s ease;">
+        <div style="background:var(--brand); color:#fff; padding:0.5rem 1rem; font-size:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700;">📺 APERÇU PRÉSENTATION EN DIRECT</span>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="toggleModPreviewSize()" style="background:none; border:none; color:#fff; cursor:pointer; font-size: 1.2rem;" title="Agrandir/Réduire">↕️</button>
+                <button onclick="document.getElementById('mod-screenshare-wrap').style.display='none'" style="background:none; border:none; color:#fff; cursor:pointer; font-size: 1.2rem;">&times;</button>
+            </div>
         </div>
-        <video id="mod-screenshare-video" autoplay playsinline style="width:100%; height:auto; display:block; background:#000;"></video>
+        <video id="mod-screenshare-video" autoplay playsinline style="width:100%; aspect-ratio: 16/9; display:block; background:#000;"></video>
     </div>
+
+    <script>
+        function toggleModPreviewSize() {
+            const wrap = document.getElementById('mod-screenshare-wrap');
+            if (wrap.style.width === '600px' || wrap.style.width === '') {
+                wrap.style.width = '900px';
+            } else {
+                wrap.style.width = '600px';
+            }
+        }
+    </script>
+
 </div>
 
 

@@ -71,12 +71,9 @@
             gap: 0;
         }
         .projection-container.full-mode .qa-sidebar {
-            opacity: 0;
-            pointer-events: none;
-            width: 0;
-            margin: 0;
-            padding: 0;
+            display: none !important;
         }
+
         .main-content {
             display: flex;
             flex-direction: column;
@@ -432,10 +429,12 @@
                         isScreenSharingActive = true;
                         const container = document.getElementById('projection-content');
                         container.innerHTML = `
-                            <div style="width: 100%; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center;">
-                                <video id="screenshare-video" autoplay playsinline style="max-width: 100%; max-height: 100vh; object-fit: contain;"></video>
+                            <div style="width: 100vw; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 100;">
+                                <video id="screenshare-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                                <button onclick="toggleFullscreen()" style="position: absolute; top: 2rem; right: 2rem; background: var(--brand); color: #fff; border: none; padding: 1rem 2rem; border-radius: 999px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.4); z-index: 110;">📺 Passer en plein écran</button>
                             </div>
                         `;
+
                         const video = document.getElementById('screenshare-video');
                         video.srcObject = remoteStream;
 
