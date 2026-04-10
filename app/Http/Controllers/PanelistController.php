@@ -99,6 +99,10 @@ class PanelistController extends Controller
             ->where('user_id', Auth::id())
             ->exists();
 
+        if (!$isPanelist) {
+            return back()->with('error', "Vous n'êtes pas enregistré comme panéliste pour cet événement.");
+        }
+
         if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
             return back()->with('error', "Cet événement n'a pas encore commencé. Accès autorisé à partir de : " . $event->scheduled_at->format('d/m/Y H:i'));
         }
