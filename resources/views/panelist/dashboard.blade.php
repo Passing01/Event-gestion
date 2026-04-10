@@ -259,19 +259,31 @@
                 
                 window.activeCalls = [];
 
-                // On appelle chaque projecteur
-                projectors.forEach(proj => {
-                    const call = peer.call(proj.id, screenStream, {
+                if (projectors.length === 0) {
+                    console.log("Aucun projecteur dynamique trouvé, tentative sur ID par défaut...");
+                    // Tentative de secours sur l'ID classique
+                    const fallbackCall = peer.call(`${eventCode}-PROJECTOR`, screenStream, {
                         metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
                     });
-                    window.activeCalls.push(call);
-                });
+                    window.activeCalls.push(fallbackCall);
+                } else {
+                    console.log(`${projectors.length} projecteur(s) trouvé(s).`);
+                    projectors.forEach(proj => {
+                        const call = peer.call(proj.id, screenStream, {
+                            metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
+                        });
+                        window.activeCalls.push(call);
+                    });
+                }
 
-                // On appelle aussi le modérateur (ID fixe car un seul modérateur par event)
+                // On appelle aussi le modérateur
                 const modCall = peer.call(`${eventCode}-MODERATOR`, screenStream, {
                     metadata: { type: 'screenshare', name: '{{ Auth::user()->name }}' }
                 });
                 window.activeCalls.push(modCall);
+                
+                alert(`${window.activeCalls.length} écran(s) de réception contacté(s).`);
+
 
                 screenStream.getVideoTracks()[0].onended = () => {
 

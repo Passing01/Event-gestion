@@ -408,15 +408,18 @@
                 if (err.type === 'unavailable-id') {
                     alert("ERREUR CRITIQUE : Cette fenêtre de projection ne peut pas recevoir le partage d'écran car une autre fenêtre de projection est déjà ouverte ailleurs. Veuillez fermer les autres onglets du projecteur.");
                 }
-            });
-            
-            peer.on('call', (call) => {
-
+               peer.on('call', (call) => {
                 console.log("Appel entrant reçu de:", call.metadata?.name || 'Inconnu');
+                
+                // Si c'est un partage d'écran, on bloque le polling immédiatement
+                if (call.metadata?.type === 'screenshare') {
+                    isScreenSharingActive = true;
+                }
+
                 call.answer(); 
                 
                 call.on('stream', (remoteStream) => {
-                    if (remoteStream.getVideoTracks().length > 0) {
+                    if (remoteStream.getVideoTracks().length > 0 || call.metadata?.type === 'screenshare') {
                         isScreenSharingActive = true;
                         const container = document.getElementById('projection-content');
                         container.innerHTML = `
@@ -436,6 +439,7 @@
                             fetchAnswering();
                         };
                     } else {
+                        // Cas Audio
                         document.getElementById('live-mic-alert').style.display = 'flex';
                         document.getElementById('live-mic-author').textContent = call.metadata?.name || 'Participant';
                         document.getElementById('voice-indicator').style.display = 'flex';
@@ -453,7 +457,13 @@
                     document.getElementById('voice-indicator').style.display = 'none';
                     fetchAnswering();
                 });
-                call.on('error', (err) => console.error("Erreur PeerJS Appel:", err));
+                call.on('error', (err) => {
+                    console.error("Erreur PeerJS Appel:", err);
+                    isScreenSharingActive = false;
+                    fetchAnswering();
+                });
+            });
+pel:", err));
             });
         } catch (e) {
             console.error("PeerJS non disponible :", e);
