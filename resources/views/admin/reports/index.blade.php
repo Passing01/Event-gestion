@@ -1,12 +1,20 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Rapports et Statistiques')
 
 @section('content')
-<header>
-    <h1>Rapports et Statistiques</h1>
-    <a href="{{ route('admin.reports.generate') }}" class="btn btn-primary">
-        <i class="fas fa-download"></i> Générer un rapport complet
-    </a>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Rapports</h1>
+            <p class="dash-subtitle">Analyses globales de la plateforme.</p>
+        </div>
+        <div class="dash-actions">
+            <a href="{{ route('admin.reports.generate') }}" class="btn btn-primary">
+                <i class="fas fa-download"></i> Générer un rapport complet
+            </a>
+        </div>
+    </div>
 
 <div class="stats-grid">
     <div class="card stat-card">
@@ -39,5 +47,6 @@
         <h3>Performance Plateforme</h3>
         <p style="color: #94a3b8; margin-top: 1rem;">Les données de performance sont stables.</p>
     </div>
+</div>
 </div>
 @endsection

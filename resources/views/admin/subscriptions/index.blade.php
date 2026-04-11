@@ -1,9 +1,15 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Gestion des Abonnements')
 
 @section('content')
-<header>
-    <h1>Gestion des Abonnements</h1>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Abonnements</h1>
+            <p class="dash-subtitle">Gérez les plans des utilisateurs.</p>
+        </div>
+    </div>
 
 <div class="card">
     <p style="color: #94a3b8; margin-bottom: 2rem;">Liste des utilisateurs et leurs plans actuels.</p>
@@ -44,5 +50,6 @@
     <div style="margin-top: 1rem;">
         {{ $users->links() }}
     </div>
+</div>
 </div>
 @endsection

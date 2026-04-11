@@ -1,9 +1,15 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Gestion des Événements')
 
 @section('content')
-<header>
-    <h1>Gestion des Événements</h1>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Événements</h1>
+            <p class="dash-subtitle">Surveillez tous les événements de la plateforme.</p>
+        </div>
+    </div>
 
 <div class="card">
     <div style="margin-bottom: 2rem;">
@@ -59,5 +65,6 @@
     <div style="margin-top: 1rem;">
         {{ $events->links() }}
     </div>
+</div>
 </div>
 @endsection

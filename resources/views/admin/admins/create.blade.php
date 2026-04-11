@@ -1,9 +1,14 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Créer un Administrateur')
 
 @section('content')
-<header>
-    <h1>Créer un Administrateur</h1>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Nouvel Administrateur</h1>
+        </div>
+    </div>
 
 <div class="card" style="max-width: 600px;">
     <form action="{{ route('admin.admins.store') }}" method="POST">
@@ -26,5 +31,6 @@
             <a href="{{ route('admin.admins.index') }}" class="btn btn-outline">Annuler</a>
         </div>
     </form>
+</div>
 </div>
 @endsection

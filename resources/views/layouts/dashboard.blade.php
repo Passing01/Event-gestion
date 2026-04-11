@@ -47,6 +47,71 @@
                         <!-- Navigation -->
                         <nav class="sidebar-nav">
                             <ul>
+                                @if(Auth::user()->role === 'admin')
+                                <li>
+                                    <a href="{{ route('admin.dashboard') }}"
+                                       class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z" />
+                                        </svg>
+                                        <span>Tableau de bord</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.admins.index') }}"
+                                       class="{{ request()->routeIs('admin.admins.*') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span>Admins</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.users.index') }}"
+                                       class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                        </svg>
+                                        <span>Utilisateurs</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.events.index') }}"
+                                       class="{{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                        </svg>
+                                        <span>Événements</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.subscriptions.index') }}"
+                                       class="{{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75-10.5h16.5a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 18V4.5a1.5 1.5 0 011.5-1.5z" />
+                                        </svg>
+                                        <span>Abonnements</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.marketplace.index') }}"
+                                       class="{{ request()->routeIs('admin.marketplace.*') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-16.5 0V15m0 0v-1.5a6.75 6.75 0 0113.5 0v1.5m-13.5 0h13.5m-13.5 0a2.25 2.25 0 00-2.25 2.25v2.25m13.5-4.5a2.25 2.25 0 012.25 2.25v2.25" />
+                                        </svg>
+                                        <span>Marketplace</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.reports.index') }}"
+                                       class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                        </svg>
+                                        <span>Rapports</span>
+                                    </a>
+                                </li>
+                                @else
                                 <li>
                                     <a href="{{ route('dashboard.index') }}"
                                        class="{{ request()->routeIs('dashboard.index') ? 'active' : '' }}"
@@ -126,17 +191,6 @@
                                     </a>
                                 </li>
                                 @endif
-                                @if(Auth::user()->role === 'admin')
-                                <li>
-                                    <a href="{{ route('admin.dashboard') }}" style="color: #6366f1; font-weight: 600;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.744c0 5.578 3.65 10.301 8.72 12.13a11.97 11.97 0 0010.56-12.13c0-1.308-.205-2.567-.582-3.744A11.946 11.946 0 0112 2.714z" />
-                                        </svg>
-                                        <span>Administration</span>
-                                    </a>
-                                </li>
                                 @endif
                                 <li>
                                     <a href="{{ route('marketplace.index') }}"
@@ -300,7 +354,7 @@
                                 <div class="dropdown" id="user-dropdown">
                                     <button class="avatar-btn" onclick="toggleDropdown('user-dropdown')"
                                             aria-label="Menu utilisateur">
-                                        <div class="avatar">JR</div>
+                                        <div class="avatar">{{ substr(Auth::user()->name, 0, 2) }}</div>
                                     </button>
                                     <div class="dropdown-content">
                                         <div class="dropdown-label" style="display:flex;align-items:center;gap:0.5rem;">

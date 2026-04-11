@@ -38,6 +38,10 @@ class AuthController extends Controller
                 return redirect()->route('panelist.index');
             }
 
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
             return redirect()->intended(route('dashboard.index'));
         }
 

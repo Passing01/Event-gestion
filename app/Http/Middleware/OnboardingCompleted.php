@@ -16,6 +16,10 @@ class OnboardingCompleted
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return $next($request);
+        }
+
         if (Auth::check() && !Auth::user()->onboarding_completed) {
             return redirect()->route('onboarding.index');
         }

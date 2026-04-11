@@ -1,13 +1,15 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Administration - Tableau de bord')
 
 @section('content')
-<header>
-    <h1>Tableau de bord</h1>
-    <div class="user-profile">
-        <span>{{ auth()->user()->name }}</span>
-        <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}&background=6366f1&color=fff" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%;">
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Administration</h1>
+            <p class="dash-subtitle">Bienvenue sur votre espace de gestion global.</p>
+        </div>
     </div>
-</header>
 
 <div class="stats-grid">
     <div class="card stat-card">
@@ -33,5 +35,6 @@
         <h3 style="margin-bottom: 1.5rem;">Activités récentes</h3>
         <p style="color: #94a3b8;">Aucune activité récente à afficher.</p>
     </div>
+</div>
 </div>
 @endsection

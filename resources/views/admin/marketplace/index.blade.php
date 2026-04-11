@@ -1,9 +1,15 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Gestion Marketplace')
 
 @section('content')
-<header>
-    <h1>Gestion Marketplace</h1>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Marketplace</h1>
+            <p class="dash-subtitle">Gérez les événements publiés sur le marketplace.</p>
+        </div>
+    </div>
 
 <div class="card">
     <table>
@@ -39,5 +45,6 @@
     <div style="margin-top: 1rem;">
         {{ $events->links() }}
     </div>
+</div>
 </div>
 @endsection

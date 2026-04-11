@@ -1,10 +1,18 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Détails de l\'événement')
 
 @section('content')
-<header>
-    <h1>Détails de l'événement : {{ $event->name }}</h1>
-    <a href="{{ route('admin.events.index') }}" class="btn btn-outline">Retour</a>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Détails de l'événement</h1>
+            <p class="dash-subtitle">{{ $event->name }}</p>
+        </div>
+        <div class="dash-actions">
+            <a href="{{ route('admin.events.index') }}" class="btn btn-outline">Retour</a>
+        </div>
+    </div>
 
 <div class="stats-grid">
     <div class="card stat-card">
@@ -63,5 +71,6 @@
     @else
     <p style="color: #94a3b8;">Aucun panéliste pour cet événement.</p>
     @endif
+</div>
 </div>
 @endsection

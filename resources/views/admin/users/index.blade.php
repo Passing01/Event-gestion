@@ -1,9 +1,15 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Gestion des Utilisateurs')
 
 @section('content')
-<header>
-    <h1>Gestion des Utilisateurs</h1>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Utilisateurs</h1>
+            <p class="dash-subtitle">Gérez les modérateurs et les participants.</p>
+        </div>
+    </div>
 
 <div class="card">
     <div style="margin-bottom: 2rem;">
@@ -61,5 +67,6 @@
     <div style="margin-top: 1rem;">
         {{ $users->links() }}
     </div>
+</div>
 </div>
 @endsection

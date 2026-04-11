@@ -1,12 +1,20 @@
-@extends('admin.layout')
+@extends('layouts.dashboard')
+
+@section('title', 'Gestion des Administrateurs')
 
 @section('content')
-<header>
-    <h1>Gestion des Administrateurs</h1>
-    <a href="{{ route('admin.admins.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Nouvel Admin
-    </a>
-</header>
+<div class="dash-content">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Administrateurs</h1>
+            <p class="dash-subtitle">Gérez les comptes d'accès à la plateforme.</p>
+        </div>
+        <div class="dash-actions">
+            <a href="{{ route('admin.admins.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvel Admin
+            </a>
+        </div>
+    </div>
 
 <div class="card">
     <table>
@@ -65,5 +73,6 @@
     <div style="margin-top: 1rem;">
         {{ $admins->links() }}
     </div>
+</div>
 </div>
 @endsection

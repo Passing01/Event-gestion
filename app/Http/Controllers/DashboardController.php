@@ -12,6 +12,10 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+        
         $events = Auth::user()->events()->orderBy('date', 'desc')->get();
         return view('dashboard.index', compact('events'));
     }
