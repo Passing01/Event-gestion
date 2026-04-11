@@ -126,6 +126,18 @@
                                     </a>
                                 </li>
                                 @endif
+                                @if(Auth::user()->role === 'admin')
+                                <li>
+                                    <a href="{{ route('admin.dashboard') }}" style="color: #6366f1; font-weight: 600;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.744c0 5.578 3.65 10.301 8.72 12.13a11.97 11.97 0 0010.56-12.13c0-1.308-.205-2.567-.582-3.744A11.946 11.946 0 0112 2.714z" />
+                                        </svg>
+                                        <span>Administration</span>
+                                    </a>
+                                </li>
+                                @endif
                                 <li>
                                     <a href="{{ route('marketplace.index') }}"
                                        class="{{ request()->routeIs('marketplace.*') ? 'active' : '' }}">

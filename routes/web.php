@@ -7,6 +7,22 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ModeratorController;
+use App\Http\Controllers\ProjectionController;
+use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\InsightsController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\PanelistController;
+use App\Http\Controllers\Admin\AdminManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\EventManagementController;
+use App\Http\Controllers\Admin\SubscriptionManagementController;
+use App\Http\Controllers\Admin\MarketplaceManagementController;
+use App\Http\Controllers\Admin\ReportManagementController;
+
 
 
 
@@ -27,11 +43,11 @@ Route::get('/', function () {
 // ──────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     // Connexion
-    Route::get('/signin',  [AuthController::class, 'signinForm'])->name('login');
+    Route::get('/signin', [AuthController::class, 'signinForm'])->name('login');
     Route::post('/signin', [AuthController::class, 'signin'])->name('login.post');
 
     // Inscription
-    Route::get('/signup',  [AuthController::class, 'signupForm'])->name('auth.signup');
+    Route::get('/signup', [AuthController::class, 'signupForm'])->name('auth.signup');
     Route::post('/signup', [AuthController::class, 'signup'])->name('auth.signup.post');
 
     // Déconnexion
@@ -71,9 +87,6 @@ Route::middleware(['auth', 'verified'])->prefix('onboarding')->name('onboarding.
     Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
 });
 
-use App\Http\Controllers\ModeratorController;
-use App\Http\Controllers\ProjectionController;
-use App\Http\Controllers\ParticipantController;
 
 // ──────────────────────────────────────────────
 //  Routes Participant (Public)
@@ -101,34 +114,27 @@ Route::get('/e/{code}/projection', [ProjectionController::class, 'index'])->name
 Route::get('/e/{code}/projection/api', [ProjectionController::class, 'getAnswering'])->name('projection.api');
 Route::post('/projection/{code}/set-question/{id}', [ProjectionController::class, 'setQuestion']);
 
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StatisticsController;
 
-use App\Http\Controllers\InsightsController;
-
-use App\Http\Controllers\SubscriptionController;
-use App\Http\Controllers\PanelistController;
 
 // ──────────────────────────────────────────────
 //  Routes du Dashboard (Protégées)
 // ──────────────────────────────────────────────
 Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboard')->name('dashboard.')->group(function () {
-    Route::get('/',            [DashboardController::class, 'index'])->name('index');
-    
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+
     // Gestion des Événements (CRUD)
     Route::prefix('events')->name('events.')->group(function () {
-        Route::get('/',                [EventController::class, 'index'])->name('index');
-        Route::get('/create',          [EventController::class, 'create'])->name('create');
-        Route::post('/',               [EventController::class, 'store'])->name('store');
-        Route::get('/{id}',            [EventController::class, 'show'])->name('show');
-        Route::get('/{id}/edit',       [EventController::class, 'edit'])->name('edit');
-        Route::put('/{id}',            [EventController::class, 'update'])->name('update');
-        Route::delete('/{id}',         [EventController::class, 'destroy'])->name('destroy');
+        Route::get('/', [EventController::class, 'index'])->name('index');
+        Route::get('/create', [EventController::class, 'create'])->name('create');
+        Route::post('/', [EventController::class, 'store'])->name('store');
+        Route::get('/{id}', [EventController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [EventController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [EventController::class, 'update'])->name('update');
+        Route::delete('/{id}', [EventController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-status', [EventController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/{id}/close', [EventController::class, 'close'])->name('close');
         Route::get('/{id}/export-presence', [EventController::class, 'exportPresence'])->name('export-presence');
-        
+
         // Panelists
         Route::post('/{id}/panelists', [PanelistController::class, 'store'])->name('panelists.store');
         Route::put('/panelists/{panelistId}', [PanelistController::class, 'update'])->name('panelists.update');
@@ -136,8 +142,8 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
     });
 
     // Profil
-    Route::get('/profile',          [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile',          [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Statistiques
@@ -145,8 +151,8 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
 
     // IA Insights
     Route::prefix('insights')->name('insights.')->group(function () {
-        Route::get('/',            [InsightsController::class, 'index'])->name('index');
-        Route::get('/{id}',        [InsightsController::class, 'show'])->name('show');
+        Route::get('/', [InsightsController::class, 'index'])->name('index');
+        Route::get('/{id}', [InsightsController::class, 'show'])->name('show');
         Route::get('/{id}/export', [InsightsController::class, 'export'])->name('export');
         Route::post('/{id}/toggle-marketplace', [InsightsController::class, 'toggleMarketplace'])->name('toggle-marketplace');
     });
@@ -160,19 +166,19 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
 Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/event/{id}/moderation', [ModeratorController::class, 'index'])->name('moderator.index');
     Route::post('/question/{id}/status', [ModeratorController::class, 'updateStatus'])->name('moderator.status');
-    Route::post('/question/{id}/edit',   [ModeratorController::class, 'updateContent'])->name('moderator.edit');
-    Route::post('/question/{id}/reply',  [ModeratorController::class, 'storeReply'])->name('moderator.reply');
-    Route::post('/hand/{id}/status',     [ModeratorController::class, 'updateHandStatus'])->name('moderator.hand-status');
+    Route::post('/question/{id}/edit', [ModeratorController::class, 'updateContent'])->name('moderator.edit');
+    Route::post('/question/{id}/reply', [ModeratorController::class, 'storeReply'])->name('moderator.reply');
+    Route::post('/hand/{id}/status', [ModeratorController::class, 'updateHandStatus'])->name('moderator.hand-status');
 
     // Nouvelles routes pour le temps réel (Polling)
     Route::get('/{id}/moderator/questions-fetch', [ModeratorController::class, 'fetchQuestionsPartial'])->name('dashboard.moderator.fetch');
     Route::get('/{id}/panelist/questions-fetch', [PanelistController::class, 'fetchQuestionsPartial'])->name('dashboard.panelist.fetch');
 
     // Gestion du temps et paramètres
-    Route::post('/event/{id}/settings',  [ModeratorController::class, 'updateSettings'])->name('moderator.settings');
-    Route::post('/panelist/{id}/start',  [ModeratorController::class, 'startPresentation'])->name('moderator.panelist.start');
+    Route::post('/event/{id}/settings', [ModeratorController::class, 'updateSettings'])->name('moderator.settings');
+    Route::post('/panelist/{id}/start', [ModeratorController::class, 'startPresentation'])->name('moderator.panelist.start');
     Route::post('/panelist/{id}/extend', [ModeratorController::class, 'addPresentationTime'])->name('moderator.panelist.extend');
-    Route::post('/panelist/{id}/stop',   [ModeratorController::class, 'stopPresentation'])->name('moderator.panelist.stop');
+    Route::post('/panelist/{id}/stop', [ModeratorController::class, 'stopPresentation'])->name('moderator.panelist.stop');
 });
 
 use App\Http\Controllers\MarketplaceController;
@@ -181,8 +187,8 @@ use App\Http\Controllers\MarketplaceController;
 //  Routes Marketplace (Public)
 // ──────────────────────────────────────────────
 Route::prefix('marketplace')->name('marketplace.')->group(function () {
-    Route::get('/',            [MarketplaceController::class, 'index'])->name('index');
-    Route::get('/{id}',        [MarketplaceController::class, 'show'])->name('show');
+    Route::get('/', [MarketplaceController::class, 'index'])->name('index');
+    Route::get('/{id}', [MarketplaceController::class, 'show'])->name('show');
     Route::get('/{id}/replay', [MarketplaceController::class, 'replay'])->name('replay');
 });
 
@@ -208,3 +214,35 @@ Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->
 Route::get('/e/{code}/projectors', [EventController::class, 'getProjectors']);
 Route::post('/e/{code}/projector/register', [EventController::class, 'registerProjector']);
 
+
+// ──────────────────────────────────────────────
+//  Routes Administration
+// ──────────────────────────────────────────────
+
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminManagementController::class, 'dashboard'])->name('dashboard');
+
+    // Gestion des admins
+    Route::resource('admins', AdminManagementController::class);
+    Route::post('admins/{id}/toggle', [AdminManagementController::class, 'toggleStatus'])->name('admins.toggle');
+    Route::post('admins/{id}/reset-password', [AdminManagementController::class, 'resetPassword'])->name('admins.reset-password');
+
+    // Gestion des utilisateurs
+    Route::resource('users', UserManagementController::class);
+    Route::post('users/{id}/toggle', [UserManagementController::class, 'toggleStatus'])->name('users.toggle');
+
+    // Gestion des événements
+    Route::resource('events', EventManagementController::class);
+    Route::post('events/{id}/toggle-panelist/{panelistId}', [EventManagementController::class, 'togglePanelistStatus'])->name('events.toggle-panelist');
+
+    // Gestion des abonnements
+    Route::resource('subscriptions', SubscriptionManagementController::class);
+
+    // Gestion des marketplace
+    Route::resource('marketplace', MarketplaceManagementController::class);
+
+    // Gestion des rapports
+    Route::get('reports', [ReportManagementController::class, 'index'])->name('reports.index');
+    Route::get('reports/generate', [ReportManagementController::class, 'generate'])->name('reports.generate');
+});

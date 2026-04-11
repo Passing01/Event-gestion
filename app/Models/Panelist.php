@@ -17,6 +17,7 @@ class Panelist extends Model
         'is_document_shared',
         'is_projecting',
         'notes',
+        'is_active',
     ];
 
     protected $casts = [
@@ -24,6 +25,7 @@ class Panelist extends Model
         'presentation_started_at' => 'datetime',
         'is_document_shared' => 'boolean',
         'is_projecting' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function event(): BelongsTo
