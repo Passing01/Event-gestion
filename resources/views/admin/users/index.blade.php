@@ -60,7 +60,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </a>
-                            <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST">
+                            <form action="{{ route('admin.users.toggle', $user->id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-outline btn-sm" title="{{ $user->is_active ? 'Bloquer' : 'Activer' }}">
                                     @if($user->is_active)

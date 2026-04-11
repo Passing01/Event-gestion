@@ -36,8 +36,9 @@
                     <td>{{ $event->updated_at->format('d/m/Y') }}</td>
                     <td style="text-align: right;">
                         <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                            <form action="{{ route('admin.marketplace.remove', $event->id) }}" method="POST" onsubmit="return confirm('Retirer cet événement du marketplace ?')">
+                            <form action="{{ route('admin.marketplace.destroy', $event->id) }}" method="POST" onsubmit="return confirm('Retirer cet événement du marketplace ?')">
                                 @csrf
+                                @method('DELETE')
                                 <button type="submit" class="btn btn-outline btn-sm" style="color: var(--destructive);">
                                     Retirer
                                 </button>

@@ -1,15 +1,35 @@
 <!DOCTYPE html>
-<html lang="fr" data-brand="purple" id="html-root">
+<html lang="fr" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Smart Home Dashboard')</title>
-    <meta name="description" content="@yield('meta_description', 'Tableau de bord Smart Home – Gérez vos appareils, pièces et consommation d\'énergie.')">
+    <title>@yield('title', 'Dashboard') - Event Q&A</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('dashboard.css') }}">
+    
+    {{-- Injection forcée des styles admin pour éviter les problèmes de cache en prod --}}
+    <style>
+        .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .admin-table-card { overflow-x: auto; }
+        .admin-table { width: 100%; border-collapse: collapse; text-align: left; background: var(--card); }
+        .admin-table th { padding: 1rem; font-size: 0.75rem; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+        .admin-table td { padding: 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .admin-table tr:hover td { background: var(--muted); }
+        .badge { border-radius: 9999px; padding: 0.25rem 0.625rem; font-size: 0.75rem; background: var(--brand-light); color: var(--brand); flex-shrink: 0; display: inline-flex; }
+        .badge-success { background: rgba(34, 197, 94, 0.1) !important; color: #22c55e !important; }
+        .badge-error { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; }
+        .badge-info { background: rgba(59, 130, 246, 0.1) !important; color: #3b82f6 !important; }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none !important; }
+        .btn-primary { background: var(--brand) !important; color: #fff !important; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--foreground); }
+        .btn-outline:hover { background: var(--muted); }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+        .dash-title { font-size: 1.5rem; font-weight: 700; color: var(--foreground); }
+        .dash-subtitle { font-size: 0.875rem; color: var(--muted-foreground); }
+    </style>
     @stack('styles')
 </head>
 <body id="body-root">
@@ -18,26 +38,24 @@
     <div class="dashboard-outer">
         <div class="dashboard-card-wrap">
 
-            <!-- Overlay mobile -->
-            <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-
             <div class="dash-flex">
 
-                <!-- ======== SIDEBAR ======== -->
-                <div class="sidebar-mobile-wrap" id="sidebar-wrap">
-                    <aside class="sidebar" id="sidebar" aria-label="Navigation principale">
+                <!-- SIDEBAR MOBILE OVERLAY -->
+                <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-                        <!-- En-tête sidebar -->
+                <!-- SIDEBAR -->
+                <div class="sidebar-mobile-wrap" id="sidebar-wrap">
+                    <aside class="sidebar" id="sidebar">
+                        
+                        <!-- Header sidebar -->
                         <div class="sidebar-header">
-                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <div class="flex items-center gap-2">
                                 <div class="sidebar-logo">QA</div>
                                 <span class="sidebar-title">Event Q&A</span>
                             </div>
-                            <button class="sidebar-toggle" id="sidebar-collapse-btn"
-                                    onclick="toggleSidebar()" aria-label="Réduire/Agrandir la sidebar">
-                                <!-- Chevron icon (change on collapse) -->
-                                <svg id="chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                     viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="chevron-icon">
+                            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="chevron-icon" id="chevron-icon">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                           d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
                                 </svg>
@@ -196,7 +214,7 @@
                         <!-- Tip de bas de sidebar -->
                         <div class="sidebar-tip">
                             <div class="sidebar-tip-inner" id="sidebar-tip">
-                                Contrôlez votre maison en toute simplicité.
+                                Contrôlez vos évènements en toute simplicité.
                             </div>
                         </div>
 

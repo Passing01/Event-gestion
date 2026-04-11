@@ -59,7 +59,7 @@
                             </a>
                             
                             @if(auth()->id() != $admin->id)
-                            <form action="{{ route('admin.admins.toggle-status', $admin->id) }}" method="POST">
+                            <form action="{{ route('admin.admins.toggle', $admin->id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-outline btn-sm" title="{{ $admin->is_active ? 'Désactiver' : 'Activer' }}">
                                     @if($admin->is_active)
