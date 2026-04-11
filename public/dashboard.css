@@ -1307,3 +1307,103 @@ input, select, textarea { font-family: inherit; }
 }
 
 .copyright a { color: var(--brand); }
+
+/* ============================================================
+   ADMIN UTILITIES
+   ============================================================ */
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.admin-table-card {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  padding: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover td {
+  background: var(--muted);
+}
+
+/* Badge variants */
+.badge-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.badge-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.badge-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.badge-info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+.btn-outline:hover { background: var(--muted); }
+
+.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+
+.dash-content {
+  padding-bottom: 3rem;
+}
+
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.dash-title { font-size: 1.5rem; font-weight: 700; color: var(--foreground); }
+.dash-subtitle { font-size: 0.875rem; color: var(--muted-foreground); }
+
+/* Form improvements */
+.admin-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--foreground);
+}

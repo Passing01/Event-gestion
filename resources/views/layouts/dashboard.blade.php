@@ -48,170 +48,135 @@
                         <nav class="sidebar-nav">
                             <ul>
                                 @if(Auth::user()->role === 'admin')
-                                <li>
-                                    <a href="{{ route('admin.dashboard') }}"
-                                       class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z" />
-                                        </svg>
-                                        <span>Tableau de bord</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.admins.index') }}"
-                                       class="{{ request()->routeIs('admin.admins.*') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span>Admins</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.users.index') }}"
-                                       class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                                        </svg>
-                                        <span>Utilisateurs</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.events.index') }}"
-                                       class="{{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                        </svg>
-                                        <span>Événements</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.subscriptions.index') }}"
-                                       class="{{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75-10.5h16.5a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 18V4.5a1.5 1.5 0 011.5-1.5z" />
-                                        </svg>
-                                        <span>Abonnements</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.marketplace.index') }}"
-                                       class="{{ request()->routeIs('admin.marketplace.*') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-16.5 0V15m0 0v-1.5a6.75 6.75 0 0113.5 0v1.5m-13.5 0h13.5m-13.5 0a2.25 2.25 0 00-2.25 2.25v2.25m13.5-4.5a2.25 2.25 0 012.25 2.25v2.25" />
-                                        </svg>
-                                        <span>Marketplace</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.reports.index') }}"
-                                       class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                        </svg>
-                                        <span>Rapports</span>
-                                    </a>
-                                </li>
+                                    <!-- ADMIN MENU -->
+                                    <li>
+                                        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z" />
+                                            </svg>
+                                            <span>Tableau de bord</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.admins.index') }}" class="{{ request()->routeIs('admin.admins.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span>Admins</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                            </svg>
+                                            <span>Utilisateurs</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.events.index') }}" class="{{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                            </svg>
+                                            <span>Événements</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.subscriptions.index') }}" class="{{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75-10.5h16.5a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 18V4.5a1.5 1.5 0 011.5-1.5z" />
+                                            </svg>
+                                            <span>Abonnements</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.marketplace.index') }}" class="{{ request()->routeIs('admin.marketplace.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-16.5 0V15m0 0v-1.5a6.75 6.75 0 0113.5 0v1.5m-13.5 0h13.5m-13.5 0a2.25 2.25 0 00-2.25 2.25v2.25m13.5-4.5a2.25 2.25 0 012.25 2.25v2.25" />
+                                            </svg>
+                                            <span>Marketplace</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.reports.index') }}" class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                            </svg>
+                                            <span>Rapports</span>
+                                        </a>
+                                    </li>
                                 @else
-                                <li>
-                                    <a href="{{ route('dashboard.index') }}"
-                                       class="{{ request()->routeIs('dashboard.index') ? 'active' : '' }}"
-                                       aria-current="{{ request()->routeIs('dashboard.index') ? 'page' : '' }}">
-                                        <!-- Home icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                                        </svg>
-                                        <span>Accueil</span>
-                                    </a>
-                                </li>
-                                
-                                @if(Auth::user()->role === 'panelist')
-                                <li>
-                                    <a href="{{ route('panelist.index') }}"
-                                       class="{{ request()->routeIs('panelist.index') ? 'active' : '' }}">
-                                        <!-- Calendar icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                        <span>Mes Événements (Panéliste)</span>
-                                    </a>
-                                </li>
+                                    <!-- MODERATOR/PANELIST MENU -->
+                                    <li>
+                                        <a href="{{ route('dashboard.index') }}" class="{{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                            </svg>
+                                            <span>Accueil</span>
+                                        </a>
+                                    </li>
+                                    
+                                    @if(Auth::user()->role === 'panelist')
+                                    <li>
+                                        <a href="{{ route('panelist.index') }}" class="{{ request()->routeIs('panelist.index') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                            <span>Mes Événements (Panéliste)</span>
+                                        </a>
+                                    </li>
+                                    @endif
+
+                                    @if(Auth::user()->role === 'moderator')
+                                    <li>
+                                        <a href="{{ route('dashboard.events.index') }}" class="{{ request()->routeIs('dashboard.events.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                            <span>Mes Événements</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('dashboard.statistics') }}" class="{{ request()->routeIs('dashboard.statistics') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                            </svg>
+                                            <span>Statistiques</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('dashboard.insights.index') }}" class="{{ request()->routeIs('dashboard.insights.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15l.75-2.25 2.25-.75-2.25-.75-.75-2.25-.75 2.25-2.25.75 2.25.75.75 2.25zM15.75 7.5l.5-1.5 1.5-.5-1.5-.5-.5-1.5-.5 1.5-1.5.5 1.5.5.5 1.5z" />
+                                            </svg>
+                                            <span>IA Insights</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ route('dashboard.subscription.index') }}" class="{{ request()->routeIs('dashboard.subscription.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                            </svg>
+                                            <span>Abonnement</span>
+                                        </a>
+                                    </li>
+                                    @endif
+
+                                    <li>
+                                        <a href="{{ route('marketplace.index') }}" class="{{ request()->routeIs('marketplace.*') ? 'active' : '' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                                            </svg>
+                                            <span>Marketplace</span>
+                                        </a>
+                                    </li>
                                 @endif
 
-                                @if(Auth::user()->role !== 'panelist')
+                                <!-- SHARED LINKS -->
                                 <li>
-                                    <a href="{{ route('dashboard.events.index') }}"
-                                       class="{{ request()->routeIs('dashboard.events.*') ? 'active' : '' }}">
-                                        <!-- Calendar icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                        <span>Mes Événements</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('dashboard.statistics') }}"
-                                       class="{{ request()->routeIs('dashboard.statistics') ? 'active' : '' }}">
-                                        <!-- BarChart3 icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                        </svg>
-                                        <span>Statistiques</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('dashboard.insights.index') }}"
-                                       class="{{ request()->routeIs('dashboard.insights.*') ? 'active' : '' }}">
-                                        <!-- Sparkles icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15l.75-2.25 2.25-.75-2.25-.75-.75-2.25-.75 2.25-2.25.75 2.25.75.75 2.25zM15.75 7.5l.5-1.5 1.5-.5-1.5-.5-.5-1.5-.5 1.5-1.5.5 1.5.5.5 1.5z" />
-                                        </svg>
-                                        <span>IA Insights</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('dashboard.subscription.index') }}"
-                                       class="{{ request()->routeIs('dashboard.subscription.*') ? 'active' : '' }}">
-                                        <!-- CreditCard icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                        </svg>
-                                        <span>Abonnement</span>
-                                    </a>
-                                </li>
-                                @endif
-                                @endif
-                                <li>
-                                    <a href="{{ route('marketplace.index') }}"
-                                       class="{{ request()->routeIs('marketplace.*') ? 'active' : '' }}">
-                                        <!-- ShoppingCart icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                                        </svg>
-                                        <span>Marketplace</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('dashboard.profile') }}"
-                                       class="{{ request()->routeIs('dashboard.profile') ? 'active' : '' }}">
-                                        <!-- UserRound icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    <a href="{{ route('dashboard.profile') }}" class="{{ request()->routeIs('dashboard.profile') ? 'active' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                         </svg>
                                         <span>Profil</span>
                                     </a>
@@ -219,11 +184,8 @@
                                 <li>
                                     <form action="{{ route('auth.logout') }}" method="POST" id="logout-form" style="display: none;">@csrf</form>
                                     <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                        <!-- LogOut icon -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                         </svg>
                                         <span>Déconnexion</span>
                                     </a>

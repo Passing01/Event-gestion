@@ -7,49 +7,55 @@
     <div class="dash-header">
         <div>
             <h1 class="dash-title">Abonnements</h1>
-            <p class="dash-subtitle">Gérez les plans des utilisateurs.</p>
+            <p class="dash-subtitle">Gérez les plans et privilèges des utilisateurs.</p>
         </div>
     </div>
 
-<div class="card">
-    <p style="color: #94a3b8; margin-bottom: 2rem;">Liste des utilisateurs et leurs plans actuels.</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Utilisateur</th>
-                <th>Plan Actuel</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($users as $user)
-            <tr>
-                <td>{{ $user->name }} ({{ $user->email }})</td>
-                <td>
-                    <span class="badge {{ $user->plan === 'enterprise' ? 'badge-primary' : ($user->plan === 'premium' ? 'badge-info' : 'badge-outline') }}" 
-                          style="{{ $user->plan === 'enterprise' ? 'background: #7c3aed; color: #fff;' : '' }}">
-                        {{ ucfirst($user->plan ?? 'Gratuit') }}
-                    </span>
-                </td>
-                <td>
-                    <form action="{{ route('admin.subscriptions.update', $user->id) }}" method="POST" style="display: flex; gap: 0.5rem;">
-                        @csrf
-                        @method('PUT')
-                        <select name="plan" class="btn btn-outline btn-sm" style="background: var(--dark); border-radius: 4px;">
-                            <option value="free" {{ ($user->plan ?? 'free') == 'free' ? 'selected' : '' }}>Gratuit</option>
-                            <option value="premium" {{ $user->plan == 'premium' ? 'selected' : '' }}>Premium</option>
-                            <option value="enterprise" {{ $user->plan == 'enterprise' ? 'selected' : '' }}>Entreprise</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary btn-sm">Changer</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    <div style="margin-top: 1rem;">
-        {{ $users->links() }}
+    <div class="card admin-table-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Plan Actuel</th>
+                    <th>Dernière mise à jour</th>
+                    <th style="text-align: right;">Changer le plan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($users as $user)
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ $user->name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $user->email }}</div>
+                    </td>
+                    <td>
+                        <span class="badge {{ $user->plan === 'Enterprise' ? 'badge-info' : ($user->plan === 'Premium' ? 'badge-success' : 'badge-warning') }}">
+                            {{ ucfirst($user->plan ?? 'Free') }}
+                        </span>
+                    </td>
+                    <td>{{ $user->updated_at->format('d/m/Y') }}</td>
+                    <td style="text-align: right;">
+                        <form action="{{ route('admin.subscriptions.update', $user->id) }}" method="POST" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            @csrf
+                            @method('PUT')
+                            <select name="plan" class="form-input" style="height: 2.1rem; padding: 0 0.5rem; width: 120px;">
+                                <option value="Free" {{ $user->plan === 'Free' ? 'selected' : '' }}>Free</option>
+                                <option value="Premium" {{ $user->plan === 'Premium' ? 'selected' : '' }}>Premium</option>
+                                <option value="Enterprise" {{ $user->plan === 'Enterprise' ? 'selected' : '' }}>Enterprise</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">Mettre à jour</button>
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @if($users->hasPages())
+        <div style="padding: 1rem; border-top: 1px solid var(--border);">
+            {{ $users->links() }}
+        </div>
+        @endif
     </div>
-</div>
 </div>
 @endsection

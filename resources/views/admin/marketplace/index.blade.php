@@ -7,44 +7,53 @@
     <div class="dash-header">
         <div>
             <h1 class="dash-title">Marketplace</h1>
-            <p class="dash-subtitle">Gérez les événements publiés sur le marketplace.</p>
+            <p class="dash-subtitle">Gérez les événements publiés pour la vente.</p>
         </div>
     </div>
 
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Événement</th>
-                <th>Organisateur</th>
-                <th>Prix</th>
-                <th>Date Publication</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($events as $event)
-            <tr>
-                <td>{{ $event->name }}</td>
-                <td>{{ $event->user?->name }}</td>
-                <td>{{ $event->marketplace_price ?? 0 }} XOF</td>
-                <td>{{ $event->updated_at->format('d/m/Y') }}</td>
-                <td>
-                    <form action="{{ route('admin.marketplace.destroy', $event->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-outline btn-sm" style="color: #ef4444;">
-                            <i class="fas fa-times"></i> Retirer du Marketplace
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-    <div style="margin-top: 1rem;">
-        {{ $events->links() }}
+    <div class="card admin-table-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Événement</th>
+                    <th>Prix demandé</th>
+                    <th>Vendeur</th>
+                    <th>Date de publication</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($events as $event)
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ $event->name }}</div>
+                        <div style="font-size: 0.75rem;">Code: <code>{{ $event->code }}</code></div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--brand);">{{ number_format($event->marketplace_price ?? 0, 0, ',', ' ') }} XOF</span>
+                    </td>
+                    <td>{{ $event->user?->name }}</td>
+                    <td>{{ $event->updated_at->format('d/m/Y') }}</td>
+                    <td style="text-align: right;">
+                        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                            <form action="{{ route('admin.marketplace.remove', $event->id) }}" method="POST" onsubmit="return confirm('Retirer cet événement du marketplace ?')">
+                                @csrf
+                                <button type="submit" class="btn btn-outline btn-sm" style="color: var(--destructive);">
+                                    Retirer
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @if($events->hasPages())
+        <div style="padding: 1rem; border-top: 1px solid var(--border);">
+            {{ $events->links() }}
+        </div>
+        @endif
     </div>
-</div>
 </div>
 @endsection
