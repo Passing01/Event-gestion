@@ -38,37 +38,6 @@ class UserManagementController extends Controller
         return back()->with('success', 'Statut de l\'utilisateur mis à jour.');
     }
 
-    public function edit($id)
-    {
-        $user = User::findOrFail($id);
-        return view('admin.users.edit', compact('user'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-        ]);
-
-        $user->update($request->only('name', 'email'));
-
-        return redirect()->route('admin.users.index')->with('success', 'Utilisateur mis à jour.');
-    }
-
-    public function resetPassword($id)
-    {
-        $user = User::findOrFail($id);
-        $password = \Illuminate\Support\Str::random(12);
-        
-        $user->password = \Illuminate\Support\Facades\Hash::make($password);
-        $user->save();
-
-        return back()->with('success', "Nouveau mot de passe généré pour {$user->name} : {$password} (N'oubliez pas de le lui transmettre).");
-    }
-
     public function destroy($id)
     {
         $user = User::findOrFail($id);
