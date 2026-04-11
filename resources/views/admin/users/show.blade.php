@@ -48,7 +48,7 @@
             </div>
             
             <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
-                <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST">
+                <form action="{{ route('admin.users.toggle', $user->id) }}" method="POST">
                     @csrf
                     <button type="submit" class="btn {{ $user->is_active ? 'btn-outline' : 'btn-primary' }}" style="width: 100%; justify-content: center;">
                         {{ $user->is_active ? 'Bloquer l\'utilisateur' : 'Débloquer l\'utilisateur' }}

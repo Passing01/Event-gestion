@@ -231,6 +231,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Gestion des utilisateurs
     Route::resource('users', UserManagementController::class);
     Route::post('users/{id}/toggle', [UserManagementController::class, 'toggleStatus'])->name('users.toggle');
+    Route::post('users/{id}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
 
     // Gestion des événements
     Route::resource('events', EventManagementController::class);
