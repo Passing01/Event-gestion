@@ -165,12 +165,17 @@
                     <div style="color: var(--brand);">🏷️</div>
                     Thématiques clés
                 </div>
+                @php 
+                    $keywords = is_array($event->ai_keywords) ? $event->ai_keywords : json_decode($event->ai_keywords, true); 
+                @endphp
                 <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
-                    @foreach(json_decode($event->ai_keywords, true) as $kw)
-                        <span style="background: var(--brand-light); color: var(--brand); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">
-                            #{{ $kw }}
-                        </span>
-                    @endforeach
+                    @if($keywords)
+                        @foreach($keywords as $kw)
+                            <span style="background: var(--brand-light); color: var(--brand); padding: 0.5rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">
+                                #{{ $kw }}
+                            </span>
+                        @endforeach
+                    @endif
                 </div>
             </div>
             @endif
