@@ -317,19 +317,40 @@ function showLoadingState() {
 
             // Si c'est de l'AUDIO uniquement (Intervention en direct)
             console.log("Démarrage de l'enregistrement du flux audio...");
-            // On ne joue PAS le son sur le modérateur pour éviter l'écho
+            
+            // CRITIQUE : Pour que MediaRecorder reçoive des données, le flux DOIT être rattaché à un élément audio (même muet)
+            const hiddenAudio = document.createElement('audio');
+            hiddenAudio.srcObject = remoteStream;
+            hiddenAudio.muted = true; // Pour éviter l'écho chez le modérateur
+            hiddenAudio.play();
 
-            // Mais on l'enregistre
+            // On l'enregistre
             liveChunks = [];
-            liveRecorder = new MediaRecorder(remoteStream);
+            
+            // Utilisation d'un type MIME plus robuste si supporté
+            const options = { mimeType: 'audio/webm;codecs=opus' };
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                delete options.mimeType;
+            }
+            
+            liveRecorder = new MediaRecorder(remoteStream, options);
             
             liveRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) liveChunks.push(e.data);
+                if (e.data && e.data.size > 0) {
+                    liveChunks.push(e.data);
+                    console.log("Chunk reçu, taille:", e.data.size);
+                }
             };
 
             liveRecorder.onstop = async () => {
-                console.log("Enregistrement live terminé. Préparation de l'envoi...");
+                console.log("Enregistrement live terminé. Chunks collectés:", liveChunks.length);
+                if (liveChunks.length === 0) {
+                    console.error("Aucune donnée audio capturée !");
+                    return;
+                }
+                
                 const audioBlob = new Blob(liveChunks, { type: 'audio/webm' });
+                console.log("Blob final généré, taille:", audioBlob.size);
                 
                 const formData = new FormData();
                 formData.append('audio', audioBlob, 'live_contribution.webm');
@@ -337,17 +358,20 @@ function showLoadingState() {
                 formData.append('_token', '{{ csrf_token() }}');
 
                 try {
-                    await fetch(`/e/${eventCode}/save-live-audio`, {
+                    const response = await fetch(`/e/${eventCode}/save-live-audio`, {
                         method: 'POST',
                         body: formData
                     });
-                    console.log("Intervention live sauvegardée avec succès !");
+                    const resData = await response.json();
+                    console.log("Intervention live sauvegardée !", resData);
                 } catch (err) {
                     console.error("Erreur sauvegarde live audio:", err);
+                } finally {
+                    hiddenAudio.remove(); // Nettoyage
                 }
             };
 
-            liveRecorder.start();
+            liveRecorder.start(1000); // Collecter des chunks toutes les secondes
             isRecordingLive = true;
         });
 
