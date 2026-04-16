@@ -34,7 +34,7 @@ use App\Http\Controllers\Admin\ReportManagementController;
 
 // Redirection de la racine vers le dashboard
 Route::get('/', function () {
-    $marketplaceEvents = \App\Models\Event::where('is_marketplace', true)->with('user')->latest()->get();
+    $marketplaceEvents = \App\Models\Event::where('is_on_marketplace', true)->with('user')->latest()->get();
     return view('landing', compact('marketplaceEvents'));
 });
 
