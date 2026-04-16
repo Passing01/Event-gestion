@@ -92,6 +92,7 @@ Route::middleware(['auth', 'verified'])->prefix('onboarding')->name('onboarding.
 //  Routes Participant (Public)
 // ──────────────────────────────────────────────
 Route::get('/join', [ParticipantController::class, 'joinForm'])->name('participant.join');
+Route::get('/waiting/{code}', [ParticipantController::class, 'waitingRoom'])->name('participant.waiting');
 Route::get('/participant/event-info/{code}', [ParticipantController::class, 'getEventInfo']);
 Route::post('/join', [ParticipantController::class, 'join'])->name('participant.join.post');
 Route::get('/e/{code}', [ParticipantController::class, 'eventInterface'])->name('participant.event');
@@ -132,6 +133,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
         Route::put('/{id}', [EventController::class, 'update'])->name('update');
         Route::delete('/{id}', [EventController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-status', [EventController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{id}/toggle-force-open', [EventController::class, 'toggleForceOpen'])->name('toggle-force-open');
         Route::post('/{id}/close', [EventController::class, 'close'])->name('close');
         Route::get('/{id}/export-presence', [EventController::class, 'exportPresence'])->name('export-presence');
 
@@ -199,6 +201,8 @@ Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->
     Route::get('/', [PanelistController::class, 'index'])->name('index');
     Route::get('/join', [PanelistController::class, 'joinForm'])->name('join.form');
     Route::post('/join', [PanelistController::class, 'join'])->name('join');
+    Route::get('/waiting/{code}', [PanelistController::class, 'waitingRoom'])->name('waiting');
+    Route::get('/event-info/{code}', [ParticipantController::class, 'getEventInfo']);
     Route::get('/e/{code}', [PanelistController::class, 'dashboard'])->name('dashboard');
     Route::post('/e/{code}/upload', [PanelistController::class, 'upload'])->name('upload');
     Route::post('/e/{code}/delete-doc', [PanelistController::class, 'deleteDocument'])->name('delete-doc');

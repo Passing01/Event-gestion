@@ -12,10 +12,33 @@
                 <h1 style="margin-top: 0.5rem;">{{ $event->name }}</h1>
                 <p>Code de participation : <strong>{{ $event->code }}</strong></p>
             </div>
-            <div style="display: flex; gap: 0.75rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                @if($event->scheduled_at && $event->scheduled_at->isFuture() && !$event->is_forced_open)
+                    <div style="text-align: right; margin-right: 1.5rem; background: var(--brand-light); padding: 0.5rem 1rem; border-radius: 0.75rem;">
+                        <p style="font-size: 0.625rem; text-transform: uppercase; font-weight: 700; color: var(--brand); margin-bottom: 0.25rem;">Ouverture dans :</p>
+                        <p id="mod-countdown" style="font-size: 1.125rem; font-weight: 800; color: var(--brand); font-family: monospace;">00:00:00:00</p>
+                    </div>
+                    <form action="{{ route('dashboard.events.toggle-force-open', $event->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="background: #10b981; color: #fff; border: none;">
+                            Forcer l'ouverture
+                        </button>
+                    </form>
+                @elseif($event->is_forced_open)
+                    <div style="text-align: right; margin-right: 1.5rem;">
+                        <span class="badge" style="background: #ecfdf5; color: #059669; font-weight: 700; padding: 0.5rem 1rem;">Ouverture forcée active</span>
+                    </div>
+                    <form action="{{ route('dashboard.events.toggle-force-open', $event->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn-brand" style="background: #ef4444; color: #fff; border: none;">
+                            Désactiver l'ouverture forcée
+                        </button>
+                    </form>
+                @endif
+
                 <form action="{{ route('dashboard.events.toggle-status', $event->id) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn-brand" style="background: {{ $event->status == 'active' ? '#f3f4f6' : '#ecfdf5' }}; color: {{ $event->status == 'active' ? '#374151' : '#059669' }};">
+                    <button type="submit" class="btn-brand" style="background: {{ $event->status == 'active' ? '#f3f4f6' : '#ecfdf5' }}; color: {{ $event->status == 'active' ? '#374151' : '#059669' }}; border: none;">
                         {{ $event->status == 'active' ? 'Désactiver' : 'Activer' }}
                     </button>
                 </form>
@@ -392,6 +415,37 @@
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     }
+    @if($event->scheduled_at && $event->scheduled_at->isFuture() && !$event->is_forced_open)
+        const scheduledAtMod = new Date("{{ $event->scheduled_at->toIso8601String() }}").getTime();
+        const countdownEl = document.getElementById('mod-countdown');
+        
+        function updateModCountdown() {
+            const now = new Date().getTime();
+            const distance = scheduledAtMod - now;
+
+            if (distance < 0) {
+                if (countdownEl) countdownEl.innerText = "00:00:00:00";
+                window.location.reload(); 
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            if (countdownEl) {
+                countdownEl.innerText = 
+                    String(days).padStart(2, '0') + ":" + 
+                    String(hours).padStart(2, '0') + ":" + 
+                    String(minutes).padStart(2, '0') + ":" + 
+                    String(seconds).padStart(2, '0');
+            }
+        }
+
+        setInterval(updateModCountdown, 1000);
+        updateModCountdown();
+    @endif
 </script>
 
 <style>

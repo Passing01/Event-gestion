@@ -36,10 +36,14 @@
         <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
             @if($panelist->presentation_started_at)
                 @php
-                    $startTime = \Carbon\Carbon::parse($panelist->presentation_started_at);
                     $totalDurationSeconds = (int) $panelist->presentation_duration * 60;
-                    $elapsedSeconds = $startTime->diffInSeconds(now(), false);
-                    $remainingSeconds = max(0, $totalDurationSeconds - $elapsedSeconds);
+                    if (isset($panelist->remaining_seconds)) {
+                        $remainingSeconds = $panelist->remaining_seconds;
+                    } else {
+                        $startTime = \Carbon\Carbon::parse($panelist->presentation_started_at);
+                        $elapsedSeconds = $startTime->diffInSeconds(now(), false);
+                        $remainingSeconds = max(0, $totalDurationSeconds - max(0, $elapsedSeconds));
+                    }
                     $isLowTime = $remainingSeconds <= 300;
                 @endphp
                 

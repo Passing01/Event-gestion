@@ -25,7 +25,7 @@ class EventController extends Controller
      */
     public function create()
     {
-        return view('events.create');
+        return redirect()->route('dashboard.events.index')->with('open_create_modal', true);
     }
 
     /**
@@ -168,6 +168,9 @@ class EventController extends Controller
     /**
      * Activer ou désactiver un événement.
      */
+    /**
+     * Activer ou désactiver un événement.
+     */
     public function toggleStatus($id)
     {
         $event = Auth::user()->events()->findOrFail($id);
@@ -177,6 +180,21 @@ class EventController extends Controller
         $msg = ($event->status === 'active') ? 'Événement activé.' : 'Événement désactivé.';
         return back()->with('success', $msg);
     }
+
+    /**
+     * Forcer l'ouverture d'un événement programmé.
+     */
+    public function toggleForceOpen($id)
+    {
+        $event = Auth::user()->events()->findOrFail($id);
+        $event->is_forced_open = !$event->is_forced_open;
+        $event->save();
+
+        $msg = $event->is_forced_open ? 'L\'événement a été forcé à l\'ouverture.' : 'L\'ouverture forcée a été désactivée.';
+        return back()->with('success', $msg);
+    }
+
+
     /**
      * Exporter la liste de présence en PDF.
      */

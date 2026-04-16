@@ -34,6 +34,18 @@ class ModeratorController extends Controller
             return $filteredByAI->contains('id', $q->id);
         });
 
+        // Calcul du temps restant pour les chronos
+        foreach ($panelists as $panel) {
+            $panel->remaining_seconds = 0;
+            if ($panel->presentation_started_at) {
+                $startTime = \Carbon\Carbon::parse($panel->presentation_started_at);
+                $totalDurationSeconds = (int) $panel->presentation_duration * 60;
+                $elapsedSeconds = $startTime->diffInSeconds(now(), false);
+                $actualElapsed = max(0, $elapsedSeconds);
+                $panel->remaining_seconds = max(0, $totalDurationSeconds - $actualElapsed);
+            }
+        }
+
         return view('moderator.index', compact('event', 'questions', 'filteredByAI', 'panelists'));
     }
 
@@ -90,6 +102,18 @@ class ModeratorController extends Controller
         });
 
         $panelists = $event->panelists()->with('user')->get();
+        // Calcul du temps restant précis pour chaque panéliste
+        foreach ($panelists as $panel) {
+            $panel->remaining_seconds = 0;
+            if ($panel->presentation_started_at) {
+                $startTime = \Carbon\Carbon::parse($panel->presentation_started_at);
+                $totalDurationSeconds = (int) $panel->presentation_duration * 60;
+                $elapsedSeconds = $startTime->diffInSeconds(now(), false);
+                $actualElapsed = max(0, $elapsedSeconds);
+                $panel->remaining_seconds = max(0, $totalDurationSeconds - $actualElapsed);
+            }
+        }
+        
         $hands = $event->raisedHands()->where('status', '!=', 'dismissed')->orderBy('created_at', 'asc')->get();
 
         return response()->json([

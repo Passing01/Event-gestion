@@ -18,8 +18,9 @@
                     @php
                         $startTime = \Carbon\Carbon::parse($panelist->presentation_started_at);
                         $totalDurationSeconds = $panelist->presentation_duration * 60;
-                        $elapsedSeconds = now()->diffInSeconds($startTime);
-                        $remainingSeconds = max(0, $totalDurationSeconds - $elapsedSeconds);
+                        $elapsedSeconds = $startTime->diffInSeconds(now(), false);
+                        $actualElapsed = max(0, $elapsedSeconds);
+                        $remainingSeconds = max(0, $totalDurationSeconds - $actualElapsed);
                         $isLowTime = $remainingSeconds <= 300; // Moins de 5 minutes
                     @endphp
                     <div id="live-timer-box" data-remaining="{{ $remainingSeconds }}" style="background: {{ $isLowTime ? '#fee2e2' : 'var(--brand-light)' }}; border: 2px solid {{ $isLowTime ? '#dc2626' : 'var(--brand)' }}; padding: 0.5rem 1rem; border-radius: 0.75rem; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s; {{ $isLowTime ? 'animation: pulse 1s infinite;' : '' }}">
@@ -524,6 +525,10 @@
                 const display = document.getElementById('timer-display');
                 if (timerBox && display) {
                     timerBox.setAttribute('data-remaining', data.remaining_seconds);
+                    // Mettre à jour la variable globale du timer si elle existe
+                    if (window.liveTimerData) {
+                        window.liveTimerData.remaining = data.remaining_seconds;
+                    }
                 }
             }
 
@@ -564,27 +569,36 @@
         const display = document.getElementById('timer-display');
         if (!timerBox || !display) return;
 
-        let remaining = parseInt(timerBox.getAttribute('data-remaining'));
+        window.liveTimerData = {
+            remaining: parseInt(timerBox.getAttribute('data-remaining'))
+        };
         
         const interval = setInterval(() => {
-            if (remaining <= 0) {
+            if (window.liveTimerData.remaining <= 0) {
                 display.textContent = "00:00";
                 timerBox.style.background = "#fee2e2";
                 timerBox.style.borderColor = "#dc2626";
-                clearInterval(interval);
+                // On laisse l'intervalle courir ou on l'arrête, mais le polling peut le relancer
                 return;
             }
             
-            remaining--;
-            const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
-            const secs = String(remaining % 60).padStart(2, '0');
+            window.liveTimerData.remaining--;
+            const rem = window.liveTimerData.remaining;
+            const mins = String(Math.floor(rem / 60)).padStart(2, '0');
+            const secs = String(rem % 60).padStart(2, '0');
             display.textContent = `${mins}:${secs}`;
             
-            if (remaining <= 300) { // Alerte 5 min
+            if (rem <= 300) { // Alerte 5 min
                 timerBox.style.background = "#fee2e2";
                 timerBox.style.borderColor = "#dc2626";
                 timerBox.style.animation = "pulse 1s infinite";
                 display.style.color = "#dc2626";
+            } else {
+                // Reset styles si le temps est rajouté
+                timerBox.style.background = "var(--brand-light)";
+                timerBox.style.borderColor = "var(--brand)";
+                timerBox.style.animation = "none";
+                display.style.color = "var(--brand)";
             }
         }, 1000);
     }

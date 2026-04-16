@@ -24,8 +24,19 @@
                     </p>
                 </div>
                 
-                <div style="display: flex; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <a href="{{ route('panelist.dashboard', $entry->event->code) }}" class="btn-brand" style="flex: 1; text-align: center;">Accéder à la Console</a>
+                <div style="display: flex; gap: 0.75rem; border-top: 1px solid var(--border); padding-top: 1rem; align-items: center;">
+                    @php
+                        $isOpen = $entry->event->is_forced_open || !($entry->event->scheduled_at && $entry->event->scheduled_at->isFuture());
+                    @endphp
+
+                    @if($isOpen)
+                        <a href="{{ route('panelist.dashboard', $entry->event->code) }}" class="btn-brand" style="flex: 1; text-align: center;">Accéder à la Console</a>
+                    @else
+                        <div style="flex: 1;">
+                            <span class="badge" style="background: var(--brand-light); color: var(--brand); display: block; text-align: center; margin-bottom: 0.5rem;">Bientôt disponible</span>
+                            <a href="{{ route('panelist.dashboard', $entry->event->code) }}" class="btn-brand" style="flex: 1; text-align: center; background: var(--muted); color: var(--muted-foreground);">Voir le décompte</a>
+                        </div>
+                    @endif
                 </div>
             </div>
         @empty

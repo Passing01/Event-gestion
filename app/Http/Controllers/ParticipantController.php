@@ -40,10 +40,6 @@ class ParticipantController extends Controller
             return back()->withErrors(['code' => 'Cet événement est actuellement désactivé ou archivé.']);
         }
 
-        if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
-            return back()->withErrors(['code' => 'Cet événement n\'a pas encore commencé. Heure prévue : ' . $event->scheduled_at->format('d/m/Y H:i')]);
-        }
-
         // Stocker le pseudo et l'event en session
         session([
             'participant_pseudo' => $data['pseudo'],
@@ -67,7 +63,35 @@ class ParticipantController extends Controller
             ]
         );
 
+        if ($this->shouldShowWaitingRoom($event)) {
+            return redirect()->route('participant.waiting', $event->code);
+        }
+
         return redirect()->route('participant.event', $event->code);
+    }
+
+    /**
+     * Vérifie si le participant doit être dans la salle d'attente.
+     */
+    private function shouldShowWaitingRoom(Event $event)
+    {
+        if ($event->is_forced_open) return false;
+        if ($event->scheduled_at && $event->scheduled_at->isFuture()) return true;
+        return false;
+    }
+
+    /**
+     * Salle d'attente avec décompte.
+     */
+    public function waitingRoom($code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        
+        if (!$this->shouldShowWaitingRoom($event)) {
+            return redirect()->route('participant.event', $event->code);
+        }
+
+        return view('participant.waiting', compact('event'));
     }
 
     /**
@@ -81,6 +105,8 @@ class ParticipantController extends Controller
         return response()->json([
             'name' => $event->name,
             'collect_presence' => $event->collect_presence,
+            'is_open' => !$this->shouldShowWaitingRoom($event),
+            'scheduled_at' => $event->scheduled_at ? $event->scheduled_at->toIso8601String() : null,
         ]);
     }
 
@@ -95,8 +121,8 @@ class ParticipantController extends Controller
             return redirect()->route('participant.join')->withErrors(['code' => 'Cet événement est actuellement désactivé ou archivé.']);
         }
 
-        if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
-            return redirect()->route('participant.join', ['code' => $code])->withErrors(['code' => 'Cet événement n\'a pas encore commencé. Heure prévue : ' . $event->scheduled_at->format('d/m/Y H:i')]);
+        if ($this->shouldShowWaitingRoom($event)) {
+            return redirect()->route('participant.waiting', $code);
         }
 
         if (!session('participant_pseudo') || session('current_event_code') != $code) {

@@ -103,11 +103,38 @@ class PanelistController extends Controller
             return back()->with('error', "Vous n'êtes pas enregistré comme panéliste pour cet événement.");
         }
 
-        if ($event->scheduled_at && $event->scheduled_at->isFuture()) {
-            return back()->with('error', "Cet événement n'a pas encore commencé. Accès autorisé à partir de : " . $event->scheduled_at->format('d/m/Y H:i'));
+        if ($this->shouldShowWaitingRoom($event)) {
+            return redirect()->route('panelist.waiting', $event->code);
         }
 
         return redirect()->route('panelist.dashboard', $event->code);
+    }
+
+    /**
+     * Helper to check if waiting room should be shown.
+     */
+    private function shouldShowWaitingRoom(Event $event)
+    {
+        if ($event->is_forced_open) return false;
+        if ($event->scheduled_at && $event->scheduled_at->isFuture()) return true;
+        return false;
+    }
+
+    /**
+     * Waiting room for panelists.
+     */
+    public function waitingRoom($code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        $panelist = Panelist::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if (!$this->shouldShowWaitingRoom($event)) {
+            return redirect()->route('panelist.dashboard', $event->code);
+        }
+
+        return view('panelist.waiting', compact('event', 'panelist'));
     }
 
     /**
@@ -116,6 +143,11 @@ class PanelistController extends Controller
     public function dashboard($code)
     {
         $event = Event::where('code', $code)->firstOrFail();
+        
+        if ($this->shouldShowWaitingRoom($event)) {
+            return redirect()->route('panelist.waiting', $code);
+        }
+
         $panelist = Panelist::where('event_id', $event->id)
             ->where('user_id', Auth::id())
             ->firstOrFail();
@@ -159,14 +191,19 @@ class PanelistController extends Controller
             return $filteredByAI->contains('id', $q->id);
         });
 
-        // Calcul du temps restant précis avec gestion de la dérive horaire
+        // Calcul du temps restant précis
         $remainingSeconds = 0;
         if ($panelist->presentation_started_at) {
             $startTime = \Carbon\Carbon::parse($panelist->presentation_started_at);
             $totalDurationSeconds = (int) $panelist->presentation_duration * 60;
-            // Utilisation d'un diff signé pour être robuste
+            
+            // On calcule l'écoulé en secondes. diffInSeconds avec false donne un résultat signé.
+            // Si now() est avant startTime, diffInSeconds sera négatif.
             $elapsedSeconds = $startTime->diffInSeconds(now(), false);
-            $remainingSeconds = max(0, $totalDurationSeconds - $elapsedSeconds);
+            
+            // Si elapsed est négatif, ça veut dire que le chrono vient de commencer (ou drift horloge), on le met à 0.
+            $actualElapsed = max(0, $elapsedSeconds);
+            $remainingSeconds = max(0, $totalDurationSeconds - $actualElapsed);
         }
 
         return response()->json([

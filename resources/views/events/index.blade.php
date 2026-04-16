@@ -29,43 +29,63 @@
 
     {{-- Modal de Création d'Événement --}}
     <div id="create-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; padding:1.5rem; backdrop-filter: blur(8px); overflow-y: auto;">
-        <div class="card" style="width:100%; max-width:32rem; padding: 2rem; border-radius: 1.5rem; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative;">
-            <button onclick="closeCreateModal()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: var(--muted); border: none; width: 2rem; height: 2rem; border-radius: 50%; font-size: 1.25rem; cursor: pointer; color: var(--muted-foreground);">&times;</button>
+        <div class="card" style="width:100%; max-width:40rem; padding: 2.5rem; border-radius: 1.5rem; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; text-align: left;">
+            <button onclick="closeCreateModal()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: var(--muted); border: none; width: 2.25rem; height: 2.25rem; border-radius: 50%; font-size: 1.25rem; cursor: pointer; color: var(--muted-foreground); transition: all 0.2s;">&times;</button>
             
-            <h2 style="font-size: 1.5rem; font-weight: 900; color: var(--foreground); margin-bottom: 0.5rem;">Nouvel événement</h2>
-            <p style="color: var(--muted-foreground); margin-bottom: 2rem; font-size: 0.875rem;">Configurez votre session interactive en quelques secondes.</p>
+            <div style="margin-bottom: 2rem;">
+                <h2 style="font-size: 1.75rem; font-weight: 900; color: var(--foreground); margin-bottom: 0.5rem; letter-spacing: -0.025em;">Nouvel événement</h2>
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">Configurez votre session interactive premium en quelques secondes.</p>
+            </div>
             
             <form method="POST" action="{{ route('dashboard.events.store') }}" enctype="multipart/form-data">
                 @csrf
-                <div class="form-group">
-                    <label class="form-label" for="image">Image de couverture / Bannière</label>
-                    <input type="file" id="image" name="image" class="form-input" style="padding: 0.5rem; font-size: 0.75rem;" accept="image/*">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="name">Nom de l'événement</label>
-                    <input type="text" id="name" name="name" class="form-input" required placeholder="Ex: Masterclass IA 2026">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="description">Description (Optionnel)</label>
-                    <textarea id="description" name="description" class="form-input" rows="3" placeholder="De quoi s'agit-il ?"></textarea>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label class="form-label" for="date">Date</label>
-                        <input type="date" id="date" name="date" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="scheduled_at">Heure (Début)</label>
-                        <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-input">
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 0.75rem; display: block;">Image de couverture / Bannière</label>
+                    <div style="border: 2px dashed var(--border); border-radius: 1rem; padding: 2rem; text-align: center; background: var(--brand-light); cursor: pointer; position: relative;" onclick="document.getElementById('image').click()">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🖼️</div>
+                        <p style="font-size: 0.75rem; color: var(--brand); font-weight: 600;">Cliquez pour choisir une image</p>
+                        <p style="font-size: 0.625rem; color: var(--muted-foreground); margin-top: 0.25rem;">PNG, JPG ou GIF jusqu'à 2Mo</p>
+                        <input type="file" id="image" name="image" style="display: none;" accept="image/*">
                     </div>
                 </div>
 
-                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                    <button type="button" onclick="closeCreateModal()" class="btn-brand" style="background: var(--muted); color: var(--foreground); flex: 1; border: none;">Annuler</button>
-                    <button type="submit" class="btn-brand" style="flex: 2; border: none;">Lancer l'événement</button>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" for="name" style="font-weight: 600;">Nom de l'événement</label>
+                    <input type="text" id="name" name="name" class="form-input" required placeholder="Ex: Masterclass IA & Web3" style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" for="description" style="font-weight: 600;">Description (Optionnel)</label>
+                    <textarea id="description" name="description" class="form-input" rows="3" placeholder="Partagez le contexte de l'événement pour l'IA..." style="border-radius: 0.75rem; padding: 0.75rem 1rem;"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="date" style="font-weight: 600;">Date de l'événement</label>
+                        <input type="date" id="date" name="date" class="form-input" required style="border-radius: 0.75rem;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="scheduled_at" style="font-weight: 600;">Heure d'ouverture</label>
+                        <input type="datetime-local" id="scheduled_at" name="scheduled_at" class="form-input" style="border-radius: 0.75rem;">
+                    </div>
+                </div>
+
+                <div style="background: var(--muted); padding: 1.25rem; border-radius: 1rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <p style="font-weight: 700; font-size: 0.875rem;">Collecter la présence</p>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground);">Enregistrer les coordonnées des participants.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="collect_presence" value="1" class="toggle-input" onchange="updateToggleVisualsInModal(this)">
+                        <span class="toggle-track"></span>
+                        <span class="toggle-thumb"></span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" onclick="closeCreateModal()" class="btn-brand" style="background: var(--muted); color: var(--foreground); flex: 1; border: none; font-weight: 600;">Annuler</button>
+                    <button type="submit" class="btn-brand" style="flex: 2; border: none; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3);">Lancer la session</button>
                 </div>
             </form>
         </div>
@@ -193,9 +213,15 @@
                         </td>
                         <td style="padding: 1rem; font-size: 0.875rem;">{{ $event->date->format('d/m/Y') }}</td>
                         <td style="padding: 1rem;">
-                            <span class="badge" style="background: {{ $event->status == 'active' ? '#ecfdf5' : '#f3f4f6' }}; color: {{ $event->status == 'active' ? '#059669' : '#6b7280' }};">
-                                {{ ucfirst($event->status) }}
-                            </span>
+                            @if($event->is_forced_open)
+                                <span class="badge" style="background: #ecfdf5; color: #059669; font-weight: 700;">Ouvert</span>
+                            @elseif($event->scheduled_at && $event->scheduled_at->isFuture())
+                                <span class="badge" style="background: var(--brand-light); color: var(--brand);">Programmé</span>
+                            @else
+                                <span class="badge" style="background: {{ $event->status == 'active' ? '#ecfdf5' : '#f3f4f6' }}; color: {{ $event->status == 'active' ? '#059669' : '#6b7280' }};">
+                                    {{ ucfirst($event->status) }}
+                                </span>
+                            @endif
                         </td>
                         <td style="padding: 1rem; text-align: right;">
                             <div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;">
@@ -240,11 +266,29 @@
 
 @push('scripts')
 <script>
+    window.onload = function() {
+        @if(session('open_create_modal'))
+            openCreateModal();
+        @endif
+    };
+
     function openCreateModal() {
         document.getElementById('create-modal').style.display = 'flex';
     }
     function closeCreateModal() {
         document.getElementById('create-modal').style.display = 'none';
+    }
+
+    function updateToggleVisualsInModal(input) {
+        const track = input.nextElementSibling;
+        const thumb = track.nextElementSibling;
+        if (input.checked) {
+            track.style.background = 'var(--brand)';
+            thumb.style.transform = 'translateX(1.125rem)';
+        } else {
+            track.style.background = 'var(--muted)';
+            thumb.style.transform = 'translateX(0)';
+        }
     }
 
     function openEditModal(event) {

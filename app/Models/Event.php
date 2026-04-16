@@ -29,6 +29,7 @@ class Event extends Model
         'image_path',
         'collect_presence',
         'end_date',
+        'is_forced_open',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Event extends Model
         'ai_keywords' => 'json',
         'collect_presence' => 'boolean',
         'end_date' => 'date',
+        'is_forced_open' => 'boolean',
     ];
 
     public function user(): BelongsTo
