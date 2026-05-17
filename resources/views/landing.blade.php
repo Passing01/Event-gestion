@@ -174,31 +174,105 @@
         </div>
 
         <div class="feature-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
-            @forelse($marketplaceEvents->take(3) as $mEvent)
-                <div class="feature-card" style="padding: 1.5rem; display: flex; flex-direction: column;">
-                    <div style="height: 12rem; border-radius: 1rem; overflow: hidden; margin-bottom: 1.25rem; background: var(--brand-light); position: relative;">
-                        @if($mEvent->image_path)
-                            <img src="{{ asset('storage/' . $mEvent->image_path) }}" alt="{{ $mEvent->name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        @else
-                            <div style="display: grid; place-items: center; height: 100%; color: var(--brand); font-size: 2rem;">🗓️</div>
-                        @endif
-                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 999px; text-transform: uppercase;">Premium</div>
-                    </div>
-                    
-                    <h3 style="font-size: 1.125rem; margin-bottom: 0.5rem;">{{ $mEvent->name }}</h3>
-                    <p style="font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 1.5rem; flex-grow: 1;">
-                        Par {{ $mEvent->user->name }} • {{ $mEvent->updated_at->format('d M Y') }}
-                    </p>
+            @if($marketplaceEvents->count() > 0)
+                @foreach($marketplaceEvents->take(3) as $mEvent)
+                    <div class="feature-card" style="padding: 1.5rem; display: flex; flex-direction: column; background: #fff; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s;">
+                        <div style="height: 12rem; border-radius: 1rem; overflow: hidden; margin-bottom: 1.25rem; background: var(--brand-light); position: relative;">
+                            @if($mEvent->image_path)
+                                <img src="{{ asset('storage/' . $mEvent->image_path) }}" alt="{{ $mEvent->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            @else
+                                <div style="display: grid; place-items: center; height: 100%; color: var(--brand); font-size: 3rem; background: linear-gradient(135deg, var(--brand-light) 0%, #fff 100%);">🗓️</div>
+                            @endif
+                            <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 999px; text-transform: uppercase;">Premium</div>
+                            <div style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                {{ number_format($mEvent->marketplace_price ?? 14990, 0, ',', ' ') }} XOF
+                            </div>
+                        </div>
+                        
+                        <h3 style="font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--foreground);">{{ $mEvent->name }}</h3>
+                        <p style="font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 1rem; flex-grow: 1; line-height: 1.4;">
+                            {{ Str::limit($mEvent->ai_summary ?? $mEvent->description ?? "Plongez dans les détails de cet événement et découvrez les synthèses générées par notre intelligence artificielle.", 120) }}
+                        </p>
+                        <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-bottom: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; justify-content: space-between;">
+                            <span>Par <strong>{{ $mEvent->user->name }}</strong></span>
+                            <span>{{ $mEvent->updated_at->format('d M Y') }}</span>
+                        </div>
 
-                    <a href="{{ route('marketplace.show', $mEvent->id) }}" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-size: 0.8rem;">
-                        🔍 Voir les détails
+                        <a href="{{ route('marketplace.show', $mEvent->id) }}" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-size: 0.8rem; font-weight: 700; text-align: center; display: block;">
+                            🔍 Découvrir le Replay
+                        </a>
+                    </div>
+                @endforeach
+            @else
+                <!-- 1. Tech & IA -->
+                <div class="feature-card" style="padding: 1.5rem; display: flex; flex-direction: column; background: #fff; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s;">
+                    <div style="height: 12rem; border-radius: 1rem; overflow: hidden; margin-bottom: 1.25rem; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); position: relative; display: grid; place-items: center; color: #fff;">
+                        <div style="text-align: center; padding: 1rem;">
+                            <span style="font-size: 3rem; display: block; margin-bottom: 0.5rem;">🧠</span>
+                            <span style="font-weight: 800; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase;">IA & ÉDUCATION</span>
+                        </div>
+                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 999px; text-transform: uppercase;">PREMIUM</div>
+                        <div style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">19 990 XOF</div>
+                    </div>
+                    <h3 style="font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--foreground);">Tech & IA : L'Afrique de Demain</h3>
+                    <p style="font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 1rem; flex-grow: 1; line-height: 1.4;">
+                        Comment l'intelligence artificielle révolutionne les diagnostics médicaux et personnalise les apprentissages scolaires en Afrique.
+                    </p>
+                    <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-bottom: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; justify-content: space-between;">
+                        <span>Par <strong>Amina Bamba</strong></span>
+                        <span>CEO TechAfrica</span>
+                    </div>
+                    <a href="{{ route('auth.signup') }}" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-size: 0.8rem; font-weight: 700; text-align: center; display: block;">
+                        🔍 Découvrir le Replay
                     </a>
                 </div>
-            @empty
-                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; background: #f8fafc; border-radius: 2rem; border: 2px dashed #e2e8f0;">
-                    <p style="color: var(--muted-foreground);">Les premiers événements arrivent bientôt sur la Marketplace !</p>
+
+                <!-- 2. DeFi & Web3 -->
+                <div class="feature-card" style="padding: 1.5rem; display: flex; flex-direction: column; background: #fff; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s;">
+                    <div style="height: 12rem; border-radius: 1rem; overflow: hidden; margin-bottom: 1.25rem; background: linear-gradient(135deg, #10b981 0%, #047857 100%); position: relative; display: grid; place-items: center; color: #fff;">
+                        <div style="text-align: center; padding: 1rem;">
+                            <span style="font-size: 3rem; display: block; margin-bottom: 0.5rem;">⛓️</span>
+                            <span style="font-weight: 800; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase;">DEFI & WEB3</span>
+                        </div>
+                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 999px; text-transform: uppercase;">PREMIUM</div>
+                        <div style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">15 000 XOF</div>
+                    </div>
+                    <h3 style="font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--foreground);">Web3 & DeFi Summit 2026</h3>
+                    <p style="font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 1rem; flex-grow: 1; line-height: 1.4;">
+                        Une immersion totale dans la finance décentralisée, les contrats intelligents et les nouveaux modèles économiques émergents.
+                    </p>
+                    <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-bottom: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; justify-content: space-between;">
+                        <span>Par <strong>Dr. Koffi Mensah</strong></span>
+                        <span>Expert FinTech</span>
+                    </div>
+                    <a href="{{ route('auth.signup') }}" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-size: 0.8rem; font-weight: 700; text-align: center; display: block;">
+                        🔍 Découvrir le Replay
+                    </a>
                 </div>
-            @endforelse
+
+                <!-- 3. Startup Growth -->
+                <div class="feature-card" style="padding: 1.5rem; display: flex; flex-direction: column; background: #fff; border-radius: 1.5rem; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s;">
+                    <div style="height: 12rem; border-radius: 1rem; overflow: hidden; margin-bottom: 1.25rem; background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); position: relative; display: grid; place-items: center; color: #fff;">
+                        <div style="text-align: center; padding: 1rem;">
+                            <span style="font-size: 3rem; display: block; margin-bottom: 0.5rem;">🚀</span>
+                            <span style="font-weight: 800; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase;">STARTUP GROWTH</span>
+                        </div>
+                        <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--brand); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 999px; text-transform: uppercase;">PREMIUM</div>
+                        <div style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">12 500 XOF</div>
+                    </div>
+                    <h3 style="font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 800; color: var(--foreground);">Lever des fonds en Afrique</h3>
+                    <p style="font-size: 0.8125rem; color: var(--muted-foreground); margin-bottom: 1rem; flex-grow: 1; line-height: 1.4;">
+                        Les stratégies essentielles pour structurer son pitch deck et capter l'intérêt des grands fonds de capital-risque mondiaux.
+                    </p>
+                    <div style="font-size: 0.75rem; color: var(--muted-foreground); margin-bottom: 1.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; justify-content: space-between;">
+                        <span>Par <strong>Jean-Luc Kouadio</strong></span>
+                        <span>Investisseur VC</span>
+                    </div>
+                    <a href="{{ route('auth.signup') }}" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; font-size: 0.8rem; font-weight: 700; text-align: center; display: block;">
+                        🔍 Découvrir le Replay
+                    </a>
+                </div>
+            @endif
         </div>
 
         <div style="text-align: center; margin-top: 4rem;">
