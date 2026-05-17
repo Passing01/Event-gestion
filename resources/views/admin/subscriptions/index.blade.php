@@ -29,7 +29,7 @@
                         <div style="font-size: 0.75rem; color: var(--muted-foreground);">{{ $user->email }}</div>
                     </td>
                     <td>
-                        <span class="badge {{ $user->plan === 'Enterprise' ? 'badge-info' : ($user->plan === 'Premium' ? 'badge-success' : 'badge-warning') }}">
+                        <span class="badge {{ strtolower($user->plan) === 'enterprise' ? 'badge-info' : (strtolower($user->plan) === 'premium' ? 'badge-success' : (strtolower($user->plan) === 'standard' ? 'badge-primary' : 'badge-warning')) }}">
                             {{ ucfirst($user->plan ?? 'Free') }}
                         </span>
                     </td>
@@ -39,9 +39,10 @@
                             @csrf
                             @method('PUT')
                             <select name="plan" class="form-input" style="height: 2.1rem; padding: 0 0.5rem; width: 120px;">
-                                <option value="Free" {{ $user->plan === 'Free' ? 'selected' : '' }}>Free</option>
-                                <option value="Premium" {{ $user->plan === 'Premium' ? 'selected' : '' }}>Premium</option>
-                                <option value="Enterprise" {{ $user->plan === 'Enterprise' ? 'selected' : '' }}>Enterprise</option>
+                                <option value="free" {{ strtolower($user->plan) === 'free' ? 'selected' : '' }}>Free</option>
+                                <option value="standard" {{ strtolower($user->plan) === 'standard' ? 'selected' : '' }}>Standard</option>
+                                <option value="premium" {{ strtolower($user->plan) === 'premium' ? 'selected' : '' }}>Premium</option>
+                                <option value="enterprise" {{ strtolower($user->plan) === 'enterprise' ? 'selected' : '' }}>Enterprise</option>
                             </select>
                             <button type="submit" class="btn btn-primary btn-sm">Mettre à jour</button>
                         </form>

@@ -211,8 +211,11 @@ class ParticipantController extends Controller
             return back()->with('error', 'Vous devez fournir une question ou un message vocal.');
         }
 
-        // AI Auto-Moderation (only if content exists)
-        if ($data['content'] && $event->description) {
+        // AI Auto-Moderation (only if content exists and owner's plan is premium or enterprise)
+        $eventOwner = $event->user;
+        $ownerPlan = strtolower($eventOwner->plan ?? 'free');
+
+        if ($data['content'] && $event->description && in_array($ownerPlan, ['premium', 'enterprise'])) {
             $moderation = $gemini->moderateQuestion($data['content'], $event);
 
             if ($moderation['status'] !== 'ok') {

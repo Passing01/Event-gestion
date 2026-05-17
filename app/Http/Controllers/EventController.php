@@ -33,6 +33,26 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        $plan = strtolower($user->plan ?? 'free');
+
+        // Check plan limits
+        $limits = [
+            'free' => 1,
+            'standard' => 5,
+            'premium' => 10,
+            'enterprise' => PHP_INT_MAX,
+        ];
+
+        $limit = $limits[$plan] ?? 1;
+        $eventsCountThisYear = $user->events()->whereYear('date', now()->year)->count();
+
+        if ($eventsCountThisYear >= $limit) {
+            $planLabel = $plan === 'free' ? 'Gratuit' : ($plan === 'standard' ? 'Standard' : ($plan === 'premium' ? 'Premium' : 'Entreprise'));
+            return redirect()->route('dashboard.events.index')
+                ->with('error', "Vous avez atteint la limite de votre plan {$planLabel} ({$limit} événement(s) par an). Veuillez mettre à jour votre abonnement.");
+        }
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -203,6 +223,18 @@ class EventController extends Controller
         $event = Auth::user()->events()
             ->with(['participants', 'user', 'panelists.user'])
             ->findOrFail($id);
+
+        $user = Auth::user();
+        $plan = strtolower($user->plan ?? 'free');
+
+        if ($plan === 'free') {
+            return back()->with('error', "L'exportation de la liste de présence n'est pas disponible pour le plan Gratuit. Veuillez passer à un plan Standard ou Premium.");
+        }
+
+        if ($plan === 'standard') {
+            // Limited Export: only the first 10 participants are exported
+            $event->setRelation('participants', $event->participants->take(10));
+        }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('events.presence_pdf', compact('event'));
 

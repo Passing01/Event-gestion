@@ -54,13 +54,23 @@
                         </div>
                     </label>
                     <label style="cursor: pointer; display: block;">
+                        <input type="radio" name="plan" value="standard" class="hidden" style="display: none;">
+                        <div class="plan-card" style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.75rem; transition: border-color 0.2s, background 0.2s;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600;">Standard</span>
+                                <span style="font-size: 0.75rem; color: var(--brand);">Populaire</span>
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Export de liste de présence limité, 5 événements/an.</p>
+                        </div>
+                    </label>
+                    <label style="cursor: pointer; display: block;">
                         <input type="radio" name="plan" value="premium" class="hidden" style="display: none;">
                         <div class="plan-card" style="padding: 1rem; border: 1px solid var(--border); border-radius: 0.75rem; transition: border-color 0.2s, background 0.2s;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 600;">Premium (IA)</span>
                                 <span style="font-size: 0.75rem; color: var(--brand);">Essai 14j offert</span>
                             </div>
-                            <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Tri automatique par IA, analyse de sentiment.</p>
+                            <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Tri automatique par IA, analyse de sentiment, 10 événements/an.</p>
                         </div>
                     </label>
                 </div>
@@ -72,6 +82,12 @@
             <div style="margin-top: 2rem; display: flex; gap: 1rem;">
                 <a href="{{ route('onboarding.index') }}" class="btn-brand" style="background: var(--muted); color: var(--foreground); flex: 1; text-align: center; line-height: 2.5rem;">← Retour</a>
                 <button type="submit" class="btn-brand" style="flex: 2;">Terminer la configuration →</button>
+            </div>
+            
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="{{ route('onboarding.skip-plan') }}" style="font-size: 0.875rem; color: var(--muted-foreground); text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='var(--brand)'" onmouseout="this.style.color='var(--muted-foreground)'">
+                    Passer cette étape et choisir plus tard (Accès limité)
+                </a>
             </div>
         </form>
     </div>

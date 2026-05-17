@@ -18,7 +18,7 @@ class SubscriptionManagementController extends Controller
     {
         $user = User::findOrFail($id);
         $request->validate([
-            'plan' => 'required|in:free,premium,enterprise',
+            'plan' => 'required|in:free,standard,premium,enterprise',
         ]);
 
         $user->plan = $request->plan;

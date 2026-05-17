@@ -74,11 +74,27 @@
                         </button>
                     </form>
                 </div>
-                @if($event->is_on_marketplace)
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-                    <a href="{{ route('marketplace.show', $event->id) }}" target="_blank" style="color: var(--brand); font-size: 0.875rem; font-weight: 600; text-decoration: none;">Voir l'annonce Marketplace ↗</a>
+                @php
+                    $plan = strtolower(auth()->user()->plan ?? 'free');
+                @endphp
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.75rem;">
+                    @if($event->is_on_marketplace)
+                        <a href="{{ route('marketplace.show', $event->id) }}" target="_blank" style="color: var(--brand); font-size: 0.875rem; font-weight: 600; text-decoration: none;">Voir l'annonce Marketplace ↗</a>
+                    @endif
+                    
+                    <div style="padding: 0.75rem; border-radius: 0.5rem; background: var(--muted); border: 1px dashed var(--border);">
+                        <p style="font-size: 0.75rem; font-weight: 600; margin: 0; color: var(--foreground);">✨ Règle Marketplace (Abonnement {{ ucfirst($plan) }}) :</p>
+                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0.25rem 0 0 0; line-height: 1.4;">
+                            @if($plan === 'free' || $plan === 'standard')
+                                Les revenus du marketplace sont la propriété exclusive de <strong>Event Q&A</strong>.
+                            @elseif($plan === 'premium')
+                                Vous conservez <strong>25%</strong> des revenus générés sur le marketplace.
+                            @elseif($plan === 'enterprise')
+                                Vous conservez <strong>50%</strong> des revenus générés sur le marketplace.
+                            @endif
+                        </p>
+                    </div>
                 </div>
-                @endif
             </section>
             @endif
 

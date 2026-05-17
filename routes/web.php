@@ -91,6 +91,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->prefix('onboar
     Route::get('/', [OnboardingController::class, 'index'])->name('index');
     Route::post('/step/{step}', [OnboardingController::class, 'saveStep'])->name('save-step');
     Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
+    Route::get('/skip-plan', [OnboardingController::class, 'skipPlan'])->name('skip-plan');
 });
 
 
@@ -126,7 +127,7 @@ Route::post('/projection/{code}/set-question/{id}', [ProjectionController::class
 // ──────────────────────────────────────────────
 //  Routes du Dashboard (Protégées)
 // ──────────────────────────────────────────────
-Route::middleware(['auth', 'verified', 'onboarding.completed', 'force.password.change'])->prefix('dashboard')->name('dashboard.')->group(function () {
+Route::middleware(['auth', 'verified', 'onboarding.completed', 'force.password.change', 'active.plan'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
 
     // Gestion des Événements (CRUD)
@@ -171,7 +172,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'force.password.c
 });
 
 // Console de Modération (Accessible aussi par les panélistes, donc hors onboarding.completed)
-Route::middleware(['auth', 'verified', 'force.password.change'])->prefix('dashboard')->name('dashboard.')->group(function () {
+Route::middleware(['auth', 'verified', 'force.password.change', 'active.plan'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/event/{id}/moderation', [ModeratorController::class, 'index'])->name('moderator.index');
     Route::post('/question/{id}/status', [ModeratorController::class, 'updateStatus'])->name('moderator.status');
     Route::post('/question/{id}/edit', [ModeratorController::class, 'updateContent'])->name('moderator.edit');

@@ -22,7 +22,7 @@ class SubscriptionController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'plan' => 'required|in:free,premium,enterprise',
+            'plan' => 'required|in:free,standard,premium,enterprise',
         ]);
 
         Auth::user()->update([

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboarding.completed' => \App\Http\Middleware\OnboardingCompleted::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
+            'active.plan' => \App\Http\Middleware\CheckActivePlan::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

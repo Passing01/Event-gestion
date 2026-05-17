@@ -80,4 +80,20 @@ class OnboardingController extends Controller
         Auth::user()->update(['onboarding_completed' => true]);
         return redirect()->route('dashboard.index');
     }
+
+    /**
+     * Sauter le choix de plan lors de l'onboarding.
+     */
+    public function skipPlan()
+    {
+        $user = Auth::user();
+        $user->update([
+            'plan' => 'none',
+            'onboarding_step' => 3,
+            'onboarding_completed' => true
+        ]);
+
+        return redirect()->route('dashboard.index')
+            ->with('warning', 'Vous avez ignoré la sélection du plan. Vous pouvez librement visiter la plateforme, mais vous devez choisir un plan pour effectuer des actions.');
+    }
 }

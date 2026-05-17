@@ -43,6 +43,13 @@ class InsightsController extends Controller
      */
     public function export($id)
     {
+        $user = Auth::user();
+        $plan = strtolower($user->plan ?? 'free');
+
+        if (in_array($plan, ['free', 'standard'])) {
+            return back()->with('error', "L'exportation du rapport d'analyse IA n'est pas disponible pour votre plan. Veuillez passer au plan Premium ou Entreprise.");
+        }
+
         $event = Auth::user()->events()->with(['questions.replies'])->findOrFail($id);
 
         if (!$event->closed_at) {
