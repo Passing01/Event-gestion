@@ -313,6 +313,17 @@
                                                     <span>Abonnement</span>
                                                 </a>
                                             </li>
+                                            <li>
+                                                <a href="{{ route('dashboard.my-marketplace.index') }}"
+                                                    class="{{ request()->routeIs('dashboard.my-marketplace.*') ? 'active' : '' }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                        stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-16.5 0V15m0 0v-1.5a6.75 6.75 0 0113.5 0v1.5m-13.5 0h13.5m-13.5 0a2.25 2.25 0 00-2.25 2.25v2.25m13.5-4.5a2.25 2.25 0 012.25 2.25v2.25" />
+                                                    </svg>
+                                                    <span>Mon Marketplace @if(!in_array(strtolower(Auth::user()->plan ?? 'free'), ['premium', 'entreprise'])) 🔒 @endif</span>
+                                                </a>
+                                            </li>
                                         @endif
 
                                         <li>

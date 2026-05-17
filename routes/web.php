@@ -170,6 +170,12 @@ Route::middleware(['auth', 'verified', 'onboarding.completed', 'force.password.c
     // Abonnement
     Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::post('/subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
+
+    // Mon Marketplace (Espace personnel du modérateur)
+    Route::prefix('my-marketplace')->name('my-marketplace.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ModeratorMarketplaceController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\ModeratorMarketplaceController::class, 'show'])->name('show');
+    });
 });
 
 // Console de Modération (Accessible aussi par les panélistes, donc hors onboarding.completed)
