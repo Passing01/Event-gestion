@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'onboarding.completed' => \App\Http\Middleware\OnboardingCompleted::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

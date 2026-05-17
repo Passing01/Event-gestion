@@ -86,6 +86,41 @@ class AuthController extends Controller
     }
 
     /**
+     * Page de modification forcée du mot de passe (GET).
+     */
+    public function showForceChangePasswordForm()
+    {
+        return view('auth.force-change-password');
+    }
+
+    /**
+     * Traitement de la modification forcée du mot de passe (POST).
+     */
+    public function forceChangePassword(Request $request)
+    {
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = Auth::user();
+        $user->password = $data['password'];
+        $user->must_change_password = false;
+        $user->save();
+
+        \Illuminate\Support\Facades\Log::info("Modification forcée du mot de passe réussie - User ID: " . $user->id);
+
+        if ($user->role === 'panelist') {
+            return redirect()->route('panelist.index')->with('success', 'Votre mot de passe a été mis à jour avec succès.');
+        }
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('success', 'Votre mot de passe a été mis à jour avec succès.');
+        }
+
+        return redirect()->route('dashboard.index')->with('success', 'Votre mot de passe a été mis à jour avec succès.');
+    }
+
+    /**
      * Déconnexion.
      */
     public function logout(Request $request)

@@ -8,20 +8,18 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PanelistInvitation extends Notification
+class PanelistAddedToEvent extends Notification
 {
     use Queueable;
 
     protected $event;
-    protected $password;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Event $event, $password)
+    public function __construct(Event $event)
     {
         $this->event = $event;
-        $this->password = $password;
     }
 
     /**
@@ -40,14 +38,13 @@ class PanelistInvitation extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('[' . config('app.name', 'Event Q&A') . '] Vos accès Panéliste - ' . $this->event->name)
-                    ->view('emails.panelist-access', [
-                        'userName'  => $notifiable->name,
-                        'userEmail' => $notifiable->email,
-                        'password'  => $this->password,
-                        'eventName' => $this->event->name,
-                        'appName'   => config('app.name', 'Event Q&A'),
-                        'loginUrl'  => route('login'),
+                    ->subject('[' . config('app.name', 'Event Q&A') . '] Nouvel événement ajouté - ' . $this->event->name)
+                    ->view('emails.panelist-added', [
+                        'userName'   => $notifiable->name,
+                        'eventName'  => $this->event->name,
+                        'eventTheme' => $this->event->description ?? "Aucun thème renseigné.",
+                        'appName'    => config('app.name', 'Event Q&A'),
+                        'loginUrl'   => route('login'),
                     ]);
     }
 

@@ -60,6 +60,12 @@ Route::prefix('auth')->group(function () {
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
 
+// Modification obligatoire du mot de passe (première connexion)
+Route::middleware(['auth'])->prefix('auth')->group(function () {
+    Route::get('/force-change-password', [AuthController::class, 'showForceChangePasswordForm'])->name('auth.force-change-password');
+    Route::post('/force-change-password', [AuthController::class, 'forceChangePassword'])->name('auth.force-change-password.post');
+});
+
 
 // ──────────────────────────────────────────────
 //  Routes de Vérification d'Email
@@ -81,7 +87,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 // ──────────────────────────────────────────────
 //  Routes d'Onboarding (Configuration pas à pas)
 // ──────────────────────────────────────────────
-Route::middleware(['auth', 'verified'])->prefix('onboarding')->name('onboarding.')->group(function () {
+Route::middleware(['auth', 'verified', 'force.password.change'])->prefix('onboarding')->name('onboarding.')->group(function () {
     Route::get('/', [OnboardingController::class, 'index'])->name('index');
     Route::post('/step/{step}', [OnboardingController::class, 'saveStep'])->name('save-step');
     Route::get('/complete', [OnboardingController::class, 'complete'])->name('complete');
@@ -120,7 +126,7 @@ Route::post('/projection/{code}/set-question/{id}', [ProjectionController::class
 // ──────────────────────────────────────────────
 //  Routes du Dashboard (Protégées)
 // ──────────────────────────────────────────────
-Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboard')->name('dashboard.')->group(function () {
+Route::middleware(['auth', 'verified', 'onboarding.completed', 'force.password.change'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
 
     // Gestion des Événements (CRUD)
@@ -165,7 +171,7 @@ Route::middleware(['auth', 'verified', 'onboarding.completed'])->prefix('dashboa
 });
 
 // Console de Modération (Accessible aussi par les panélistes, donc hors onboarding.completed)
-Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')->group(function () {
+Route::middleware(['auth', 'verified', 'force.password.change'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/event/{id}/moderation', [ModeratorController::class, 'index'])->name('moderator.index');
     Route::post('/question/{id}/status', [ModeratorController::class, 'updateStatus'])->name('moderator.status');
     Route::post('/question/{id}/edit', [ModeratorController::class, 'updateContent'])->name('moderator.edit');
@@ -197,7 +203,7 @@ Route::prefix('marketplace')->name('marketplace.')->group(function () {
 // ──────────────────────────────────────────────
 //  Routes Panéliste
 // ──────────────────────────────────────────────
-Route::middleware(['auth', 'verified'])->prefix('panelist')->name('panelist.')->group(function () {
+Route::middleware(['auth', 'verified', 'force.password.change'])->prefix('panelist')->name('panelist.')->group(function () {
     Route::get('/', [PanelistController::class, 'index'])->name('index');
     Route::get('/join', [PanelistController::class, 'joinForm'])->name('join.form');
     Route::post('/join', [PanelistController::class, 'join'])->name('join');
@@ -224,7 +230,7 @@ Route::post('/e/{code}/projector/register', [EventController::class, 'registerPr
 // ──────────────────────────────────────────────
 
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', 'force.password.change'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminManagementController::class, 'dashboard'])->name('dashboard');
 
     // Gestion des admins

@@ -41,10 +41,12 @@ class PanelistController extends Controller
         // Check if user exists, or create one
         $user = User::where('email', $data['email'])->first();
         $password = Str::random(10);
+        $isNewUser = false;
         
-        \Illuminate\Support\Facades\Log::info("Création panéliste - Email: " . $data['email'] . " - Password généré: " . $password);
+        \Illuminate\Support\Facades\Log::info("Création panéliste - Email: " . $data['email']);
 
         if (!$user) {
+            $isNewUser = true;
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -52,15 +54,15 @@ class PanelistController extends Controller
                 'role' => 'panelist',
                 'onboarding_completed' => true,
                 'email_verified_at' => now(), // Auto-vérification pour les panélistes
+                'must_change_password' => true, // Force password change on first login
             ]);
-            \Illuminate\Support\Facades\Log::info("Nouvel utilisateur créé pour le panéliste.");
+            \Illuminate\Support\Facades\Log::info("Nouvel utilisateur créé pour le panéliste. Password généré: " . $password);
         } else {
             $user->update([
                 'role' => 'panelist', 
-                'password' => $password, // On met à jour le mot de passe pour qu'il corresponde au mail
                 'email_verified_at' => $user->email_verified_at ?? now()
             ]);
-            \Illuminate\Support\Facades\Log::info("Utilisateur existant mis à jour en panéliste (mot de passe inclus).");
+            \Illuminate\Support\Facades\Log::info("Utilisateur existant mis à jour en panéliste (mot de passe inchangé).");
         }
 
         // Create Panelist link
@@ -70,7 +72,11 @@ class PanelistController extends Controller
         );
 
         // Send notification
-        $user->notify(new PanelistInvitation($event, $password));
+        if ($isNewUser) {
+            $user->notify(new PanelistInvitation($event, $password));
+        } else {
+            $user->notify(new \App\Notifications\PanelistAddedToEvent($event));
+        }
 
         return back()->with('success', 'Panelyste ajouté et invité avec succès.');
     }
