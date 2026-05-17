@@ -48,6 +48,31 @@
                     Partager l'écran
                 </button>
 
+                @php
+                    $currentSpeaker = \App\Models\Panelist::where('event_id', $event->id)
+                        ->where('is_speaking', true)
+                        ->with('user')
+                        ->first();
+                    
+                    $isOtherSpeaking = $currentSpeaker && $currentSpeaker->id !== $panelist->id;
+                    $isSelfSpeaking = $currentSpeaker && $currentSpeaker->id === $panelist->id;
+                @endphp
+
+                <button id="mic-toggle-btn" class="btn-brand" 
+                        style="background: {{ $isSelfSpeaking ? '#22c55e' : ($isOtherSpeaking ? '#94a3b8' : '#7c3aed') }}; color: #fff; cursor: {{ $isOtherSpeaking ? 'not-allowed' : 'pointer' }}; transition: all 0.3s;"
+                        onclick="toggleMicrophone()" {{ $isOtherSpeaking ? 'disabled' : '' }}>
+                    <span id="mic-icon" style="margin-right: 0.5rem; display: inline-block; {{ $isSelfSpeaking ? 'animation: pulse 1s infinite;' : '' }}">🎤</span>
+                    <span id="mic-text">
+                        @if($isSelfSpeaking)
+                            Micro Ouvert
+                        @elseif($isOtherSpeaking)
+                            Micro Occupé ({{ $currentSpeaker->user->name }})
+                        @else
+                            Ouvrir le Micro
+                        @endif
+                    </span>
+                </button>
+
             </div>
         </div>
     </div>
@@ -536,6 +561,35 @@
             document.getElementById('tab-btn-active').textContent = `🎯 Flux Actif (${data.counts.active})`;
             document.getElementById('tab-btn-filtered').textContent = `🤖 Filtrées par l'IA (${data.counts.filtered})`;
 
+            // Mise à jour en temps réel de l'état du micro
+            const micBtn = document.getElementById('mic-toggle-btn');
+            const micIcon = document.getElementById('mic-icon');
+            const micText = document.getElementById('mic-text');
+            
+            if (micBtn && micIcon && micText) {
+                if (data.speaking_name) {
+                    if (data.is_speaking_self) {
+                        micBtn.disabled = false;
+                        micBtn.style.background = '#22c55e';
+                        micBtn.style.cursor = 'pointer';
+                        micIcon.style.animation = 'pulse 1s infinite';
+                        micText.innerText = 'Micro Ouvert';
+                    } else {
+                        micBtn.disabled = true;
+                        micBtn.style.background = '#94a3b8';
+                        micBtn.style.cursor = 'not-allowed';
+                        micIcon.style.animation = 'none';
+                        micText.innerText = `Micro Occupé (${data.speaking_name})`;
+                    }
+                } else {
+                    micBtn.disabled = false;
+                    micBtn.style.background = '#7c3aed';
+                    micBtn.style.cursor = 'pointer';
+                    micIcon.style.animation = 'none';
+                    micText.innerText = 'Ouvrir le Micro';
+                }
+            }
+
         } catch (e) {
             console.error("Polling error:", e);
         }
@@ -543,6 +597,42 @@
 
     // Lancer le polling
     setInterval(fetchQuestions, 5000);
+
+    // --- Gestion du Micro Panéliste ---
+    window.toggleMicrophone = async function() {
+        const btn = document.getElementById('mic-toggle-btn');
+        const icon = document.getElementById('mic-icon');
+        const text = document.getElementById('mic-text');
+
+        try {
+            const response = await fetch("{{ route('panelist.toggle-mic', $event->code) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.is_speaking) {
+                    btn.style.background = '#22c55e';
+                    icon.style.animation = 'pulse 1s infinite';
+                    text.innerText = 'Micro Ouvert';
+                } else {
+                    btn.style.background = '#7c3aed';
+                    icon.style.animation = 'none';
+                    text.innerText = 'Ouvrir le Micro';
+                }
+            } else {
+                alert(data.message || "Impossible de modifier le statut du micro.");
+            }
+        } catch (err) {
+            console.error("Mic toggle error:", err);
+            alert("Erreur de communication avec le serveur.");
+        }
+    }
     // --- Gestion Télécommande Projection ---
     let currentPage = {{ $panelist->current_page ?? 1 }};
     

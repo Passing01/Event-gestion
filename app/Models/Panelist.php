@@ -18,6 +18,7 @@ class Panelist extends Model
         'is_projecting',
         'notes',
         'is_active',
+        'is_speaking',
     ];
 
     protected $casts = [
@@ -26,6 +27,7 @@ class Panelist extends Model
         'is_document_shared' => 'boolean',
         'is_projecting' => 'boolean',
         'is_active' => 'boolean',
+        'is_speaking' => 'boolean',
     ];
 
     public function event(): BelongsTo

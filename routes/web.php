@@ -121,6 +121,7 @@ Route::post('/e/{code}/save-live-audio', [ModeratorController::class, 'saveLiveA
 Route::get('/e/{code}/projection', [ProjectionController::class, 'index'])->name('projection.index');
 Route::get('/e/{code}/projection/api', [ProjectionController::class, 'getAnswering'])->name('projection.api');
 Route::post('/projection/{code}/set-question/{id}', [ProjectionController::class, 'setQuestion']);
+Route::post('/e/{code}/projection/upload-replay', [ProjectionController::class, 'uploadReplay'])->name('projection.upload-replay');
 
 
 
@@ -215,6 +216,7 @@ Route::middleware(['auth', 'verified', 'force.password.change'])->prefix('paneli
     Route::post('/e/{code}/delete-doc', [PanelistController::class, 'deleteDocument'])->name('delete-doc');
     Route::post('/e/{code}/toggle-share', [PanelistController::class, 'toggleShare'])->name('toggle-share');
     Route::post('/e/{code}/toggle-project', [PanelistController::class, 'toggleProject'])->name('toggle-project');
+    Route::post('/e/{code}/toggle-mic', [PanelistController::class, 'toggleMic'])->name('toggle-mic');
     Route::post('/e/{code}/sync-page', [PanelistController::class, 'syncPage'])->name('sync-page');
     Route::post('/e/{code}/ai-suggest', [PanelistController::class, 'aiSuggest'])->name('ai-suggest');
 });

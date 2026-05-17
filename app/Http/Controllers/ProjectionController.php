@@ -46,6 +46,7 @@ class ProjectionController extends Controller
             'content' => $answering ? $answering->content : null,
             'audio_path' => $answering ? $answering->audio_path : null,
             'status' => $answering ? $answering->status : null,
+            'is_closed' => $event->closed_at !== null,
             'raised_hands' => $raisedHands,
             'all_questions' => $allQuestions,
             'projecting_panelist' => $projectingPanelist ? [
@@ -73,5 +74,40 @@ class ProjectionController extends Controller
         $question->update(['status' => 'answering']);
         
         return response()->json(['status' => 'ok', 'question_id' => $id]);
+    }
+
+    /**
+     * Enregistrer et sauvegarder le fichier vidéo du replay de l'événement.
+     */
+    public function uploadReplay(Request $request, $code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+
+        $request->validate([
+            'video' => 'required|file|mimes:webm,mp4|max:102400', // 100 Mo max
+        ]);
+
+        if ($request->hasFile('video')) {
+            $file = $request->file('video');
+            $filename = "replay_" . $event->id . "_" . time() . "." . $file->getClientOriginalExtension();
+            $path = $file->storeAs('replays', $filename, 'public');
+
+            $event->update([
+                'replay_path' => $path,
+            ]);
+
+            \Illuminate\Support\Facades\Log::info("Replay enregistré avec succès pour l'événement ID: {$event->id} à l'emplacement: {$path}");
+
+            return response()->json([
+                'success' => true,
+                'path' => $path,
+                'message' => 'Le replay a été sauvegardé avec succès.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Aucun fichier vidéo n\'a été reçu.'
+        ], 400);
     }
 }

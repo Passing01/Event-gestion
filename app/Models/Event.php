@@ -27,6 +27,7 @@ class Event extends Model
         'ai_sentiment',
         'ai_report',
         'image_path',
+        'replay_path',
         'collect_presence',
         'end_date',
         'is_forced_open',

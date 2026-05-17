@@ -23,14 +23,18 @@
                     $panelist = $event->panelists->first();
                     $fileUrl = $panelist ? asset('storage/' . $panelist->presentation_path) : null;
                 @endphp
-                @if($fileUrl)
+                @if($event->replay_path)
+                    {{-- Lecteur Vidéo Premium du Replay Réel --}}
+                    <video src="{{ asset('storage/' . $event->replay_path) }}" controls style="width: 100%; height: 100%; object-fit: contain; background: #000;" poster="{{ $event->image_path ? asset('storage/' . $event->image_path) : '' }}"></video>
+                @elseif($fileUrl)
                     <iframe id="presentation-iframe" src="{{ $fileUrl }}#page=1" style="width: 100%; height: 100%; border: none;"></iframe>
                 @else
-                    <div style="display: grid; place-items: center; height: 100%; color: #fff;">Aucun document disponible</div>
+                    <div style="display: grid; place-items: center; height: 100%; color: #fff;">Aucun document ou enregistrement vidéo disponible</div>
                 @endif
             </div>
             
-            {{-- Barre de Contrôle du Replay --}}
+            @if(!$event->replay_path)
+            {{-- Barre de Contrôle du Replay (Simulé par slides) --}}
             <div style="background: #1a1a1a; padding: 1rem; display: flex; align-items: center; gap: 1.5rem; color: #fff;">
                 <button onclick="prevLog()" class="btn-brand" style="width: auto; background: #333; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;">◄ Précédent</button>
                 <div style="flex-grow: 1; text-align: center;">
@@ -39,6 +43,7 @@
                 </div>
                 <button onclick="nextLog()" class="btn-brand" style="width: auto; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer;">Suivant ►</button>
             </div>
+            @endif
         </div>
 
         {{-- Flux des Questions Synchronisées --}}
@@ -73,6 +78,7 @@
 </div>
 
 <script>
+    @if(!$event->replay_path)
     const logs = @json($logs);
     // On crée une map des documents par ID de panéliste pour un switch rapide
     const panelistDocs = {
@@ -146,9 +152,8 @@
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') nextLog();
         if (e.key === 'ArrowLeft') prevLog();
-    });
-
     window.onload = updateReplay;
+    @endif
 </script>
 
 @endsection

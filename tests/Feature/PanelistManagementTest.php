@@ -148,5 +148,67 @@ class PanelistManagementTest extends TestCase
         $panelist->refresh();
         $this->assertFalse($panelist->must_change_password);
         $this->assertTrue(Hash::check('newsecurepassword', $panelist->password));
+     }
+
+    /**
+     * Test that a panelist can toggle their microphone.
+     */
+    public function test_panelist_can_toggle_their_microphone(): void
+    {
+        $event = Event::factory()->create();
+        $user = User::factory()->create(['role' => 'panelist', 'onboarding_completed' => true]);
+        $panelist = \App\Models\Panelist::create([
+            'event_id' => $event->id,
+            'user_id' => $user->id,
+            'sector' => 'Tech',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('panelist.toggle-mic', $event->code))
+            ->assertStatus(200)
+            ->assertJson(['success' => true, 'is_speaking' => true]);
+
+        $panelist->refresh();
+        $this->assertTrue($panelist->is_speaking);
+
+        $this->actingAs($user)
+            ->post(route('panelist.toggle-mic', $event->code))
+            ->assertStatus(200)
+            ->assertJson(['success' => true, 'is_speaking' => false]);
+
+        $panelist->refresh();
+        $this->assertFalse($panelist->is_speaking);
+    }
+
+    /**
+     * Test that microphone is mutually exclusive between panelists.
+     */
+    public function test_microphone_is_mutually_exclusive_between_panelists(): void
+    {
+        $event = Event::factory()->create();
+        
+        $userA = User::factory()->create(['role' => 'panelist', 'onboarding_completed' => true]);
+        $panelistA = \App\Models\Panelist::create([
+            'event_id' => $event->id,
+            'user_id' => $userA->id,
+            'is_speaking' => true,
+        ]);
+
+        $userB = User::factory()->create(['role' => 'panelist', 'onboarding_completed' => true]);
+        $panelistB = \App\Models\Panelist::create([
+            'event_id' => $event->id,
+            'user_id' => $userB->id,
+            'is_speaking' => false,
+        ]);
+
+        // Panelist B tries to turn on mic but gets rejected
+        $response = $this->actingAs($userB)
+            ->post(route('panelist.toggle-mic', $event->code));
+
+        $response->assertStatus(403)
+            ->assertJson(['success' => false]);
+
+        $panelistB->refresh();
+        $this->assertFalse($panelistB->is_speaking);
     }
 }

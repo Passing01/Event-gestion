@@ -259,16 +259,25 @@
 </head>
 <body data-brand="{{ $event->user->brand_color ?? 'purple' }}">
 
-    <div id="audio-init-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
-        <div style="background: var(--brand); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 2rem; box-shadow: 0 0 50px var(--brand-soft); animation: pulse 2s infinite;">🔊</div>
-        <h1 style="color: #fff; margin-bottom: 1rem; font-weight: 800; font-size: 2.5rem;">Prêt pour l'événement ?</h1>
-        <p style="color: rgba(255,255,255,0.6); margin-bottom: 3rem; font-size: 1.25rem;">Cliquez sur le bouton ci-dessous pour autoriser le son et les micros en direct.</p>
-        <button onclick="enableAudioOnProjector()" class="btn-brand" style="padding: 1.5rem 4rem; font-size: 1.5rem; border-radius: 999px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.3); cursor: pointer; font-weight: 900;">DÉMARRER LA SESSION</button>
+    <div id="audio-init-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+        <div style="background: var(--brand); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 2rem; box-shadow: 0 0 50px var(--brand-soft); animation: pulse 2s infinite;">🎬</div>
+        <h1 style="color: #fff; margin-bottom: 1rem; font-weight: 800; font-size: 2.5rem;">Démarrer l'Événement & Enregistrement</h1>
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 2rem; font-size: 1.25rem; max-width: 45rem; text-align: center; line-height: 1.6;">
+            Cliquez sur le bouton ci-dessous pour lancer la session. <br>
+            <strong style="color: var(--brand);">Important :</strong> Pour l'enregistrement automatique pour le Marketplace, sélectionnez l'option <strong>"Partager cet onglet"</strong> et veillez à cocher la case <strong>"Partager l'audio de l'onglet"</strong> dans la fenêtre système qui s'affiche.
+        </p>
+        <button onclick="enableAudioOnProjector()" class="btn-brand" style="padding: 1.5rem 4rem; font-size: 1.5rem; border-radius: 999px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.3); cursor: pointer; font-weight: 900; background: var(--brand);">DÉMARRER LA SESSION</button>
     </div>
 
     <div class="event-header">
         <div class="event-logo-box">LIVE</div>
         <span class="event-title">{{ $event->name }}</span>
+    </div>
+
+    {{-- Indicateur d'enregistrement Marketplace --}}
+    <div id="marketplace-rec-indicator" style="position: absolute; top: 2.25rem; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 0.5rem; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; padding: 0.5rem 1.25rem; border-radius: 999px; z-index: 500; font-family: sans-serif; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #fecaca; letter-spacing: 0.05em;">
+        <span style="width: 0.625rem; height: 0.625rem; background: #ef4444; border-radius: 50%; display: inline-block; animation: pulse-red 1s infinite;"></span>
+        Enregistrement Marketplace en cours
     </div>
 
     {{-- Indicateur de micro en direct --}}
@@ -344,12 +353,225 @@
         let audioContext = null;
         let isScreenSharingActive = false;
 
-        function enableAudioOnProjector() {
+        // --- Enregistrement Automatique de la Session (Marketplace) ---
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordingStream = null;
+        let db = null;
+
+        // Initialisation de la base IndexedDB locale
+        const dbRequest = indexedDB.open("ReplayDB", 1);
+        dbRequest.onupgradeneeded = function(e) {
+            db = e.target.result;
+            db.createObjectStore("chunks", { autoIncrement: true });
+        };
+        dbRequest.onsuccess = function(e) {
+            db = e.target.result;
+            console.log("IndexedDB initialisée avec succès.");
+            checkAndRecoverReplay();
+        };
+
+        function preventTabClose(e) {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                e.preventDefault();
+                e.returnValue = ''; // Requis pour forcer l'affichage de l'alerte sur tous les navigateurs
+            }
+        }
+
+        function saveChunkToIndexedDB(chunk) {
+            if (!db) return;
+            try {
+                const transaction = db.transaction(["chunks"], "readwrite");
+                const store = transaction.objectStore("chunks");
+                store.add(chunk);
+            } catch (err) {
+                console.error("Erreur de sauvegarde locale du chunk :", err);
+            }
+        }
+
+        function clearIndexedDB() {
+            if (!db) return;
+            try {
+                const transaction = db.transaction(["chunks"], "readwrite");
+                const store = transaction.objectStore("chunks");
+                store.clear();
+                console.log("IndexedDB locale nettoyée.");
+            } catch (err) {
+                console.error("Erreur de nettoyage IndexedDB :", err);
+            }
+        }
+
+        function checkAndRecoverReplay() {
+            if (!db) return;
+            const transaction = db.transaction(["chunks"], "readonly");
+            const store = transaction.objectStore("chunks");
+            const getAllRequest = store.getAll();
+
+            getAllRequest.onsuccess = function(e) {
+                const chunks = e.target.result;
+                if (chunks && chunks.length > 0 && (!mediaRecorder || mediaRecorder.state === 'inactive')) {
+                    console.log("Replay interrompu détecté dans IndexedDB. Restauration...");
+                    recoverAndUpload(chunks);
+                }
+            };
+        }
+
+        async function recoverAndUpload(chunks) {
+            // Afficher un overlay d'envoi magnifique
+            const recoveryOverlay = document.createElement('div');
+            recoveryOverlay.id = 'recovery-replay-overlay';
+            recoveryOverlay.style = "position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10001; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px); font-family: sans-serif;";
+            recoveryOverlay.innerHTML = `
+                <div style="background: #eab308; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 2rem; box-shadow: 0 0 40px rgba(234, 179, 8, 0.4); animation: pulse 1.5s infinite;">📂</div>
+                <h2 style="color: #fff; margin-bottom: 1rem; font-weight: 800; font-size: 2rem;">Replay récupéré !</h2>
+                <p id="recovery-status-text" style="color: rgba(255,255,255,0.7); font-size: 1.1rem; text-align: center; max-width: 30rem; line-height: 1.6;">
+                    Un enregistrement précédent a été interrompu suite à une fermeture sauvage. Envoi automatique sur le serveur pour le Marketplace... Veuillez patienter.
+                </p>
+            `;
+            document.body.appendChild(recoveryOverlay);
+
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const formData = new FormData();
+            formData.append('video', blob, `replay_recovered_${eventCode}.webm`);
+
+            try {
+                const response = await fetch(`/e/${eventCode}/projection/upload-replay`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    clearIndexedDB();
+                    document.getElementById('recovery-status-text').innerHTML = `
+                        <span style="color: #22c55e; font-weight: 900; font-size: 3rem; display: block; margin-bottom: 1rem;">🎉</span>
+                        <strong style="color: #22c55e; font-size: 1.3rem;">Récupération Réussie !</strong><br><br>
+                        Le replay interrompu a été récupéré, sauvegardé et mis en vente sur le Marketplace avec succès.<br>
+                        Vous pouvez démarrer la nouvelle session.
+                        <br><br>
+                        <button onclick="document.getElementById('recovery-replay-overlay').remove()" class="btn-brand" style="background: var(--brand); padding: 0.75rem 2rem; border-radius: 999px; border:none; cursor:pointer; color:#fff; font-weight:700;">Continuer</button>
+                    `;
+                } else {
+                    throw new Error(data.message || "Erreur de sauvegarde.");
+                }
+            } catch (err) {
+                console.error("Recovery upload error:", err);
+                document.getElementById('recovery-status-text').innerHTML = `
+                    <span style="color: #ef4444; font-weight: 900; font-size: 3rem; display: block; margin-bottom: 1rem;">⚠️</span>
+                    <strong style="color: #ef4444; font-size: 1.3rem;">Erreur de Récupération</strong><br><br>
+                    Impossible d'envoyer le replay récupéré au serveur.<br><br>
+                    <button onclick="window.location.reload()" class="btn-brand" style="background: var(--brand); padding: 0.75rem 2rem; border:none; cursor:pointer; color:#fff; font-weight:700;">Réessayer</button>
+                    <button onclick="clearIndexedDB(); document.getElementById('recovery-replay-overlay').remove()" class="btn-brand" style="background: rgba(255,255,255,0.1); padding: 0.75rem 2rem; border:none; cursor:pointer; color:#fff; font-weight:700; margin-left: 0.5rem;">Ignorer et effacer</button>
+                `;
+            }
+        }
+
+        async function startRecording() {
+            try {
+                // Nettoyer IndexedDB avant de commencer le nouvel enregistrement
+                clearIndexedDB();
+
+                // Demande de capture de l'onglet/écran avec l'audio du système/onglet
+                recordingStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { displaySurface: "browser" },
+                    audio: true
+                });
+
+                recordedChunks = [];
+                mediaRecorder = new MediaRecorder(recordingStream, {
+                    mimeType: 'video/webm;codecs=vp9,opus'
+                });
+
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) {
+                        recordedChunks.push(e.data);
+                        saveChunkToIndexedDB(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async function() {
+                    console.log("Enregistrement arrêté, préparation de l'envoi...");
+                    uploadReplayVideo();
+                };
+
+                // Protéger l'onglet contre l'actualisation ou la fermeture accidentelle
+                window.addEventListener('beforeunload', preventTabClose);
+
+                mediaRecorder.start(1000); // Acquisition continue par tranches de 1s
+                document.getElementById('marketplace-rec-indicator').style.display = 'flex';
+                console.log("Enregistrement de l'événement démarré.");
+            } catch (err) {
+                console.warn("L'enregistrement n'a pas pu démarrer ou a été refusé :", err);
+                alert("Attention : L'enregistrement automatique de la session pour le Marketplace n'a pas pu être lancé. Si vous souhaitez l'activer, veuillez rafraîchir et autoriser le partage de l'onglet.");
+            }
+        }
+
+        async function uploadReplayVideo() {
+            // Afficher un overlay d'envoi magnifique
+            const uploadOverlay = document.createElement('div');
+            uploadOverlay.id = 'upload-replay-overlay';
+            uploadOverlay.style = "position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px); font-family: sans-serif;";
+            uploadOverlay.innerHTML = `
+                <div style="background: var(--brand); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 2rem; box-shadow: 0 0 40px var(--brand-soft); animation: pulse 1.5s infinite;">⏳</div>
+                <h2 style="color: #fff; margin-bottom: 1rem; font-weight: 800; font-size: 2rem;">Clôture de l'Événement</h2>
+                <p id="upload-status-text" style="color: rgba(255,255,255,0.7); font-size: 1.1rem; text-align: center; max-width: 30rem; line-height: 1.6;">
+                    Génération du replay vidéo final pour le Marketplace en cours... Veuillez ne pas fermer cette fenêtre.
+                </p>
+            `;
+            document.body.appendChild(uploadOverlay);
+
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const formData = new FormData();
+            formData.append('video', blob, `replay_${eventCode}.webm`);
+
+            try {
+                const response = await fetch(`/e/${eventCode}/projection/upload-replay`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Désactiver la protection anti-fermeture de l'onglet
+                    window.removeEventListener('beforeunload', preventTabClose);
+
+                    document.getElementById('upload-status-text').innerHTML = `
+                        <span style="color: #22c55e; font-weight: 900; font-size: 3rem; display: block; margin-bottom: 1rem;">🎉</span>
+                        <strong style="color: #22c55e; font-size: 1.3rem;">Sauvegarde Réussie !</strong><br><br>
+                        Le replay a été sauvegardé avec succès et est maintenant disponible sur le Marketplace.<br>
+                        Vous pouvez fermer cet onglet.
+                    `;
+                } else {
+                    throw new Error(data.message || "Erreur de sauvegarde.");
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+                document.getElementById('upload-status-text').innerHTML = `
+                    <span style="color: #ef4444; font-weight: 900; font-size: 3rem; display: block; margin-bottom: 1rem;">⚠️</span>
+                    <strong style="color: #ef4444; font-size: 1.3rem;">Erreur de Sauvegarde</strong><br><br>
+                    Impossible d'envoyer le replay automatiquement.<br>
+                    <button onclick="window.location.reload()" class="btn-brand" style="margin-top: 1.5rem; background: var(--brand);">Réessayer</button>
+                `;
+            }
+        }
+
+        async function enableAudioOnProjector() {
             audioEnabled = true;
             document.getElementById('audio-init-overlay').style.display = 'none';
             console.log("Session démarrée.");
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
+            // Lancer l'enregistrement automatique
+            await startRecording();
+
             // Lancer le polling
             fetchAnswering();
             setInterval(fetchAnswering, 3000);
@@ -444,6 +666,8 @@
                         
                         remoteStream.getVideoTracks()[0].onended = () => {
                             isScreenSharingActive = false;
+                            document.getElementById('projection-wrap').classList.remove('full-mode');
+                            document.getElementById('presentation-badge').style.display = 'none';
                             fetchAnswering();
                         };
                     } else {
@@ -461,6 +685,8 @@
                 });
                 call.on('close', () => {
                     isScreenSharingActive = false;
+                    document.getElementById('projection-wrap').classList.remove('full-mode');
+                    document.getElementById('presentation-badge').style.display = 'none';
                     document.getElementById('live-mic-alert').style.display = 'none';
                     document.getElementById('voice-indicator').style.display = 'none';
                     fetchAnswering();
@@ -481,6 +707,18 @@
             try {
                 const response = await fetch('{{ route("projection.api", $event->code) }}');
                 const data = await response.json();
+
+                // Si l'événement est clôturé, on arrête automatiquement l'enregistrement et on l'envoie
+                if (data.is_closed) {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        document.getElementById('marketplace-rec-indicator').style.display = 'none';
+                        mediaRecorder.stop();
+                        if (recordingStream) {
+                            recordingStream.getTracks().forEach(track => track.stop());
+                        }
+                    }
+                    return; // Fin du polling
+                }
                 
                 // Si un partage d'écran est en cours, on ne met pas à jour le CONTENU principal
                 // mais on continue de mettre à jour la sidebar et le footer.

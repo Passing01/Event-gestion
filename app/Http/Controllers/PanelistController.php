@@ -212,10 +212,18 @@ class PanelistController extends Controller
             $remainingSeconds = max(0, $totalDurationSeconds - $actualElapsed);
         }
 
+        // Get currently speaking panelist
+        $speakingPanelist = Panelist::where('event_id', $event->id)
+            ->where('is_speaking', true)
+            ->with('user')
+            ->first();
+
         return response()->json([
             'main_html' => view('panelist.partials.questions_list', compact('questions'))->render(),
             'filtered_html' => view('panelist.partials.filtered_list', compact('filteredByAI'))->render(),
             'remaining_seconds' => $remainingSeconds,
+            'speaking_name' => $speakingPanelist ? $speakingPanelist->user->name : null,
+            'is_speaking_self' => $speakingPanelist ? ($speakingPanelist->id === $panelist->id) : false,
             'counts' => [
                 'active' => $questions->count(),
                 'filtered' => $filteredByAI->count(),
@@ -385,6 +393,43 @@ class PanelistController extends Controller
         $panelist->update(['current_page' => max(1, $page)]);
 
         return response()->json(['status' => 'ok', 'current_page' => $panelist->current_page]);
+    }
+
+    /**
+     * Toggle panelist's microphone.
+     */
+    public function toggleMic(Request $request, $code)
+    {
+        $event = Event::where('code', $code)->firstOrFail();
+        $panelist = Panelist::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $newState = !$panelist->is_speaking;
+
+        if ($newState) {
+            // Check if any other panelist is currently speaking/has the mic active
+            $otherSpeaking = Panelist::where('event_id', $event->id)
+                ->where('id', '!=', $panelist->id)
+                ->where('is_speaking', true)
+                ->first();
+
+            if ($otherSpeaking) {
+                $otherName = $otherSpeaking->user->name;
+                return response()->json([
+                    'success' => false,
+                    'message' => "Impossible d'ouvrir le micro. Le panéliste {$otherName} est déjà en train de parler."
+                ], 403);
+            }
+        }
+
+        $panelist->update(['is_speaking' => $newState]);
+
+        return response()->json([
+            'success' => true,
+            'is_speaking' => $panelist->is_speaking,
+            'message' => $panelist->is_speaking ? "Votre micro est maintenant ouvert !" : "Votre micro est fermé."
+        ]);
     }
 
     /**
